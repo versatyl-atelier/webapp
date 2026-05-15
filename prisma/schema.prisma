@@ -1,0 +1,513 @@
+// Unified Atelier Versatyl schema: merges Punch (timesheet) and Lanceur (planning) databases
+// See /docs/PRD-phase-1.md for design decisions and /issues/0_project_setup_and_schema.md for acceptance criteria
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// CORE ENTITIES: Employees & Access Control
+// ============================================
+
+model Statut {
+  id          String    @id
+  description String
+  isDefault   Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   Int?
+
+  employees               Employee[]
+  statutSourcePermissions StatutSourcePermission[]
+
+  @@map("statuts")
+}
+
+model StatutSourcePermission {
+  statutId String
+  sourceId String
+
+  statut Statut @relation(fields: [statutId], references: [id], onDelete: Cascade)
+
+  @@id([statutId, sourceId])
+  @@index([sourceId])
+  @@map("statutSourcePermissions")
+}
+
+model Employee {
+  id           Int       @id
+  name         String
+  weeklyTarget Float     @default(40)
+  statutId     String?   @default("atelier")
+  displayOrder Int       @default(999)
+  isDeleted    Boolean   @default(false)
+  deletedAt    DateTime?
+  deletedBy    Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  statut            Statut?             @relation(fields: [statutId], references: [id], onDelete: SetNull)
+  timeEntries       TimeEntry[]
+  activePunch       ActivePunch?
+  frozenWeeks       FrozenWeek[]
+  weeklyKilometrage WeeklyKilometrage[]
+  weeklyObjectives  WeeklyObjective[]
+
+  @@map("employees")
+}
+
+// ============================================
+// TIMEKEEPING: Punch & Time Entries
+// ============================================
+
+model ActivePunch {
+  employeeId Int       @id
+  startTime  DateTime
+  projects   String // JSON array of { projectId, projectType, projectName }
+  isDeleted  Boolean   @default(false)
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("activePunches")
+}
+
+model TimeEntry {
+  id          Int       @id @default(autoincrement())
+  employeeId  Int?
+  projectId   String
+  projectType String // 'trello' or 'internal' or other
+  projectName String // denormalized for quick access
+  date        DateTime  @db.Date
+  hours       Float
+  seconds     Int? // raw duration in seconds
+  type        String    @default("manual")
+  entryMethod String    @default("manual") // 'manual', 'punch', etc.
+  subtaskId   String    @default("1default")
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  employee Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  subtask  Subtask   @relation(fields: [subtaskId], references: [id], onDelete: SetDefault)
+
+  @@index([employeeId])
+  @@index([projectId])
+  @@index([date])
+  @@map("timeEntries")
+}
+
+model Subtask {
+  id          String    @id
+  description String
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  timeEntries TimeEntry[]
+
+  @@map("subtasks")
+}
+
+model FrozenWeek {
+  id         Int       @id @default(autoincrement())
+  employeeId Int
+  weekStart  DateTime  @db.Date
+  weekTotal  Float
+  objective  Float
+  isDeleted  Boolean   @default(false)
+  deletedAt  DateTime?
+  deletedBy  Int?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, weekStart])
+  @@map("frozenWeeks")
+}
+
+model WeeklyKilometrage {
+  id          Int       @id @default(autoincrement())
+  employeeId  Int
+  weekStart   DateTime  @db.Date
+  kilometrage Float     @default(0)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, weekStart])
+  @@map("weeklyKilometrage")
+}
+
+model WeeklyObjective {
+  id         Int       @id @default(autoincrement())
+  employeeId Int
+  weekStart  DateTime  @db.Date
+  objective  Float
+  isDeleted  Boolean   @default(false)
+  deletedAt  DateTime?
+  deletedBy  Int?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, weekStart])
+  @@map("weeklyObjectives")
+}
+
+// ============================================
+// PROJECTS & PLANNING (Lanceur + Punch merged)
+// ============================================
+
+model Project {
+  id   String @id
+  name String
+
+  // Source & relationship
+  sourceId String?
+
+  // Lanceur planning dates (all optional, user can enable/disable)
+  useSignatureDate    Boolean   @default(false)
+  signatureDate       DateTime? @db.Date
+  manualSignatureDate DateTime? @db.Date
+
+  useApprovalDate    Boolean   @default(false)
+  approvalDate       DateTime? @db.Date
+  manualApprovalDate DateTime? @db.Date
+
+  useDeliveryDate    Boolean   @default(false)
+  deliveryDate       DateTime? @db.Date
+  isDeliveryLocked   Boolean   @default(false)
+  manualDeliveryDate DateTime? @db.Date
+
+  useDaysSignatureToApproval Boolean @default(false)
+  daysSignatureToApproval    Int?
+
+  useDaysApprovalToDelivery Boolean @default(false)
+  daysApprovalToDelivery    Int?
+
+  // Pricing (from Lanceur)
+  submissionPrice Float
+
+  // Extra delays
+  useExtraProductionDelay Boolean @default(false)
+  extraProductionDays     Int?
+
+  useExtraPlanningDelay Boolean @default(false)
+  extraPlanningDays     Int?
+
+  // Metadata
+  priority      Int     @default(0)
+  color         String  @default("#4CAF50")
+  isInCalendar  Boolean @default(false)
+  calendarOrder Int     @default(0)
+  isLocked      Boolean @default(false)
+
+  // Durations (calculated/stored)
+  productionDurationDays Int?
+  planningDurationDays   Int?
+
+  // Calculated dates (from Lanceur)
+  calculatedPlanningStart   DateTime? @db.Date
+  calculatedPlanningEnd     DateTime? @db.Date
+  calculatedProductionStart DateTime? @db.Date
+  calculatedProductionEnd   DateTime? @db.Date
+  calculatedDeliveryDate    DateTime? @db.Date
+
+  // Soft delete
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  source TrelloSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([sourceId])
+  @@map("projects")
+}
+
+// Punch system had separate trelloProjects table; now consolidated into projects
+// Keeping the data structure in case we need to distinguish source later
+model TrelloProject {
+  id        String    @id
+  name      String
+  sourceId  String?
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("trelloProjects")
+}
+
+// ============================================
+// TRELLO INTEGRATION & SOURCES
+// ============================================
+
+model TrelloSource {
+  id        String    @id
+  name      String
+  apiKey    String
+  token     String
+  boardId   String
+  boardName String?
+  labelName String?
+  icon      String    @default("📦")
+  isActive  Boolean   @default(false)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  projects      Project[]
+  importHistory TrelloImportHistory[]
+
+  @@map("trelloSources")
+}
+
+model TrelloImportHistory {
+  id               String   @id
+  sourceId         String
+  sourceName       String
+  projectsImported Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  source TrelloSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@map("trelloImportHistory")
+}
+
+// ============================================
+// CALENDAR & SCHEDULING (Lanceur + Punch)
+// ============================================
+
+model CalendarSource {
+  id        Int      @id @default(autoincrement())
+  boardName String
+  boardId   String
+  apiKey    String
+  apiToken  String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("calendarSources")
+}
+
+model ChronoGroup {
+  id             String   @id
+  name           String
+  color          String   @default("#666666")
+  isDone         Boolean  @default(true)
+  projectedHours Float?
+  createdAt      DateTime @default(now())
+
+  members    ChronoGroupMember[]
+  financials ChronoGroupFinancial?
+
+  @@map("chronoGroups")
+}
+
+model ChronoGroupMember {
+  groupId     String
+  projectType String
+  projectId   String
+
+  group ChronoGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, projectType, projectId])
+  @@map("chronoGroupMembers")
+}
+
+model ChronoProjectSettings {
+  projectType    String
+  projectId      String
+  isHidden       Boolean  @default(false)
+  color          String?
+  isDone         Boolean  @default(true)
+  projectedHours Float?
+  createdAt      DateTime @default(now())
+
+  @@id([projectType, projectId])
+  @@map("chronoProjectSettings")
+}
+
+model ChronoARRow {
+  id         Int      @id @default(autoincrement())
+  factureNum String?
+  dateStr    String?
+  client     String
+  montant    Float
+  year       Int?
+  createdAt  DateTime @default(now())
+
+  projectValues     ChronoProjectValue[]
+  projectValueLines ChronoProjectValueLine[]
+
+  @@map("chronoARRows")
+}
+
+model ChronoProjectValue {
+  entityType String
+  entityId   String
+  arRowId    Int?
+  montant    Float
+  createdAt  DateTime @default(now())
+
+  arRow ChronoARRow? @relation(fields: [arRowId], references: [id], onDelete: SetNull)
+
+  @@id([entityType, entityId])
+  @@map("chronoProjectValues")
+}
+
+model ChronoLocalEntry {
+  projectType        String
+  projectId          String
+  projectName        String
+  date               DateTime @db.Date
+  subtaskId          String   @default("1default")
+  hours              Float
+  subtaskName        String?
+  employeeId         Int?
+  employeeName       String?
+  employeeStatutId   String?
+  employeeStatutName String?
+  trelloSourceId     String?
+  trelloSourceName   String?
+  createdAt          DateTime @default(now())
+
+  @@id([projectType, projectId, date, subtaskId])
+  @@map("chronoLocalEntries")
+}
+
+model ChronoFilterRule {
+  id        String   @id
+  name      String
+  color     String   @default("#4a9eff")
+  style     String   @default("solid")
+  isHidden  Boolean  @default(false)
+  hasValue  Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  sources ChronoFilterSource[]
+
+  @@map("chronoFilterRules")
+}
+
+model ChronoFilterSource {
+  id          Int      @id @default(autoincrement())
+  ruleId      String
+  tableType   String
+  matchValue  String
+  stepOrder   Int      @default(0)
+  matchValues String?
+  createdAt   DateTime @default(now())
+
+  rule ChronoFilterRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@map("chronoFilterSources")
+}
+
+model ChronoProjectValueLine {
+  id         Int      @id @default(autoincrement())
+  entityType String
+  entityId   String
+  arRowId    Int?
+  montant    Float
+  createdAt  DateTime @default(now())
+
+  arRow ChronoARRow? @relation(fields: [arRowId], references: [id], onDelete: SetNull)
+
+  @@map("chronoProjectValueLines")
+}
+
+model ChronoGroupFinancial {
+  groupId         String   @id
+  hardwareCost    Float    @default(0)
+  materialCost    Float    @default(0)
+  installationPct Float    @default(0)
+  paintshopCost   Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  group ChronoGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("chronoGroupFinancials")
+}
+
+model CapacityCurve {
+  id                 Int    @id @default(autoincrement())
+  dayPosition        String
+  maxCapacityPercent Int
+  sortOrder          Int
+
+  @@map("capacityCurve")
+}
+
+// ============================================
+// SHOP & OPERATIONS
+// ============================================
+
+model ShopClosure {
+  id          Int      @id @default(autoincrement())
+  closureDate DateTime @db.Date
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  @@map("shopClosures")
+}
+
+// ============================================
+// TASKS (from Punch system)
+// ============================================
+
+model Task {
+  id        Int       @id @default(autoincrement())
+  name      String
+  color     String    @default("#3498db")
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("tasks")
+}
+
+// ============================================
+// SETTINGS (key-value store for both systems)
+// ============================================
+
+model Setting {
+  key   String @id
+  value String
+
+  @@map("settings")
+}
+
+model GeneralSetting {
+  key         String  @id
+  value       String
+  type        String  @default("string")
+  description String?
+
+  @@map("generalSettings")
+}

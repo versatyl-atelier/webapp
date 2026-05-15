@@ -1,65 +1,111 @@
-import Image from "next/image";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import { PrismaClient } from "@/generated/prisma/client";
 
-export default function Home() {
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+export default async function Home() {
+  const tables = [
+    { name: "Statut", count: await prisma.statut.count() },
+    {
+      name: "StatutSourcePermission",
+      count: await prisma.statutSourcePermission.count(),
+    },
+    { name: "Employee", count: await prisma.employee.count() },
+    { name: "ActivePunch", count: await prisma.activePunch.count() },
+    { name: "TimeEntry", count: await prisma.timeEntry.count() },
+    { name: "Subtask", count: await prisma.subtask.count() },
+    { name: "FrozenWeek", count: await prisma.frozenWeek.count() },
+    {
+      name: "WeeklyKilometrage",
+      count: await prisma.weeklyKilometrage.count(),
+    },
+    { name: "WeeklyObjective", count: await prisma.weeklyObjective.count() },
+    { name: "Project", count: await prisma.project.count() },
+    { name: "TrelloProject", count: await prisma.trelloProject.count() },
+    { name: "TrelloSource", count: await prisma.trelloSource.count() },
+    {
+      name: "TrelloImportHistory",
+      count: await prisma.trelloImportHistory.count(),
+    },
+    { name: "CalendarSource", count: await prisma.calendarSource.count() },
+    { name: "ChronoGroup", count: await prisma.chronoGroup.count() },
+    {
+      name: "ChronoGroupMember",
+      count: await prisma.chronoGroupMember.count(),
+    },
+    {
+      name: "ChronoProjectSettings",
+      count: await prisma.chronoProjectSettings.count(),
+    },
+    { name: "ChronoARRow", count: await prisma.chronoARRow.count() },
+    {
+      name: "ChronoProjectValue",
+      count: await prisma.chronoProjectValue.count(),
+    },
+    { name: "ChronoLocalEntry", count: await prisma.chronoLocalEntry.count() },
+    { name: "ChronoFilterRule", count: await prisma.chronoFilterRule.count() },
+    {
+      name: "ChronoFilterSource",
+      count: await prisma.chronoFilterSource.count(),
+    },
+    {
+      name: "ChronoProjectValueLine",
+      count: await prisma.chronoProjectValueLine.count(),
+    },
+    {
+      name: "ChronoGroupFinancial",
+      count: await prisma.chronoGroupFinancial.count(),
+    },
+    { name: "ShopClosure", count: await prisma.shopClosure.count() },
+    { name: "Task", count: await prisma.task.count() },
+    { name: "Setting", count: await prisma.setting.count() },
+    { name: "GeneralSetting", count: await prisma.generalSetting.count() },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-white p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-2 text-gray-900">
+          Atelier Versatyl
+        </h1>
+        <p className="text-gray-600 mb-8">Database Status — All 29 Tables</p>
+
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+          <p className="text-green-800 font-medium">
+            ✅ Database connection successful
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid grid-cols-2 gap-4">
+          {tables.map((table) => (
+            <div
+              key={table.name}
+              className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-gray-900">{table.name}</span>
+                <span className="text-2xl font-bold text-gray-600">
+                  {table.count}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">rows</p>
+            </div>
+          ))}
         </div>
-      </main>
+
+        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-900 text-sm">
+            <strong>Schema Status:</strong> All 29 tables created and ready.
+            Expected row count: 0 (fresh database).
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
