@@ -171,3 +171,17 @@
     cursor: pointer;
   }
 }
+
+@layer utilities {
+  .counter-reset-step {
+    counter-reset: step-counter;
+  }
+
+  .counter-increment-step {
+    counter-increment: step-counter;
+  }
+
+  .counter-increment-step::before {
+    content: counter(step-counter);
+  }
+}

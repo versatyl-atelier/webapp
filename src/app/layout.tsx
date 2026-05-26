@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import pkg from "@/../package.json";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +30,9 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         {children}
+        <footer className="mt-4 text-center text-[10px] text-gray-500 print:mt-4">
+          Version {pkg.version} - Atelier Versatyl © 2025
+        </footer>
       </body>
     </html>
   );
