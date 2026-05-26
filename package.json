@@ -1,8 +1,10 @@
 {
   "name": "my-app",
-  "version": "0.1.0",
+  "version": "3.0.0",
   "private": true,
   "scripts": {
+    "db:local": "docker-compose -f docker-compose.yml up",
+    "local": "npm run db:local && npm run dev",
     "dev": "next dev",
     "test": "npm run validateDb",
     "db:validate": "prisma validate",
@@ -11,7 +13,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "lint:fix": "biome check --write --unsafe",
+    "format": "biome format --write && npm run lint:fix"
   },
   "dependencies": {
     "@neondatabase/serverless": "1.1.0",
