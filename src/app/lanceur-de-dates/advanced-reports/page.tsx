@@ -1,8 +1,8 @@
 export default function Page() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="flex min-h-screen flex-col items-center justify-center">
       <h1 className="text-3xl font-bold">Advanced Reports</h1>
-      <p className="text-gray-500 mt-2">Placeholder page</p>
+      <p className="mt-2 text-gray-500">Placeholder page</p>
     </div>
   );
 }

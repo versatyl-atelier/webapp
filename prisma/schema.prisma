@@ -1,6 +1,3 @@
-// Unified Atelier Versatyl schema: merges Punch (timesheet) and Lanceur (planning) databases
-// See /docs/PRD-phase-1.md for design decisions and /issues/0_project_setup_and_schema.md for acceptance criteria
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -9,10 +6,6 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-
-// ============================================
-// CORE ENTITIES: Employees & Access Control
-// ============================================
 
 model Statut {
   id          String    @id
@@ -32,7 +25,8 @@ model StatutSourcePermission {
   statutId String
   sourceId String
 
-  statut Statut @relation(fields: [statutId], references: [id], onDelete: Cascade)
+  statut Statut       @relation(fields: [statutId], references: [id], onDelete: Cascade)
+  source TrelloSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
   @@id([statutId, sourceId])
   @@index([sourceId])
@@ -51,7 +45,7 @@ model Employee {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  statut            Statut?             @relation(fields: [statutId], references: [id], onDelete: SetNull)
+  statut            Statut?             @relation(fields: [statutId], references: [id], onDelete: SetDefault)
   timeEntries       TimeEntry[]
   activePunch       ActivePunch?
   frozenWeeks       FrozenWeek[]
@@ -60,10 +54,6 @@ model Employee {
 
   @@map("employees")
 }
-
-// ============================================
-// TIMEKEEPING: Punch & Time Entries
-// ============================================
 
 model ActivePunch {
   employeeId Int       @id
@@ -79,29 +69,41 @@ model ActivePunch {
   @@map("activePunches")
 }
 
+enum ProjectType {
+  TRELLO
+  TASK
+}
+
+enum Role {
+  employee
+  manager
+}
+
 model TimeEntry {
-  id          Int       @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   employeeId  Int?
-  projectId   String
-  projectType String // 'trello' or 'internal' or other
-  projectName String // denormalized for quick access
-  date        DateTime  @db.Date
+  projectId   String?
+  taskId      Int?
+  projectType ProjectType
+  date        DateTime    @db.Date
   hours       Float
-  seconds     Int? // raw duration in seconds
-  type        String    @default("manual")
-  entryMethod String    @default("manual") // 'manual', 'punch', etc.
-  subtaskId   String    @default("1default")
-  isDeleted   Boolean   @default(false)
+  seconds     Int?
+  entryMethod String      @default("manual") // 'manual', 'punch', etc.
+  subtaskId   String      @default("1default")
+  isDeleted   Boolean     @default(false)
   deletedAt   DateTime?
   deletedBy   Int?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   employee Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
   subtask  Subtask   @relation(fields: [subtaskId], references: [id], onDelete: SetDefault)
+  project  Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  task     Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
 
   @@index([employeeId])
   @@index([projectId])
+  @@index([taskId])
   @@index([date])
   @@map("timeEntries")
 }
@@ -121,7 +123,6 @@ model Subtask {
 }
 
 model FrozenWeek {
-  id         Int       @id @default(autoincrement())
   employeeId Int
   weekStart  DateTime  @db.Date
   weekTotal  Float
@@ -134,12 +135,11 @@ model FrozenWeek {
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@unique([employeeId, weekStart])
+  @@id([employeeId, weekStart])
   @@map("frozenWeeks")
 }
 
 model WeeklyKilometrage {
-  id          Int       @id @default(autoincrement())
   employeeId  Int
   weekStart   DateTime  @db.Date
   kilometrage Float     @default(0)
@@ -151,12 +151,11 @@ model WeeklyKilometrage {
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@unique([employeeId, weekStart])
+  @@id([employeeId, weekStart])
   @@map("weeklyKilometrage")
 }
 
 model WeeklyObjective {
-  id         Int       @id @default(autoincrement())
   employeeId Int
   weekStart  DateTime  @db.Date
   objective  Float
@@ -168,22 +167,16 @@ model WeeklyObjective {
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@unique([employeeId, weekStart])
+  @@id([employeeId, weekStart])
   @@map("weeklyObjectives")
 }
-
-// ============================================
-// PROJECTS & PLANNING (Lanceur + Punch merged)
-// ============================================
 
 model Project {
   id   String @id
   name String
 
-  // Source & relationship
   sourceId String?
 
-  // Lanceur planning dates (all optional, user can enable/disable)
   useSignatureDate    Boolean   @default(false)
   signatureDate       DateTime? @db.Date
   manualSignatureDate DateTime? @db.Date
@@ -203,64 +196,40 @@ model Project {
   useDaysApprovalToDelivery Boolean @default(false)
   daysApprovalToDelivery    Int?
 
-  // Pricing (from Lanceur)
   submissionPrice Float
 
-  // Extra delays
   useExtraProductionDelay Boolean @default(false)
   extraProductionDays     Int?
 
   useExtraPlanningDelay Boolean @default(false)
   extraPlanningDays     Int?
 
-  // Metadata
   priority      Int     @default(0)
   color         String  @default("#4CAF50")
   isInCalendar  Boolean @default(false)
   calendarOrder Int     @default(0)
   isLocked      Boolean @default(false)
 
-  // Durations (calculated/stored)
   productionDurationDays Int?
   planningDurationDays   Int?
 
-  // Calculated dates (from Lanceur)
   calculatedPlanningStart   DateTime? @db.Date
   calculatedPlanningEnd     DateTime? @db.Date
   calculatedProductionStart DateTime? @db.Date
   calculatedProductionEnd   DateTime? @db.Date
   calculatedDeliveryDate    DateTime? @db.Date
 
-  // Soft delete
   isDeleted Boolean   @default(false)
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  source TrelloSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  source      TrelloSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  timeEntries TimeEntry[]
 
   @@index([sourceId])
   @@map("projects")
 }
-
-// Punch system had separate trelloProjects table; now consolidated into projects
-// Keeping the data structure in case we need to distinguish source later
-model TrelloProject {
-  id        String    @id
-  name      String
-  sourceId  String?
-  isDeleted Boolean   @default(false)
-  deletedAt DateTime?
-  deletedBy Int?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@map("trelloProjects")
-}
-
-// ============================================
-// TRELLO INTEGRATION & SOURCES
-// ============================================
 
 model TrelloSource {
   id        String    @id
@@ -277,27 +246,23 @@ model TrelloSource {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  projects      Project[]
-  importHistory TrelloImportHistory[]
+  projects                Project[]
+  importHistory           TrelloImport[]
+  statutSourcePermissions StatutSourcePermission[]
 
   @@map("trelloSources")
 }
 
-model TrelloImportHistory {
+model TrelloImport {
   id               String   @id
   sourceId         String
-  sourceName       String
   projectsImported Int      @default(0)
   createdAt        DateTime @default(now())
 
   source TrelloSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
-  @@map("trelloImportHistory")
+  @@map("trelloImports")
 }
-
-// ============================================
-// CALENDAR & SCHEDULING (Lanceur + Punch)
-// ============================================
 
 model CalendarSource {
   id        Int      @id @default(autoincrement())
@@ -462,10 +427,6 @@ model CapacityCurve {
   @@map("capacityCurve")
 }
 
-// ============================================
-// SHOP & OPERATIONS
-// ============================================
-
 model ShopClosure {
   id          Int      @id @default(autoincrement())
   closureDate DateTime @db.Date
@@ -474,10 +435,6 @@ model ShopClosure {
 
   @@map("shopClosures")
 }
-
-// ============================================
-// TASKS (from Punch system)
-// ============================================
 
 model Task {
   id        Int       @id @default(autoincrement())
@@ -489,25 +446,16 @@ model Task {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  timeEntries TimeEntry[]
+
   @@map("tasks")
 }
 
-// ============================================
-// SETTINGS (key-value store for both systems)
-// ============================================
-
 model Setting {
-  key   String @id
-  value String
-
-  @@map("settings")
-}
-
-model GeneralSetting {
   key         String  @id
   value       String
-  type        String  @default("string")
+  type        String
   description String?
 
-  @@map("generalSettings")
+  @@map("settings")
 }
