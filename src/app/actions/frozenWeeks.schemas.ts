@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FormState } from "./FormState";
 
 export const FreezeWeekFormSchema = z.object({
   employeeId: z.string(),
@@ -9,17 +10,14 @@ export const FreezeWeekFormSchema = z.object({
 });
 
 export type FreezeWeekFormState =
-  | {
+  | (FormState & {
       errors?: {
         employeeId?: string[];
         weekStart?: string[];
         weekTotal?: string[];
         objective?: string[];
-        schemaValidation?: string;
-        dataValidation?: string;
       };
-      message?: string;
-    }
+    })
   | undefined;
 
 export const FrozenWeekSchema = z.object({

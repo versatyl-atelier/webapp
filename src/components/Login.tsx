@@ -7,17 +7,21 @@ import { useRouter } from "next/navigation";
 
 type LoginFormProps = {
   role?: Role;
+  redirectTo?: string;
 };
-export function LoginForm({ role = Role.employee }: LoginFormProps) {
+export function LoginForm({
+  role = Role.employee,
+  redirectTo,
+}: LoginFormProps) {
   const router = useRouter();
   const [state, action, pending] = useActionState(authenticateRole, undefined);
   const isManager = role === Role.manager;
 
   useEffect(() => {
     if (state?.message === `${role} login success`) {
-      router.back();
+      return redirectTo ? router.push(redirectTo) : router.back();
     }
-  }, [state]);
+  }, [state, role, redirectTo, router]);
 
   return (
     <form action={action}>

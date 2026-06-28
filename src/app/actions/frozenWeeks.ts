@@ -96,7 +96,19 @@ export const freezeWeek = async (
     const isFrozen = frozen === "1";
     if (isFrozen) {
       // unfreezing
-      await restrictToRole(Role.manager, () => Promise.resolve());
+      return restrictToRole(Role.manager, async () => {
+        await putFreezeWeek({
+          employeeId: parseInt(employeeId, 10),
+          weekStart,
+          weekTotal,
+          objective,
+          ...rest,
+          isDeleted: isFrozen,
+        });
+        return {
+          message: isFrozen ? "unfreezeSuccess" : "freezeSuccess",
+        };
+      });
     } else {
       // freezing
       if (Math.abs(weekTotal - objective) > 0.5) {
@@ -106,16 +118,16 @@ export const freezeWeek = async (
           },
         };
       }
+      await putFreezeWeek({
+        employeeId: parseInt(employeeId, 10),
+        weekStart,
+        weekTotal,
+        objective,
+        ...rest,
+        isDeleted: isFrozen,
+      });
+      return {
+        message: isFrozen ? "unfreezeSuccess" : "freezeSuccess",
+      };
     }
-    await putFreezeWeek({
-      employeeId: parseInt(employeeId, 10),
-      weekStart,
-      weekTotal,
-      objective,
-      ...rest,
-      isDeleted: isFrozen,
-    });
-    return {
-      message: isFrozen ? "unfreezeSuccess" : "freezeSuccess",
-    };
   });

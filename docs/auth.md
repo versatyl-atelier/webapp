@@ -12,3 +12,5 @@ Backend uses middleware to read cookie and allow/refuse access to vertain pages 
 | -------------- | --------------------------- | ---------------------------- |
 | "employé"      | `versatyl_session_employee` | `VERSATYL_PASSWORD_EMPLOYEE` |
 | "gestionnaire" | `versatyl_session_manager`  | `VERSATYL_PASSWORD_MANAGER`  |
+
+Protected form actions should catch `AuthRequiredError`, return it via `handleAuthError()`, and use `useAuthError()` hook in the component to trigger the modal via client-side navigation to `/login?role=X`.

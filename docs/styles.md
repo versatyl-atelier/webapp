@@ -1,6 +1,6 @@
 # Styling conventions
 
-Respect existing styling conventions.
+Respect existing styling conventions. Look at siblings to fit the project's existing patterns.
 
 In particular, use Tailwind CSS v4 for everything.
 
@@ -12,3 +12,4 @@ In particular, use Tailwind CSS v4 for everything.
 - Use theme variables, no magic values
 - Use TaildwindCSS for transitions and animations, not Typescript
 - Don't use `@apply`
+- Never generate deprecated utilities

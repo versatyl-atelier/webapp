@@ -3,13 +3,10 @@ import { decrypt, getCookieName } from "@/lib/session";
 import { cookies } from "next/headers";
 import { Role } from "@/generated/prisma/enums";
 
-// const adminRoutes = [""];
-const protectedRoutes = ["/punch"];
-// const publicRoutes = ["/", "/login"];
+const protectedRoutes = ["/punch", "/employee"];
 
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  // const isAdminRoute = adminRoutes.includes(path);
   const isProtectedRoute = protectedRoutes.includes(path);
   const employeeCookie = (await cookies()).get(
     getCookieName(Role.employee),
@@ -20,22 +17,18 @@ export default async function proxy(req: NextRequest) {
   )?.value;
   const managerSession = managerCookie ? await decrypt(managerCookie) : null;
 
-  // if (isAdminRoute && !managerSession) {
-  //   return NextResponse.redirect(
-  //     new URL(`/login?role=${Role.manager}`, req.nextUrl),
-  //   );
-  // }
-
   if (isProtectedRoute && !employeeSession && !managerSession) {
     return NextResponse.redirect(
-      new URL(`/login?role=${Role.employee}`, req.nextUrl),
+      new URL(
+        `/login?role=${Role.employee}&redirectTo=${encodeURIComponent(path)}`,
+        req.nextUrl,
+      ),
     );
   }
 
   return NextResponse.next();
 }
 
-// Routes Proxy should not run on
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],
 };

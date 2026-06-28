@@ -7,15 +7,13 @@ import { Button } from "@/components/ui/button";
 import { notFound, redirect } from "next/navigation";
 import { getEmployee } from "@/app/actions/employees";
 import { getTimeEntries } from "@/app/actions/timeEntries";
-import { verifySession } from "@/app/actions/auth";
 import { getProjects } from "@/app/actions/projects";
 import { getTasks } from "@/app/actions/tasks";
+import { assertNoAuthError } from "@/lib/assertNoAuthError";
 import formatTimeDisplay from "@/lib/formatTimeDisplay";
 import type { TimeEntryWithRelations } from "@/app/actions/timeEntries";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
 import { PageContextProvider } from "./context-provider";
-import * as PlainDateTime from "temporal-polyfill/fns/PlainDateTime";
-import { Role } from "@/generated/prisma/enums";
 const defaultWeeklyTarget = 40; // TODO Find better place for this magic value
 
 const dayNames = [
@@ -57,6 +55,8 @@ export default async function EmployeePage({
   const employeeId = parseInt(id, 10);
   const employee = await getEmployee(employeeId);
 
+  assertNoAuthError(employee);
+
   if (!employee) {
     return notFound();
   }
@@ -82,6 +82,7 @@ export default async function EmployeePage({
         weekStart.toString() === thisWeek.startDate,
     )?.objective ?? defaultWeeklyTarget;
   const timeEntries = await getTimeEntries(employee.id, thisWeek);
+  assertNoAuthError(timeEntries);
 
   const weekly = timeEntries.reduce(
     (sum, entry) => sum + (entry.hours || 0),
@@ -123,10 +124,20 @@ export default async function EmployeePage({
     });
   }
 
-  const projectsPromise = getProjects(employeeId);
-  const tasksPromise = getTasks();
+  const projectsPromise = (async () => {
+    const result = await getProjects(employeeId);
+    assertNoAuthError(result);
+    return result;
+  })();
+  const tasksPromise = (async () => {
+    const result = await getTasks();
+    assertNoAuthError(result);
+    return result;
+  })();
 
   const frozenWeeks = await getFrozenWeeks(employeeId);
+  assertNoAuthError(frozenWeeks);
+
   const weekStart = new Date(thisWeek.startDate);
   const weekFrozen = !!frozenWeeks?.find((entry) =>
     isSameDay(entry.weekStart, weekStart),

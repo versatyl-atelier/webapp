@@ -7,16 +7,10 @@ import { toast } from "sonner";
 
 import { freezeWeek } from "@/app/actions/frozenWeeks";
 import dino from "@/app/employee/[id]/dino.gif";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  AlertAction,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertAction } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { FreezeWeekFormState } from "@/app/actions/frozenWeeks.schemas";
 import { useRouter } from "next/navigation";
 
 export type FreezeFormProps = {
@@ -42,6 +36,10 @@ export function FreezeForm({
   useEffect(() => {
     setHideSchemaValidationError(false);
     setHideDataValidationError(false);
+    if (state?.errors?.auth) {
+      const [err, role] = state.errors.auth.split(":");
+      return router.push(`/login?role=${role}`);
+    }
     if (state?.message === "freezeSuccess") {
       router.refresh();
       toast.success("Semain gelée!", {

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { type AuthErrorState } from "./auth.schemas";
+import { FormState } from "./FormState";
 
 export const EditTimeEntryFormSchema = z.object({
   timeEntryId: z.string(),
@@ -7,18 +9,14 @@ export const EditTimeEntryFormSchema = z.object({
   command: z.enum(["save", "delete"]),
 });
 
-export type EditTimeEntryFormState =
-  | {
-      errors?: {
-        timeEntryId?: string[];
-        projectId?: string[];
-        hours?: string[];
-        command?: string[];
-        schemaValidationError?: string;
-      };
-      message?: string;
-    }
-  | undefined;
+export type EditTimeEntryFormState = (FormState & {
+  errors?: {
+    timeEntryId?: string[];
+    projectId?: string[];
+    hours?: string[];
+    command?: string[];
+  };
+}) | undefined;
 
 export type Employee = {
   id: number;

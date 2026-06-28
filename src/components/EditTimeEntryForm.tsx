@@ -24,6 +24,8 @@ import { formatTimeDisplay } from "@/lib/parseTimeToSeconds";
 import { Input } from "./ui/input";
 import { useRouter } from "next/navigation";
 import type { TimeEntryWithRelations } from "@/app/actions/timeEntries";
+import { useAuthError } from "@/hooks/useAuthError";
+import { isAuthError } from "@/lib/auth";
 
 export type EditTimeEntryFormProps = {
   entry: TimeEntryWithRelations;
@@ -33,12 +35,13 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [state, action, pending] = useActionState(editTimeEntry, undefined);
+  useAuthError(state);
   useEffect(() => {
-    if (state?.message === "Supprimé" || state?.message === "Sauvegardé") {
+    if (state && !isAuthError(state) && (state.message === "Supprimé" || state.message === "Sauvegardé")) {
       router.refresh();
       setIsOpen(false);
     }
-  }, [state]);
+  }, [state, router]);
   const projectName =
     entry.projectType === "TRELLO" ? entry.project?.name : entry.task?.name;
 
@@ -83,7 +86,7 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
                 name="timeEntryId"
                 value={entry.id}
               />
-              {state?.errors?.timeEntryId?.map((error: string) => (
+              {state && !isAuthError(state) && state.errors?.timeEntryId?.map((error: string) => (
                 <FieldError key={error}>- {error}</FieldError>
               ))}
             </Field>

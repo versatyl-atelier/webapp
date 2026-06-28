@@ -6,7 +6,7 @@
 npm run
 ```
 
-## Project conventions
+## Project conventions and coding guidelines
 
 - [Styles](docs/styles.md)
 - [Code](docs/code.md)

@@ -1,9 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { cache } from "react";
-import z from "zod";
 
 import {
   decrypt,
@@ -20,6 +18,7 @@ import {
   LogoutFormState,
 } from "./auth.schemas";
 import { Role } from "@/generated/prisma/enums";
+import { AuthRequiredError, handleAuthError } from "@/lib/auth";
 
 export async function authenticateRole(
   formState: LoginFormState,
@@ -53,7 +52,7 @@ export const verifySession = cache(async (role: Role) => {
   const session = await decrypt(cookie);
 
   if (!session) {
-    return redirect(`/login?role=${role}`);
+    throw new AuthRequiredError(role);
   }
 
   return { isAuth: true, role };
@@ -77,7 +76,6 @@ export async function logout(
   }
 
   const { role } = data;
-
   await deleteSession(role);
 
   return {
@@ -85,7 +83,18 @@ export async function logout(
   };
 }
 
-export async function restrictToRole<T>(role: Role, cb: () => Promise<T>) {
-  await verifySession(role);
-  return cb();
+export async function restrictToRole<T>(
+  role: Role,
+  cb: () => Promise<T>,
+): Promise<T> {
+  try {
+    await verifySession(role);
+    return await cb();
+  } catch (error) {
+    const authError = handleAuthError(error);
+    if (authError) {
+      return authError as T;
+    }
+    throw error;
+  }
 }
