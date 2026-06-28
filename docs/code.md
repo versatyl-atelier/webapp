@@ -13,6 +13,7 @@
 - semantic HTML
 - prefer async/await over manually using promises
 
+- don't add comments in the code
 - no `any` type
 - no magic values, define and export constants instead
 - form actions using `restrictToRole()` should wrap the call in try-catch, call `handleAuthError()` on auth errors, and client components should use `useAuthError()` hook to show login modal

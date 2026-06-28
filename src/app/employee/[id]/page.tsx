@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getFrozenWeeks } from "@/app/actions/frozenWeeks";
+import { getWeeklyKilometrage } from "@/app/actions/weeklyKilometrage";
 import Clock from "@/components/Clock";
 import { FreezeForm } from "@/components/FreezeForm";
+import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
 import { Button } from "@/components/ui/button";
 import { notFound, redirect } from "next/navigation";
 import { getEmployee } from "@/app/actions/employees";
@@ -143,6 +145,9 @@ export default async function EmployeePage({
     isSameDay(entry.weekStart, weekStart),
   );
 
+  const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
+  assertNoAuthError(weeklyKilometrage);
+
   return (
     <PageContextProvider
       projectsPromise={projectsPromise}
@@ -177,7 +182,7 @@ export default async function EmployeePage({
         </header>
 
         <main className="flex flex-1 flex-col gap-2.5 p-1.5">
-          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[180px_1fr_180px]">
             <aside className="border-punch-dark w-full rounded-lg border-2 bg-white p-2.5">
               <h2 className="border-punch-accent mb-2 border-b-2 pb-1 text-center text-sm font-bold">
                 Résumé
@@ -224,8 +229,8 @@ export default async function EmployeePage({
                 </div>
               </div>
             </aside>
-            <div className="lg:col-span-2">
-              <div className="border-punch-dark flex flex-col rounded-lg border-2 bg-white">
+            <div>
+              <div className="border-punch-dark flex h-full flex-col rounded-lg border-2 bg-white">
                 {/* Week Navigation */}
                 <div className="border-punch-dark bg-punch-light flex items-center justify-between border-b-2 px-2 py-2 sm:px-3">
                   <Button
@@ -332,6 +337,13 @@ export default async function EmployeePage({
                 </div>
               </div>
             </div>
+
+            <ObjectivesAndKilometrageForm
+              employeeId={employeeId}
+              weekStart={weekStart}
+              currentObjective={objective}
+              currentKilometrage={weeklyKilometrage?.kilometrage ?? 0}
+            />
           </div>
         </main>
       </div>
