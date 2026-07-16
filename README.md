@@ -1,12 +1,18 @@
 # Versatyl
 
-## System Requirements
-
-- [`git`](https://git-scm.com/install/)
-- [Node.js](https://nodejs.org) (also installs `npm` and `npx`)
-- [Docker](https://docs.docker.com/desktop/setup/install) (also installs `docker-compose`)
-
 ## Getting Started
+
+### Setup (first time)
+
+- See [System Requirements](docs/sys-reqs.md)
+- `git clone <repo>`
+- `cd <repo>`
+- `cp .env.example .env`
+- `npm install`
+
+### For the rest
+
+- Have a look at your options by running:
 
 ```bash
 npm run
