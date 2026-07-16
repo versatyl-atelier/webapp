@@ -1,5 +1,11 @@
 # Versatyl
 
+## System Requirements
+
+- [`git`](https://git-scm.com/install/)
+- [Node.js](https://nodejs.org) (also installs `npm` and `npx`)
+- [Docker](https://docs.docker.com/desktop/setup/install) (also installs `docker-compose`)
+
 ## Getting Started
 
 ```bash
