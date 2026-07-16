@@ -1,21 +1,23 @@
+import { Schema } from "effect";
 import { LoginForm } from "@/components/Login";
 import { Role } from "@/generated/prisma/enums";
-import { redirect } from "next/navigation";
-import z from "zod";
+
 export type LoginPageProps = {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-const LoginSearchParamsSchema = z.object({
-  role: z.nativeEnum(Role),
-  redirectTo: z.string().optional(),
+const LoginSearchParamsSchema = Schema.Struct({
+  role: Schema.Enums(Role),
+  redirectTo: Schema.optional(Schema.String),
 });
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const result = LoginSearchParamsSchema.safeParse(await searchParams);
-  const { success, data } = result;
-  if (!success) {
-    return redirect(`/login?role=${Role.employee}`);
-  }
-  return <LoginForm role={data?.role} redirectTo={data?.redirectTo} />;
+  const data = Schema.decodeUnknownSync(LoginSearchParamsSchema)(
+    await searchParams,
+  );
+  return (
+    <main className="mt-2 flex flex-col items-center justify-center">
+      <LoginForm role={data.role} redirectTo={data.redirectTo} />
+    </main>
+  );
 }

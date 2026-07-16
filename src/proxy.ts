@@ -2,33 +2,66 @@ import { NextRequest, NextResponse } from "next/server";
 import { decrypt, getCookieName } from "@/lib/session";
 import { cookies } from "next/headers";
 import { Role } from "@/generated/prisma/enums";
-
-const protectedRoutes = ["/punch", "/employee"];
-
-export default async function proxy(req: NextRequest) {
-  const path = req.nextUrl.pathname;
-  const isProtectedRoute = protectedRoutes.includes(path);
-  const employeeCookie = (await cookies()).get(
-    getCookieName(Role.employee),
-  )?.value;
-  const employeeSession = employeeCookie ? await decrypt(employeeCookie) : null;
-  const managerCookie = (await cookies()).get(
-    getCookieName(Role.manager),
-  )?.value;
-  const managerSession = managerCookie ? await decrypt(managerCookie) : null;
-
-  if (isProtectedRoute && !employeeSession && !managerSession) {
-    return NextResponse.redirect(
-      new URL(
-        `/login?role=${Role.employee}&redirectTo=${encodeURIComponent(path)}`,
-        req.nextUrl,
-      ),
-    );
-  }
-
-  return NextResponse.next();
-}
+import { Data, Effect } from "effect";
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],
 };
+
+const protectedRoutes = ["/punch", "/employee"];
+
+export class Unauthorized extends Data.TaggedError("Unauthorized") {}
+
+export default async function proxy(req: NextRequest) {
+  return Effect.runPromise(
+    proxyRequest(req).pipe(
+      Effect.catchTag("Unauthorized", (error) => {
+        return Effect.succeed(false);
+      }),
+      Effect.match({
+        onSuccess: (wasAuthorized) =>
+          wasAuthorized
+            ? NextResponse.next()
+            : NextResponse.redirect(
+                new URL(
+                  `/login?role=${Role.employee}&redirectTo=${encodeURIComponent(
+                    req.nextUrl.pathname,
+                  )}`,
+                  req.nextUrl,
+                ),
+              ),
+        onFailure: (error) => {
+          throw error;
+        },
+      }),
+    ),
+  );
+}
+
+function proxyRequest(req: NextRequest) {
+  return Effect.gen(function* () {
+    const path = req.nextUrl.pathname;
+    const isProtectedRoute = protectedRoutes.includes(path);
+    const allCookies = yield* Effect.tryPromise(cookies);
+
+    if (!isProtectedRoute) {
+      return true;
+    }
+
+    const employeeCookie = allCookies.get(getCookieName(Role.employee))?.value;
+    const employeeSession = employeeCookie
+      ? yield* decrypt(employeeCookie)
+      : null;
+
+    if (employeeSession) {
+      return true;
+    }
+    const managerCookie = allCookies.get(getCookieName(Role.manager))?.value;
+    const managerSession = managerCookie ? yield* decrypt(managerCookie) : null;
+
+    if (managerSession) {
+      return true;
+    }
+    return yield* new Unauthorized();
+  });
+}

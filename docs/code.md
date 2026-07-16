@@ -1,19 +1,18 @@
 # Coding conventions
 
+- DRY
 - WCAG 2.1 AA compliance
-- strict typing
-- react state for state management
-- shadcn/ui for UI components, fallback: other npm packages, last resort: custom code
-- react server actions
-- zod for validating all inputs
-- text directly inlined in the code
-- business logic as pure functions
-- wide-event logging
-- server components by default (`'use client';` only where required)
 - semantic HTML
-- prefer async/await over manually using promises
-
+- wide-event logging
+- business logic as pure functions, Effect for side-effects
+- shadcn/ui for UI components
+- load page data via React Server Components
+- user actions using React Server Actions (`<form action={…}>`) and `useActionState`
+- Effect.Schema for input validation (e.g. form data)
+- auth
+  - src/proxy.ts protects pages
+  - `cachedGetter` and `protectedEffect` (see src/lib/effect.ts) protect actions
+- strict typing. No `any` type
+- prefer async/await over manually using promises, but prefer Effect or Promise for code dealing with side-effects
 - don't add comments in the code
-- no `any` type
 - no magic values, define and export constants instead
-- form actions using `restrictToRole()` should wrap the call in try-catch, call `handleAuthError()` on auth errors, and client components should use `useAuthError()` hook to show login modal

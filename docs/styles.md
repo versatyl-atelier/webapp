@@ -1,8 +1,6 @@
 # Styling conventions
 
-Respect existing styling conventions. Look at siblings to fit the project's existing patterns.
-
-In particular, use Tailwind CSS v4 for everything.
+Use Tailwind CSS v4 for everything.
 
 - No `<style>` tags, no `style=` attributes, no custom CSS (`.classname { /*css*/}`) except for things TailwindCSS v4 can't do.
 - Use Official TailwindCSS v4 utility classes names directly on elements or add project theme utility classes

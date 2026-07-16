@@ -8,8 +8,9 @@ npm run
 
 ## Project conventions and coding guidelines
 
-- [Styles](docs/styles.md)
+- [Auth](docs/auth.md)
 - [Code](docs/code.md)
 - [Copy](docs/copy.md)
-- [Auth](docs/auth.md)
+- [Data](docs/data.md)
 - [Logs](docs/logs.md)
+- [Styles](docs/styles.md)

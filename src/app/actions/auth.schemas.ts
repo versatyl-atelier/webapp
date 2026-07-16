@@ -1,5 +1,6 @@
+import { Schema } from "effect";
+
 import { Role } from "@/generated/prisma/client";
-import { z } from "zod";
 import { FormState } from "./FormState";
 
 export type AuthErrorState = {
@@ -11,26 +12,28 @@ export type SessionPayload = {
   expiresAt: Date;
 };
 
-export const LoginFormSchema = z.object({
-  password: z.string().min(1, "Mot de passe requis"),
-  role: z.nativeEnum(Role),
+export const LoginFormSchema = Schema.Struct({
+  password: Schema.String.pipe(Schema.minLength(1)),
+  role: Schema.Enums(Role),
 });
 
-export type LoginFormState = (FormState & {
-  errors?: {
-    password?: string[];
-    role?: string[];
-  };
-  success?: boolean;
-  error?: string;
-}) | undefined;
+export type LoginFormErrors = {
+  password?: string[];
+  role?: string[];
+};
 
-export type LogoutFormState = (FormState & {
-  errors?: {
-    role?: string[];
-  };
-}) | undefined;
+export type LoginFormState =
+  | (FormState & {
+      errors?: LoginFormErrors;
+      success?: boolean;
+      error?: string;
+    })
+  | undefined;
 
-export const LogoutFormSchema = z.object({
-  role: z.nativeEnum(Role),
+export type LogoutFormState = FormState | undefined;
+
+export const LogoutFormSchema = Schema.Struct({
+  role: Schema.Union(Schema.Enums(Role), Schema.Literal("")),
 });
+
+export type LogoutFormErrors = never;

@@ -2,7 +2,7 @@
 
 import { TriangleAlert } from "lucide-react";
 import Image from "next/image";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { freezeWeek } from "@/app/actions/frozenWeeks";
@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { Role } from "@/generated/prisma/enums";
+import { useResubmitOnAuth } from "@/hooks/auth";
 
 export type FreezeFormProps = {
   employeeId: number;
@@ -29,6 +31,8 @@ export function FreezeForm({
   weekFrozen,
 }: FreezeFormProps) {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const setPendingAuthRole = useResubmitOnAuth(formRef);
   const [state, action, pending] = useActionState(freezeWeek, undefined);
   const [hideSchemaValidationError, setHideSchemaValidationError] =
     useState(false);
@@ -37,7 +41,8 @@ export function FreezeForm({
     setHideSchemaValidationError(false);
     setHideDataValidationError(false);
     if (state?.errors?.auth) {
-      const [err, role] = state.errors.auth.split(":");
+      const [, role] = state.errors.auth.split(":");
+      setPendingAuthRole(role as Role);
       return router.push(`/login?role=${role}`);
     }
     if (state?.message === "freezeSuccess") {
@@ -68,13 +73,13 @@ export function FreezeForm({
   }, [state]);
 
   return (
-    <form action={action}>
+    <form ref={formRef} action={action}>
       <Input type="hidden" name="employeeId" value={employeeId} />
       <Input type="hidden" name="weekStart" value={weekStart.toString()} />
       <Input type="hidden" name="weekTotal" value={weekTotal} />
       <Input type="hidden" name="objective" value={objective} />
       <Input type="hidden" name="frozen" value={weekFrozen ? 1 : 0} />
-      <FieldGroup className="fixed top-16 left-4 w-5/6">
+      <FieldGroup className="absolute top-16 left-4 w-5/6">
         {state?.errors?.schemaValidation && !hideSchemaValidationError && (
           <FieldError>
             <Alert>
@@ -82,7 +87,7 @@ export function FreezeForm({
               <AlertDescription className="bg-black text-white">
                 {state.errors.schemaValidation}
               </AlertDescription>
-              <AlertAction>
+              <AlertAction className="top-1">
                 <Button onClick={() => setHideSchemaValidationError(true)}>
                   x
                 </Button>
@@ -97,7 +102,7 @@ export function FreezeForm({
               <AlertDescription className="font-bold">
                 {state.errors.dataValidation}
               </AlertDescription>
-              <AlertAction>
+              <AlertAction className="top-1">
                 <Button onClick={() => setHideDataValidationError(true)}>
                   x
                 </Button>

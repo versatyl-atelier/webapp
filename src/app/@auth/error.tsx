@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 
 export default function ErrorPage({
@@ -14,11 +15,11 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <div>
+    <>
       <h2>Something went wrong!</h2>
-      <button onClick={() => unstable_retry()}>
+      <Button onClick={() => unstable_retry()}>
         {"Try again (`unstable_retry()`)"}
-      </button>
-    </div>
+      </Button>
+    </>
   );
 }

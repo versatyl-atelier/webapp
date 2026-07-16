@@ -4,8 +4,8 @@ import type { Project, Task } from "@/generated/prisma/client";
 import { createContext, PropsWithChildren, useContext } from "react";
 
 interface PageContextType {
-  projectsPromise: Promise<Project[]>;
-  tasksPromise: Promise<Task[]>;
+  projectsPromise: Promise<Project[] | null>;
+  tasksPromise: Promise<Task[] | null>;
 }
 
 const PageContext = createContext<PageContextType | null>(null);

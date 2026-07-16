@@ -1,3 +1,3 @@
 # Logs
 
-`console.log` wide-events to keep a auditable trace of everything happening in the system.
+Use Effect to log wide-events that keep an auditable trace of everything happening in the system.

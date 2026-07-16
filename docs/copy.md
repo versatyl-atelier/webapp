@@ -1,3 +1,3 @@
 # Copy-writing conventions
 
-- French (Québec): fr-qc
+- Locale: fr-qc

@@ -2,9 +2,11 @@
 
 import "server-only";
 
-import { cache } from "react";
+import { Effect } from "effect";
 
 import prisma from "@/lib/prisma";
+import { cachedGetter, runEffectAsFormAction } from "@/lib/effect";
+import { toUTCDate } from "@/lib/time";
 import {
   FrozenWeekFindManyArgs,
   FrozenWeekUpsertArgs,
@@ -12,122 +14,102 @@ import {
 
 import {
   type FreezeWeekFormState,
+  type FreezeWeekFormErrors,
   FreezeWeekFormSchema,
 } from "./frozenWeeks.schemas";
-import { restrictToRole } from "./auth";
-import { FrozenWeek } from "@/generated/prisma/client";
-import { Role } from "@/generated/prisma/enums";
+import { FrozenWeek, Role } from "@/generated/prisma/client";
+import { verifySession } from "../effects/auth";
 
-export const putFreezeWeek = async (payload: Partial<FrozenWeek>) => {
-  const { employeeId, weekStart, ...data } = payload;
-  if (!employeeId || !weekStart) {
-    throw new Error(`Missing employeeId or weekStart`);
-  }
-  const upsertFrozenWeek = async () => {
-    const args: FrozenWeekUpsertArgs = {
-      where: {
-        employeeId_weekStart: {
+export const getFrozenWeeks = cachedGetter(
+  (employeeId: number) =>
+    Effect.gen(function* () {
+      const args: FrozenWeekFindManyArgs = {
+        where: {
           employeeId,
-          weekStart,
+          isDeleted: false,
         },
-      },
-      update: data,
-      create: {
-        employeeId,
-        weekStart,
-        weekTotal: data.weekTotal || 0,
-        objective: data.objective || 40,
-      },
-    };
-    return await prisma.frozenWeek.upsert(args);
-  };
-  return data.isDeleted
-    ? restrictToRole(Role.manager, upsertFrozenWeek)
-    : restrictToRole(Role.employee, upsertFrozenWeek);
-};
-
-export const getFrozenWeeks = cache(async (employeeId: number) =>
-  restrictToRole(Role.employee, async () => {
-    const args: FrozenWeekFindManyArgs = {
-      where: {
-        employeeId,
-        isDeleted: false,
-      },
-    };
-    return await prisma.frozenWeek.findMany(args);
-  }),
+      };
+      return prisma.frozenWeek.findMany(args);
+    }),
+  Role.employee,
 );
 
 export const freezeWeek = async (
   formState: FreezeWeekFormState,
   formData: FormData,
-): Promise<FreezeWeekFormState> =>
-  restrictToRole(Role.employee, async () => {
-    const validatedFields = FreezeWeekFormSchema.safeParse({
-      employeeId: formData.get("employeeId"),
-      weekStart: formData.get("weekStart"),
-      weekTotal: formData.get("weekTotal"),
-      objective: formData.get("objective"),
-      frozen: formData.get("frozen"),
-    });
-    const { success, data, error } = validatedFields;
-    if (!success) {
-      return {
-        errors: {
-          ...validatedFields.error.flatten().fieldErrors,
-          schemaValidation: error.toString(),
-        },
-      };
-    }
+): Promise<FreezeWeekFormState> => {
+  return runEffectAsFormAction<
+    FreezeWeekFormState,
+    typeof FreezeWeekFormSchema,
+    FreezeWeekFormErrors
+  >(
+    formState,
+    formData,
+    FreezeWeekFormSchema,
+    (
+      _formState,
+      {
+        employeeId: strEmployeeId,
+        weekStart: strWeekStart,
+        weekTotal: strWeekTotal,
+        objective: strObjective,
+        frozen,
+      },
+    ) =>
+      Effect.gen(function* () {
+        const employeeId = parseInt(strEmployeeId, 10);
+        const weekStart = new Date(String(strWeekStart));
+        const weekTotal = parseFloat(String(strWeekTotal));
+        const objective = parseFloat(String(strObjective));
 
-    const {
-      employeeId,
-      weekStart: strWeekStart,
-      weekTotal: strWeekTotal,
-      objective: strObjective,
-      frozen,
-      ...rest
-    } = data;
+        const isFrozen = frozen === "1";
 
-    const weekStart = new Date(strWeekStart);
-    const weekTotal = parseFloat(strWeekTotal);
-    const objective = parseFloat(strObjective);
+        if (!isFrozen && Math.abs(weekTotal - objective) > 0.5) {
+          return {
+            errors: {
+              dataValidation: `Impossible de geler: ${weekTotal.toFixed(2)}h enregistrées vs ${objective}h objectif (écart max: ±0.5h)`,
+            },
+          };
+        }
+        const isDeleted = isFrozen;
 
-    const isFrozen = frozen === "1";
-    if (isFrozen) {
-      // unfreezing
-      return restrictToRole(Role.manager, async () => {
-        await putFreezeWeek({
-          employeeId: parseInt(employeeId, 10),
-          weekStart,
-          weekTotal,
-          objective,
-          ...rest,
-          isDeleted: isFrozen,
-        });
+        if (!employeeId || !weekStart) {
+          throw new Error(`Missing employeeId or weekStart`);
+        }
+        const upsertFrozenWeek = () => {
+          const args: FrozenWeekUpsertArgs = {
+            where: {
+              employeeId_weekStart: {
+                employeeId,
+                weekStart: toUTCDate(weekStart),
+              },
+            },
+            update: {
+              weekTotal,
+              objective,
+              isDeleted,
+            },
+            create: {
+              employeeId,
+              weekStart: toUTCDate(weekStart),
+              weekTotal: weekTotal || 0,
+              objective: objective || 40,
+            },
+          };
+          return prisma.frozenWeek.upsert(args);
+        };
+        if (isDeleted) {
+          yield* verifySession(Role.manager);
+        } else {
+          yield* verifySession(Role.employee);
+        }
+        const result = yield* Effect.promise(() => upsertFrozenWeek());
+        if (!result) {
+          return { message: "failure" };
+        }
         return {
           message: isFrozen ? "unfreezeSuccess" : "freezeSuccess",
         };
-      });
-    } else {
-      // freezing
-      if (Math.abs(weekTotal - objective) > 0.5) {
-        return {
-          errors: {
-            dataValidation: `Impossible de geler: ${weekTotal.toFixed(2)}h enregistrées vs ${objective}h objectif (écart max: ±0.5h)`,
-          },
-        };
-      }
-      await putFreezeWeek({
-        employeeId: parseInt(employeeId, 10),
-        weekStart,
-        weekTotal,
-        objective,
-        ...rest,
-        isDeleted: isFrozen,
-      });
-      return {
-        message: isFrozen ? "unfreezeSuccess" : "freezeSuccess",
-      };
-    }
-  });
+      }),
+  );
+};

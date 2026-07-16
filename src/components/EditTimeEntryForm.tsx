@@ -20,12 +20,11 @@ import {
 } from "@/components/ui/field";
 import ProjectSelect from "@/components/ProjectSelect";
 
-import { formatTimeDisplay } from "@/lib/parseTimeToSeconds";
+import { formatTimeDisplay } from "@/lib/time";
 import { Input } from "./ui/input";
 import { useRouter } from "next/navigation";
 import type { TimeEntryWithRelations } from "@/app/actions/timeEntries";
-import { useAuthError } from "@/hooks/useAuthError";
-import { isAuthError } from "@/lib/auth";
+import { ProjectType } from "@/generated/prisma/enums";
 
 export type EditTimeEntryFormProps = {
   entry: TimeEntryWithRelations;
@@ -35,15 +34,25 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [state, action, pending] = useActionState(editTimeEntry, undefined);
-  useAuthError(state);
   useEffect(() => {
-    if (state && !isAuthError(state) && (state.message === "Supprimé" || state.message === "Sauvegardé")) {
+    if (
+      state &&
+      (state.message === "Supprimé" || state.message === "Sauvegardé")
+    ) {
       router.refresh();
       setIsOpen(false);
     }
   }, [state, router]);
+  const firstProject = entry.projects[0];
   const projectName =
-    entry.projectType === "TRELLO" ? entry.project?.name : entry.task?.name;
+    firstProject?.projectType === ProjectType.trello
+      ? firstProject?.project?.name
+      : firstProject?.task?.name;
+
+  const calculateHours = () => {
+    if (!entry.start || !entry.end) return 0;
+    return (entry.end.getTime() - entry.start.getTime()) / 3600000;
+  };
 
   function handleOpenChange(opened: boolean) {
     setIsOpen(opened);
@@ -62,13 +71,13 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
           style={{
             backgroundColor: getProjectColor(projectName),
           }}
-          title={`${projectName} - ${formatTimeDisplay(entry.hours || 0)}`}
+          title={`${projectName} - ${formatTimeDisplay(calculateHours())}`}
         >
           <div className="truncate text-xs font-bold">{projectName}</div>
           {entry.subtaskId && entry.subtaskId !== "1default" && (
             <div className="truncate text-xs opacity-90">{entry.subtaskId}</div>
           )}
-          <div className="text-xs">{formatTimeDisplay(entry.hours || 0)}</div>
+          <div className="text-xs">{formatTimeDisplay(calculateHours())}</div>
         </div>
       </DialogTrigger>
       <DialogContent className="border-2 border-black">
@@ -86,18 +95,27 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
                 name="timeEntryId"
                 value={entry.id}
               />
-              {state && !isAuthError(state) && state.errors?.timeEntryId?.map((error: string) => (
-                <FieldError key={error}>- {error}</FieldError>
-              ))}
+              <input
+                type="hidden"
+                name="startTime"
+                value={entry.start.toString()}
+              />
+              {state &&
+                state.errors?.timeEntryId?.map((error: string) => (
+                  <FieldError key={error}>- {error}</FieldError>
+                ))}
             </Field>
 
             <ProjectSelect
-              defaultSelectedProjectOrTask={{
+              defaultSelected={{
                 id:
-                  entry.projectType === "TRELLO"
-                    ? entry.projectId || ""
-                    : entry.taskId || -1,
-                type: entry.projectType === "TRELLO" ? "trello" : "task",
+                  firstProject?.projectType === ProjectType.trello
+                    ? firstProject?.projectId || ""
+                    : firstProject?.taskId || -1,
+                type:
+                  firstProject?.projectType === ProjectType.trello
+                    ? ProjectType.trello
+                    : ProjectType.task,
               }}
             />
             {state?.errors?.projectId?.map((error: string) => (
@@ -114,7 +132,7 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
                 id="hours"
                 name="hours"
                 type="text"
-                defaultValue={formatTimeDisplay(entry.hours || 0)}
+                defaultValue={formatTimeDisplay(calculateHours())}
                 className="w-full rounded border-2 border-black px-1.5 py-1 text-xs text-black"
                 placeholder="Ex: 8.75 ou 8h45"
               />

@@ -6,8 +6,10 @@ import { SignJWT, jwtVerify } from "jose";
 import { Role } from "@/generated/prisma/client";
 import type { SessionPayload } from "@/app/actions/auth.schemas";
 import { SESSION_COOKIE_NAMES } from "@/constants/auth";
+import { Data, Effect } from "effect";
+import { SessionNotFound } from "@/app/effects/auth";
 
-const sessionDurations: Record<Role, number> = {
+const SESSION_DURATIONS: Record<Role, number> = {
   [Role.employee]: 365 * 24 * 60 * 60 * 1000,
   [Role.manager]: 1 * 60 * 1000,
 };
@@ -20,70 +22,89 @@ if (!process.env.SESSION_SECRET) {
 const secretKey = process.env.SESSION_SECRET || "";
 const encodedKey = new TextEncoder().encode(secretKey);
 
-export async function encrypt(payload: SessionPayload) {
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .sign(encodedKey);
-}
+class SessionEncryptError extends Data.TaggedError("SessionEncryptError")<{
+  readonly payload: SessionPayload;
+  readonly cause: unknown;
+}> {}
 
-export async function decrypt(session: string | undefined = "") {
-  try {
-    const { payload } = await jwtVerify(session, encodedKey, {
-      algorithms: ["HS256"],
+export const encrypt = (payload: SessionPayload) =>
+  Effect.tryPromise({
+    try: () =>
+      new SignJWT(payload)
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .sign(encodedKey),
+    catch: (error) =>
+      new SessionEncryptError({
+        payload,
+        cause: error,
+      }),
+  });
+
+class SessionDecryptError extends Data.TaggedError("SessionDecryptError")<{
+  readonly session: string | undefined;
+  readonly cause: unknown;
+}> {}
+export const decrypt = (session: string | undefined = "") =>
+  Effect.tryPromise({
+    try: async () => {
+      if (!session) {
+        return undefined;
+      }
+      const { payload } = await jwtVerify(session, encodedKey, {
+        algorithms: ["HS256"],
+      });
+      return payload;
+    },
+    catch: (error) =>
+      new SessionDecryptError({
+        session,
+        cause: error,
+      }),
+  });
+
+export const createSession = (role: Role) =>
+  Effect.gen(function* () {
+    const expiresAt = new Date(Date.now() + SESSION_DURATIONS[role]);
+    const session = yield* encrypt({ expiresAt });
+    const cookieStore = yield* Effect.tryPromise(() => cookies());
+    const cookieName = getCookieName(role);
+
+    cookieStore.set(cookieName, session, {
+      httpOnly: true,
+      secure: true,
+      expires: expiresAt,
+      sameSite: "lax",
+      path: "/",
     });
-    return payload;
-  } catch (error) {
-    return undefined;
-  }
-}
-
-export async function createSession(role: Role) {
-  const expiresAt = new Date(Date.now() + sessionDurations[role]);
-  const session = await encrypt({ expiresAt });
-  const cookieStore = await cookies();
-  const cookieName = getCookieName(role);
-
-  cookieStore.set(cookieName, session, {
-    httpOnly: true,
-    secure: true,
-    expires: expiresAt,
-    sameSite: "lax",
-    path: "/",
   });
-}
 
-export async function updateSession(role: Role) {
-  const cookieName = getCookieName(role);
-  const session = (await cookies()).get(cookieName)?.value;
-  const payload = await decrypt(session);
+export const updateSession = (role: Role) =>
+  Effect.gen(function* () {
+    const cookieStore = yield* Effect.tryPromise(() => cookies());
+    const cookieName = getCookieName(role);
+    const session = cookieStore.get(cookieName)?.value;
+    const payload = yield* decrypt(session);
 
-  if (!session || !payload) {
-    return null;
-  }
+    yield* Effect.filterOrFail(
+      Effect.succeed({ session, payload }),
+      ({ session, payload }) => !!session && !!payload,
+      () => new SessionNotFound({ role }),
+    );
 
-  const expires = new Date(Date.now() + sessionDurations[role]);
-
-  const cookieStore = await cookies();
-  cookieStore.set(cookieName, session, {
-    httpOnly: true,
-    secure: true,
-    expires,
-    sameSite: "lax",
-    path: "/",
+    cookieStore.set(cookieName, session || "", {
+      httpOnly: true,
+      secure: true,
+      expires: new Date(Date.now() + SESSION_DURATIONS[role]),
+      sameSite: "lax",
+      path: "/",
+    });
   });
-}
 
-export async function deleteSession(role: Role) {
-  const cookieStore = await cookies();
-  cookieStore.delete(getCookieName(role));
-}
+export const deleteSession = (role: Role) =>
+  Effect.gen(function* () {
+    const cookieStore = yield* Effect.tryPromise(() => cookies());
+    cookieStore.delete(getCookieName(role));
+  });
 
-export function getCookieName(role: Role) {
-  const cookieName = SESSION_COOKIE_NAMES[role];
-
-  if (!cookieName) {
-    throw new Error(`No cookie name found for role ${role}`);
-  }
-  return cookieName;
-}
+export const getCookieName = (role: Role) => SESSION_COOKIE_NAMES[role];

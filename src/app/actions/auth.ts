@@ -1,100 +1,83 @@
 "use server";
+import "server-only";
 
-import { cookies } from "next/headers";
-import { cache } from "react";
+import { Effect } from "effect";
 
-import {
-  decrypt,
-  createSession,
-  deleteSession,
-  getCookieName,
-} from "@/lib/session";
+import { createSession, deleteSession } from "@/lib/session";
 import { PASSWORDS } from "@/constants/auth";
 
 import {
   type LoginFormState,
   LoginFormSchema,
+  LoginFormErrors,
   LogoutFormSchema,
   LogoutFormState,
+  LogoutFormErrors,
 } from "./auth.schemas";
 import { Role } from "@/generated/prisma/enums";
-import { AuthRequiredError, handleAuthError } from "@/lib/auth";
+import { runEffectAsFormAction } from "@/lib/effect";
 
-export async function authenticateRole(
+export async function login(
   formState: LoginFormState,
   formData: FormData,
-) {
-  const validatedFields = LoginFormSchema.safeParse({
-    password: formData.get("password"),
-    role: formData.get("role"),
-  });
-  const { success, data } = validatedFields;
-  if (!success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
+): Promise<LoginFormState> {
+  return runEffectAsFormAction<
+    LoginFormState,
+    typeof LoginFormSchema,
+    LoginFormErrors
+  >(
+    formState,
+    formData,
+    LoginFormSchema,
+    (
+      formState: LoginFormState,
+      { password, role }: Record<string, FormDataEntryValue | null>,
+    ) =>
+      Effect.gen(function* () {
+        const rolePassword = process.env[PASSWORDS[role as Role]];
 
-  const { password, role } = data as { password: string; role: Role };
+        if (password !== rolePassword) {
+          yield* Effect.succeed({
+            success: false,
+            errors: {
+              password: "Mauvais mot de passe",
+            },
+          });
+        }
 
-  const rolePassword = process.env[PASSWORDS[role]];
-
-  if (password !== rolePassword) {
-    return { success: false, error: "Mauvais mot de passe" };
-  }
-
-  await createSession(role);
-  return { success: true, message: `${role} login success` };
+        yield* createSession(role as Role);
+        return { success: true, message: `${role as Role} login success` };
+      }),
+  );
 }
-
-export const verifySession = cache(async (role: Role) => {
-  const cookie = (await cookies()).get(getCookieName(role))?.value;
-  const session = await decrypt(cookie);
-
-  if (!session) {
-    throw new AuthRequiredError(role);
-  }
-
-  return { isAuth: true, role };
-});
 
 export async function logout(
   formState: LogoutFormState,
   formData: FormData,
 ): Promise<LogoutFormState> {
-  const validatedFields = LogoutFormSchema.safeParse({
-    role: formData.get("role"),
-  });
-  const { success, data, error } = validatedFields;
-  if (!success) {
-    return {
-      errors: {
-        ...validatedFields.error.flatten().fieldErrors,
-        schemaValidation: error.toString(),
-      },
-    };
-  }
-
-  const { role } = data;
-  await deleteSession(role);
-
-  return {
-    message: "logoutSuccess",
-  };
-}
-
-export async function restrictToRole<T>(
-  role: Role,
-  cb: () => Promise<T>,
-): Promise<T> {
-  try {
-    await verifySession(role);
-    return await cb();
-  } catch (error) {
-    const authError = handleAuthError(error);
-    if (authError) {
-      return authError as T;
-    }
-    throw error;
-  }
+  return runEffectAsFormAction<
+    LogoutFormState,
+    typeof LogoutFormSchema,
+    LogoutFormErrors
+  >(
+    formState,
+    formData,
+    LogoutFormSchema,
+    (
+      formState: LogoutFormState,
+      { role }: Record<string, FormDataEntryValue | null>,
+    ) =>
+      Effect.gen(function* () {
+        if (role) {
+          yield* deleteSession(role as Role);
+        } else {
+          yield* deleteSession(Role.employee);
+          yield* deleteSession(Role.manager);
+        }
+        return {
+          success: true,
+          message: "logoutSuccess",
+        };
+      }),
+  );
 }

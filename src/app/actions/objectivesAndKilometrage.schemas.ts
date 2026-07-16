@@ -1,20 +1,22 @@
-import { z } from "zod";
+import { Schema } from "effect";
 import { FormState } from "./FormState";
 
-export const ObjectivesAndKilometrageFormSchema = z.object({
-  employeeId: z.string(),
-  weekStart: z.string(),
-  objective: z.string(),
-  kilometrage: z.string(),
+export const ObjectivesAndKilometrageFormSchema = Schema.Struct({
+  employeeId: Schema.String,
+  weekStart: Schema.String,
+  objective: Schema.String,
+  kilometrage: Schema.String,
 });
+
+export type ObjectivesAndKilometrageFormErrors = {
+  employeeId?: string[];
+  weekStart?: string[];
+  objective?: string[];
+  kilometrage?: string[];
+};
 
 export type ObjectivesAndKilometrageFormState =
   | (FormState & {
-      errors?: {
-        employeeId?: string[];
-        weekStart?: string[];
-        objective?: string[];
-        kilometrage?: string[];
-      };
+      errors?: ObjectivesAndKilometrageFormErrors;
     })
   | undefined;

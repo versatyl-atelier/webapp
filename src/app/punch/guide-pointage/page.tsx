@@ -11,7 +11,7 @@ export default function Page() {
 
       {/* Section 1: Pointage */}
       <section className="print:page-break-inside-avoid mb-4 border-r-3 border-b-3 border-l-3 border-black p-0">
-        <div className="mb-3 flex items-center gap-2.5 bg-(--punch-accent) px-4 py-2 text-base font-bold text-white">
+        <div className="bg-punch-accent mb-3 flex items-center gap-2.5 px-4 py-2 text-base font-bold text-white">
           <span>📍</span>
           <span>POINTAGE (Punch In / Punch Out)</span>
         </div>
@@ -23,11 +23,11 @@ export default function Page() {
           </li>
           <li className="relative mb-3 pl-11.25 text-sm before:absolute before:-top-0.5 before:left-0 before:flex before:h-8 before:w-8 before:items-center before:justify-center before:rounded-full before:bg-black before:text-base before:font-bold before:text-white before:content-['2']">
             <strong>Choisir votre projet</strong> dans "Pointage Multiple"
-            <div className="my-2.5 border-l-4 border-(--punch-accent) bg-(--punch-light) px-2.5 py-2.5 text-xs">
+            <div className="border-punch-accent bg-punch-light my-2.5 border-l-4 px-2.5 py-2.5 text-xs">
               → Commencez à taper le nom du projet
               <br />→ Sélectionnez dans la liste qui apparaît
               <br />→{" "}
-              <strong className="text-(--punch-accent)">
+              <strong className="text-punch-accent">
                 Vous pouvez sélectionner jusqu'à 3 projets simultanés
               </strong>
             </div>
@@ -42,63 +42,63 @@ export default function Page() {
           <li className="relative mb-3 pl-11.25 text-sm before:absolute before:-top-0.5 before:left-0 before:flex before:h-8 before:w-8 before:items-center before:justify-center before:rounded-full before:bg-black before:text-base before:font-bold before:text-white before:content-['5']">
             <strong>Pour dépuncher:</strong> Sélectionnez votre nom à nouveau,
             puis cliquez sur "Punch Out"
-            <div className="my-2.5 border-l-4 border-(--punch-accent) bg-(--punch-light) px-2.5 py-2.5 text-xs">
-              ⏰ <strong className="text-(--punch-accent)">Important:</strong>{" "}
-              Les punchs s'arrêtent automatiquement à 16h00
+            <div className="border-punch-accent bg-punch-light my-2.5 border-l-4 px-2.5 py-2.5 text-xs">
+              ⏰ <strong className="text-punch-accent">Important:</strong> Les
+              punchs s'arrêtent automatiquement à 16h00
             </div>
           </li>
         </ol>
 
-        <div className="mx-5 mt-2.5 mb-6 rounded-sm bg-(--punch-accent-hover) px-2.5 py-2.5 text-center text-xs font-bold text-white">
+        <div className="bg-punch-accent-hover mx-5 mt-2.5 mb-6 rounded-sm px-2.5 py-2.5 text-center text-xs font-bold text-white">
           ⚠️ N'OUBLIEZ PAS DE RÉVISER VOS HEURES AVANT DE GELER VOTRE SEMAINE!
         </div>
       </section>
 
       {/* Section 2: Principes */}
       <section className="print:page-break-inside-avoid mb-4 border-r-4 border-b-4 border-l-4 border-black">
-        <div className="mb-3 flex items-center gap-2.5 bg-(--punch-accent) px-4 py-2 text-base font-bold text-white">
+        <div className="bg-punch-accent mb-3 flex items-center gap-2.5 px-4 py-2 text-base font-bold text-white">
           <span>📋</span>
           <span>PRINCIPES À RESPECTER</span>
         </div>
 
         <ul className="list-none space-y-2 px-5 py-4 text-xs">
           <li className="relative pl-6">
-            <span className="absolute left-0 font-bold text-(--punch-accent)">
+            <span className="text-punch-accent absolute left-0 font-bold">
               ✓
             </span>
             <strong>Arrêter votre punch le midi</strong> - Utilisez "Punch Out"
             avant votre pause dîner
           </li>
           <li className="relative pl-6">
-            <span className="absolute left-0 font-bold text-(--punch-accent)">
+            <span className="text-punch-accent absolute left-0 font-bold">
               ✓
             </span>
             <strong>Ajouter 0.5h de dîner</strong> - Dans "Ajout Manuel",
             cliquez sur le bouton 🍽️ "Ajouter Dîner (0.5h)"
           </li>
           <li className="relative pl-6">
-            <span className="absolute left-0 font-bold text-(--punch-accent)">
+            <span className="text-punch-accent absolute left-0 font-bold">
               ✓
             </span>
             <strong>Ajuster vos heures au besoin</strong> - Cliquez sur un bloc
             de temps pour le modifier ou le supprimer
           </li>
           <li className="relative pl-6">
-            <span className="absolute left-0 font-bold text-(--punch-accent)">
+            <span className="text-punch-accent absolute left-0 font-bold">
               ✓
             </span>
             <strong>Utiliser "Combler Journée"</strong> si des heures manquent
             pour atteindre votre objectif
           </li>
           <li className="relative pl-6">
-            <span className="absolute left-0 font-bold text-(--punch-accent)">
+            <span className="text-punch-accent absolute left-0 font-bold">
               ✓
             </span>
             <strong>Choisir votre objectif hebdomadaire</strong> dans la section
             "Objectifs" (ex: 40h/semaine)
           </li>
           <li className="relative pl-6">
-            <span className="absolute left-0 font-bold text-(--punch-accent)">
+            <span className="text-punch-accent absolute left-0 font-bold">
               ✓
             </span>
             <strong>Geler votre semaine quand elle est équilibrée</strong> - Les
@@ -107,12 +107,12 @@ export default function Page() {
         </ul>
 
         <div className="mx-5 my-2.5 grid grid-cols-2 gap-4">
-          <div className="rounded bg-(--punch-light) px-2.5 py-2.5 text-xs">
+          <div className="bg-punch-light rounded px-2.5 py-2.5 text-xs">
             <strong className="block text-black">📊 Les totaux en bas</strong>
             Chaque colonne affiche le total d'heures de la journée en noir au
             bas
           </div>
-          <div className="rounded bg-(--punch-light) px-2.5 py-2.5 text-xs">
+          <div className="bg-punch-light rounded px-2.5 py-2.5 text-xs">
             <strong className="block text-black">🔒 Geler la semaine</strong>
             Cliquez sur "Geler" quand vos heures sont complètes et correctes
           </div>
@@ -121,7 +121,7 @@ export default function Page() {
 
       {/* Section 3: Dépannage */}
       <section className="print:page-break-inside-avoid border-r-4 border-b-4 border-l-4 border-black">
-        <div className="mb-3 flex items-center gap-2.5 bg-(--punch-accent) px-4 py-2 text-base font-bold text-white">
+        <div className="bg-punch-accent mb-3 flex items-center gap-2.5 px-4 py-2 text-base font-bold text-white">
           <span>🔧</span>
           <span>DÉPANNAGE</span>
         </div>
@@ -150,8 +150,8 @@ export default function Page() {
           </li>
         </ul>
 
-        <div className="mx-5 my-4 rounded border-l-4 border-(--punch-accent) bg-(--punch-light) px-2.5 py-2.5 text-center text-xs">
-          <strong className="text-(--punch-accent)">❓ BESOIN D'AIDE?</strong>
+        <div className="border-punch-accent bg-punch-light mx-5 my-4 rounded border-l-4 px-2.5 py-2.5 text-center text-xs">
+          <strong className="text-punch-accent">❓ BESOIN D'AIDE?</strong>
           <br />
           Contactez votre chef d'équipe ou le gestionnaire
         </div>

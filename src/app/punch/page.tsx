@@ -5,9 +5,10 @@ import { EmployeeSelect } from "@/components/EmployeeSelect";
 
 import { getEmployees } from "@/app/actions/employees";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const employees = await getEmployees();
-
   return (
     <div className="bg-punch-light flex min-h-screen items-center justify-center p-5">
       <div className="w-full max-w-md text-center">

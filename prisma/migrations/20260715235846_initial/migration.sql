@@ -1,5 +1,8 @@
 -- CreateEnum
-CREATE TYPE "ProjectType" AS ENUM ('TRELLO', 'TASK');
+CREATE TYPE "ProjectType" AS ENUM ('trello', 'task');
+
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('employee', 'manager');
 
 -- CreateTable
 CREATE TABLE "statuts" (
@@ -23,7 +26,7 @@ CREATE TABLE "statutSourcePermissions" (
 
 -- CreateTable
 CREATE TABLE "employees" (
-    "id" INTEGER NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "weeklyTarget" DOUBLE PRECISION NOT NULL DEFAULT 40,
     "statutId" TEXT DEFAULT 'atelier',
@@ -38,28 +41,22 @@ CREATE TABLE "employees" (
 );
 
 -- CreateTable
-CREATE TABLE "activePunches" (
-    "employeeId" INTEGER NOT NULL,
-    "startTime" TIMESTAMP(3) NOT NULL,
-    "projects" TEXT NOT NULL,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
-    "deletedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+CREATE TABLE "timeEntryProjects" (
+    "id" SERIAL NOT NULL,
+    "timeEntryId" INTEGER NOT NULL,
+    "projectId" TEXT,
+    "taskId" INTEGER,
+    "projectType" "ProjectType" NOT NULL,
 
-    CONSTRAINT "activePunches_pkey" PRIMARY KEY ("employeeId")
+    CONSTRAINT "timeEntryProjects_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "timeEntries" (
     "id" SERIAL NOT NULL,
     "employeeId" INTEGER,
-    "projectId" TEXT,
-    "taskId" INTEGER,
-    "projectType" "ProjectType" NOT NULL,
-    "date" DATE NOT NULL,
-    "hours" DOUBLE PRECISION NOT NULL,
-    "seconds" INTEGER,
+    "start" TIMESTAMP(3) NOT NULL,
+    "end" TIMESTAMP(3),
     "entryMethod" TEXT NOT NULL DEFAULT 'manual',
     "subtaskId" TEXT NOT NULL DEFAULT '1default',
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -391,16 +388,19 @@ CREATE TABLE "settings" (
 CREATE INDEX "statutSourcePermissions_sourceId_idx" ON "statutSourcePermissions"("sourceId");
 
 -- CreateIndex
+CREATE INDEX "timeEntryProjects_projectId_idx" ON "timeEntryProjects"("projectId");
+
+-- CreateIndex
+CREATE INDEX "timeEntryProjects_taskId_idx" ON "timeEntryProjects"("taskId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "timeEntryProjects_timeEntryId_projectId_taskId_key" ON "timeEntryProjects"("timeEntryId", "projectId", "taskId");
+
+-- CreateIndex
 CREATE INDEX "timeEntries_employeeId_idx" ON "timeEntries"("employeeId");
 
 -- CreateIndex
-CREATE INDEX "timeEntries_projectId_idx" ON "timeEntries"("projectId");
-
--- CreateIndex
-CREATE INDEX "timeEntries_taskId_idx" ON "timeEntries"("taskId");
-
--- CreateIndex
-CREATE INDEX "timeEntries_date_idx" ON "timeEntries"("date");
+CREATE INDEX "timeEntries_start_idx" ON "timeEntries"("start");
 
 -- CreateIndex
 CREATE INDEX "projects_sourceId_idx" ON "projects"("sourceId");
@@ -415,19 +415,19 @@ ALTER TABLE "statutSourcePermissions" ADD CONSTRAINT "statutSourcePermissions_so
 ALTER TABLE "employees" ADD CONSTRAINT "employees_statutId_fkey" FOREIGN KEY ("statutId") REFERENCES "statuts"("id") ON DELETE SET DEFAULT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "activePunches" ADD CONSTRAINT "activePunches_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "employees"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "timeEntryProjects" ADD CONSTRAINT "timeEntryProjects_timeEntryId_fkey" FOREIGN KEY ("timeEntryId") REFERENCES "timeEntries"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "timeEntryProjects" ADD CONSTRAINT "timeEntryProjects_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "timeEntryProjects" ADD CONSTRAINT "timeEntryProjects_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "tasks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "timeEntries" ADD CONSTRAINT "timeEntries_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "employees"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "timeEntries" ADD CONSTRAINT "timeEntries_subtaskId_fkey" FOREIGN KEY ("subtaskId") REFERENCES "subtasks"("id") ON DELETE SET DEFAULT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "timeEntries" ADD CONSTRAINT "timeEntries_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "timeEntries" ADD CONSTRAINT "timeEntries_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "tasks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "frozenWeeks" ADD CONSTRAINT "frozenWeeks_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "employees"("id") ON DELETE CASCADE ON UPDATE CASCADE;

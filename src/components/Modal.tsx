@@ -7,19 +7,37 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { PropsWithChildren } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { PropsWithChildren, useState } from "react";
 
-export function Modal({ children }: PropsWithChildren) {
+type ModalProps = { path: string };
+
+export function Modal({ children, path }: PropsWithChildren<ModalProps>) {
   const router = useRouter();
+  const pathname = usePathname();
+  const [open, setOpen] = useState(true);
 
-  const handleOpenChange = () => {
+  const handleClose = () => {
+    setOpen(false);
     router.back();
   };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      handleClose();
+    }
+  };
+
+  if (pathname !== path) {
+    return null;
+  }
+
   return (
-    <Dialog defaultOpen={true} open={true} onOpenChange={handleOpenChange}>
-      <DialogOverlay>
-        <DialogContent className="">{children}</DialogContent>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogOverlay className="border-2 border-red-500">
+        <DialogContent className="max-h-96 border-2 border-amber-600">
+          {children}
+        </DialogContent>
       </DialogOverlay>
       <DialogClose>
         <Link href="">x</Link>

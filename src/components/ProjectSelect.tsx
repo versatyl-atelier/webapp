@@ -3,7 +3,6 @@
 import { Suspense, use, useState } from "react";
 import {
   Combobox,
-  ComboboxInput,
   ComboboxContent,
   ComboboxList,
   ComboboxItem,
@@ -12,77 +11,128 @@ import {
   ComboboxLabel,
   ComboboxCollection,
   ComboboxSeparator,
+  ComboboxChips,
+  ComboboxChip,
+  ComboboxChipsInput,
+  ComboboxInput,
 } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { usePageContext } from "@/app/employee/[id]/context-provider";
 
+import { ProjectType } from "@/generated/prisma/enums";
+import { parseItemKey, stringifyItemKey } from "../lib/itemKey";
+
+export type ProjectOrTask = {
+  id: string | number;
+  type: ProjectType;
+};
 type ProjectSelectProps = {
-  defaultSelectedProjectOrTask?: {
-    id: string | number;
-    type: "trello" | "task";
-  };
+  multiple?: boolean;
+  maxSelections?: number;
+  defaultSelected?: ProjectOrTask | ProjectOrTask[];
+  className?: string;
 };
 
 export default function ProjectSelect({
-  defaultSelectedProjectOrTask = {
-    id: "",
-    type: "trello",
-  },
+  multiple = false,
+  maxSelections,
+  defaultSelected,
+  className = "",
 }: ProjectSelectProps) {
   const { projectsPromise, tasksPromise } = usePageContext();
-  const projects = use(projectsPromise);
-  const tasks = use(tasksPromise);
-  const [selectedProjectOrTask, setSelectedProjectOrTask] = useState(
-    defaultSelectedProjectOrTask,
-  );
-  const { id, type } = selectedProjectOrTask;
-  const selected = (type === "task" ? tasks : projects).find(
-    ({ id }) => id.toString() === selectedProjectOrTask.id.toString(),
+  const projects = use(projectsPromise) || [];
+  const tasks = use(tasksPromise) || [];
+  const defaultValue = multiple ? [] : { type: ProjectType.trello, id: "" };
+  const [selected, setSelected] = useState(
+    multiple
+      ? defaultSelected || defaultValue
+      : defaultSelected || defaultValue,
   );
 
-  const projectName = selected?.name || "";
-  const stringId = typeof id === "number" ? id.toString() : id;
+  function getProjectOrTask({ id, type }: ProjectOrTask) {
+    return (type === ProjectType.task ? tasks : projects).find(
+      ({ id: foundId }) => foundId.toString() === id,
+    );
+  }
+
+  function getProjectName(value: string) {
+    return getProjectOrTask(parseItemKey(value))?.name || value;
+  }
+
+  const value = Array.isArray(selected)
+    ? selected.map(stringifyItemKey)
+    : stringifyItemKey(selected);
+
+  function handleValuesChange(values?: string[]) {
+    if (!values) {
+      return setSelected(defaultValue);
+    }
+    return typeof maxSelections === "undefined" ||
+      values.length <= maxSelections
+      ? setSelected(values.map((value) => parseItemKey(value)))
+      : null;
+  }
+  function handleValueChange(value?: string) {
+    setSelected(value ? parseItemKey(value) : defaultValue);
+  }
 
   return (
-    <Field>
+    <Field className={className}>
       <FieldLabel className="mb-1 block text-xs font-semibold text-black uppercase">
-        Projet/Tâche
+        {multiple
+          ? `Projet(s)/Tâche(s)${maxSelections ? ` (jusqu\'à ${maxSelections})` : ""}`
+          : "Projet/Tâche"}
       </FieldLabel>
       <Suspense
         fallback={
           <Input
             type="text"
-            // value={selectedProjectOrTask}
             disabled
             className="w-full rounded border-2 border-black bg-gray-100 px-2.5 py-2 text-xs text-gray-600"
           />
         }
       >
         <Combobox
-          value={`${type}-${stringId}`}
-          onValueChange={(value) => {
-            if (!value) {
-              return setSelectedProjectOrTask(defaultSelectedProjectOrTask);
-            }
-            const [type, id] = value.split("-");
-            if (type !== "trello" && type !== "task") {
-              console.error(`Unexpected type ${type}`);
-              return setSelectedProjectOrTask(defaultSelectedProjectOrTask);
-            }
-            return setSelectedProjectOrTask({
-              id,
-              type,
-            });
+          multiple={multiple}
+          limit={maxSelections}
+          value={value}
+          onValueChange={(val) => {
+            return val
+              ? Array.isArray(val)
+                ? handleValuesChange(val)
+                : handleValueChange(val)
+              : setSelected(defaultValue);
           }}
-          name="projectId"
+          name={multiple ? "projectIds" : "projectId"}
         >
-          <ComboboxInput
-            className="border-punch-accent bg-punch-light/40 [&>div>button]:bg-punch-accent [&>div>button]:hover:bg-punch-accent-hover rounded-xs border-2 [&>div>button]:rounded-full [&>div>button]:text-white [&>div>button]:hover:text-white [&>div>button>svg]:size-0.5"
-            placeholder="Rechercher un projet..."
-            value={projectName}
-            showClear
-          />
+          <div className="relative">
+            {multiple ? (
+              <ComboboxChips className="border-punch-accent rounded-xs border-2 bg-white">
+                {Array.isArray(selected) &&
+                  selected.map((item) => {
+                    const key = stringifyItemKey(item);
+                    return (
+                      <ComboboxChip key={key}>
+                        {getProjectName(key)}
+                      </ComboboxChip>
+                    );
+                  })}
+                <ComboboxChipsInput
+                  placeholder={`Rechercher jusqu\`à ${maxSelections} projets...`}
+                  className="border-punch-accent placeholder:text-punch-dark/70"
+                  value={undefined}
+                />
+              </ComboboxChips>
+            ) : (
+              <ComboboxInput
+                className="border-punch-accent bg-punch-light/40 [&>div>button]:bg-punch-accent [&>div>button]:hover:bg-punch-accent-hover rounded-xs border-2 [&>div>button]:rounded-full [&>div>button]:text-white [&>div>button]:hover:text-white [&>div>button>svg]:size-0.5"
+                placeholder="Rechercher un projet..."
+                value={getProjectName(value as string)}
+                showClear
+              />
+            )}
+          </div>
           <ComboboxContent
             side="top"
             sideOffset={8}
@@ -100,7 +150,10 @@ export default function ProjectSelect({
                   {(task) => (
                     <ComboboxItem
                       key={task.id}
-                      value={`task-${task.id}`}
+                      value={stringifyItemKey({
+                        type: ProjectType.task,
+                        id: task.id,
+                      })}
                       className="text-punch-dark text-md border-l-punch-accent-hover border-y-punch-light hover:bg-punch-accent-hover data-highlighted:bg-punch-accent-hover cursor-pointer rounded-none border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:text-white"
                     >
                       {task.name}
@@ -120,7 +173,10 @@ export default function ProjectSelect({
                   {(project) => (
                     <ComboboxItem
                       key={project.id}
-                      value={`trello-${project.id}`}
+                      value={stringifyItemKey({
+                        type: ProjectType.trello,
+                        id: project.id,
+                      })}
                       className="text-punch-dark text-md border-l-punch-accent border-y-punch-light hover:bg-punch-accent data-highlighted:bg-punch-accent border-r-punch-light cursor-pointer rounded-none border-r-4 border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:border-r-0 hover:text-white"
                     >
                       {project.name}
@@ -128,10 +184,22 @@ export default function ProjectSelect({
                   )}
                 </ComboboxCollection>
               </ComboboxGroup>
-              <ComboboxSeparator />
             </ComboboxList>
           </ComboboxContent>
         </Combobox>
+        {multiple && Array.isArray(selected) && (
+          <input
+            type="hidden"
+            name="projectIds"
+            value={JSON.stringify(selected.map(stringifyItemKey))}
+          />
+        )}
+        {multiple &&
+        Array.isArray(selected) &&
+        maxSelections &&
+        selected.length > 0
+          ? `${selected.length}/${maxSelections}`
+          : ""}
       </Suspense>
     </Field>
   );

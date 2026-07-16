@@ -56,18 +56,64 @@ export function secondsToHours(seconds: number): number {
 }
 
 export function formatTimeDisplay(decimal: number): string {
-  if (decimal === null || decimal === undefined || isNaN(decimal)) {
-    return "0h 0m";
-  }
+  if (!decimal || Number.isNaN(decimal)) return "0h 0m";
 
   let hours = Math.floor(decimal);
   let minutes = Math.round((decimal - hours) * 60);
 
-  // Handle 60 minutes edge case
   if (minutes === 60) {
     hours += 1;
     minutes = 0;
   }
 
   return `${hours}h ${minutes}m`;
+}
+export function getThisWeek(weekOffset: number = 0) {
+  const currentMonday = getMonday(weekOffset);
+  const sunday = new Date(currentMonday);
+  sunday.setDate(currentMonday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  return {
+    startDate: currentMonday,
+    endDate: sunday,
+  };
+}
+export function getMonday(weekOffset: number = 0): Date {
+  let i = 0;
+  const today = new Date();
+  today.setDate(today.getDate() + weekOffset * 7);
+  const day = today.getDay();
+  const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+  const result = new Date(today.setDate(diff));
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+export function isSameDay(a: Date, b: Date) {
+  const result =
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+  return result;
+}
+
+// Postgres `@db.Date` columns (weekStart on WeeklyObjective, FrozenWeek,
+// WeeklyKilometrage) round-trip through Prisma as UTC midnight, not local
+// midnight. Use this instead of isSameDay when comparing one of those
+// DB-sourced dates against a locally-constructed Date (e.g. getMonday()),
+// otherwise the comparison drifts a day off in any non-UTC timezone.
+export function isSameUTCDate(a: Date, b: Date) {
+  return (
+    a.getUTCFullYear() === b.getUTCFullYear() &&
+    a.getUTCMonth() === b.getUTCMonth() &&
+    a.getUTCDate() === b.getUTCDate()
+  );
+}
+
+// Convert a local date to UTC midnight for Prisma @db.Date queries.
+// Extracts the local year/month/date and creates a new Date at UTC midnight.
+export function toUTCDate(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
 }

@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertAction } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import formatTimeDisplay from "@/lib/formatTimeDisplay";
+import { formatTimeDisplay } from "@/lib/time";
 import { useRouter } from "next/navigation";
 
 export type ObjectivesAndKilometrageFormProps = {
@@ -126,7 +126,7 @@ export function ObjectivesAndKilometrageForm({
           disabled={pending}
           className="hover:bg-punch-accent w-full rounded-sm bg-black font-bold text-white uppercase disabled:opacity-50"
         >
-          {"Sauver"}
+          Sauver
         </Button>
       </form>
     </div>

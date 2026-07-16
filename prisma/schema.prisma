@@ -34,7 +34,7 @@ model StatutSourcePermission {
 }
 
 model Employee {
-  id           Int       @id
+  id           Int       @id @default(autoincrement())
   name         String
   weeklyTarget Float     @default(40)
   statutId     String?   @default("atelier")
@@ -47,7 +47,6 @@ model Employee {
 
   statut            Statut?             @relation(fields: [statutId], references: [id], onDelete: SetDefault)
   timeEntries       TimeEntry[]
-  activePunch       ActivePunch?
   frozenWeeks       FrozenWeek[]
   weeklyKilometrage WeeklyKilometrage[]
   weeklyObjectives  WeeklyObjective[]
@@ -55,23 +54,26 @@ model Employee {
   @@map("employees")
 }
 
-model ActivePunch {
-  employeeId Int       @id
-  startTime  DateTime
-  projects   String // JSON array of { projectId, projectType, projectName }
-  isDeleted  Boolean   @default(false)
-  deletedAt  DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+model TimeEntryProject {
+  id          Int         @id @default(autoincrement())
+  timeEntryId Int
+  projectId   String?
+  taskId      Int?
+  projectType ProjectType
 
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  timeEntry TimeEntry @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  task      Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
 
-  @@map("activePunches")
+  @@unique([timeEntryId, projectId, taskId])
+  @@index([projectId])
+  @@index([taskId])
+  @@map("timeEntryProjects")
 }
 
 enum ProjectType {
-  TRELLO
-  TASK
+  trello
+  task
 }
 
 enum Role {
@@ -80,31 +82,24 @@ enum Role {
 }
 
 model TimeEntry {
-  id          Int         @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   employeeId  Int?
-  projectId   String?
-  taskId      Int?
-  projectType ProjectType
-  date        DateTime    @db.Date
-  hours       Float
-  seconds     Int?
-  entryMethod String      @default("manual") // 'manual', 'punch', etc.
-  subtaskId   String      @default("1default")
-  isDeleted   Boolean     @default(false)
+  start       DateTime
+  end         DateTime?
+  entryMethod String    @default("manual") // 'manual', 'punch', etc.
+  subtaskId   String    @default("1default")
+  isDeleted   Boolean   @default(false)
   deletedAt   DateTime?
   deletedBy   Int?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  employee Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
-  subtask  Subtask   @relation(fields: [subtaskId], references: [id], onDelete: SetDefault)
-  project  Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task     Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  employee Employee?          @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  subtask  Subtask            @relation(fields: [subtaskId], references: [id], onDelete: SetDefault)
+  projects TimeEntryProject[]
 
   @@index([employeeId])
-  @@index([projectId])
-  @@index([taskId])
-  @@index([date])
+  @@index([start])
   @@map("timeEntries")
 }
 
@@ -224,8 +219,8 @@ model Project {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  source      TrelloSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-  timeEntries TimeEntry[]
+  source            TrelloSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  timeEntryProjects TimeEntryProject[]
 
   @@index([sourceId])
   @@map("projects")
@@ -446,7 +441,7 @@ model Task {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  timeEntries TimeEntry[]
+  timeEntryProjects TimeEntryProject[]
 
   @@map("tasks")
 }
