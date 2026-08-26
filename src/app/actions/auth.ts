@@ -29,25 +29,24 @@ export async function login(
     formState,
     formData,
     LoginFormSchema,
-    (
+    function* (
       formState: LoginFormState,
       { password, role }: Record<string, FormDataEntryValue | null>,
-    ) =>
-      Effect.gen(function* () {
-        const rolePassword = process.env[PASSWORDS[role as Role]];
+    ) {
+      const rolePassword = process.env[PASSWORDS[role as Role]];
 
-        if (password !== rolePassword) {
-          yield* Effect.succeed({
-            success: false,
-            errors: {
-              password: "Mauvais mot de passe",
-            },
-          });
-        }
+      if (password !== rolePassword) {
+        yield* Effect.succeed({
+          success: false,
+          errors: {
+            password: "Mauvais mot de passe",
+          },
+        });
+      }
 
-        yield* createSession(role as Role);
-        return { success: true, message: `${role as Role} login success` };
-      }),
+      yield* createSession(role as Role);
+      return { success: true, message: `${role as Role} login success` };
+    },
   );
 }
 
@@ -63,21 +62,20 @@ export async function logout(
     formState,
     formData,
     LogoutFormSchema,
-    (
+    function* (
       formState: LogoutFormState,
       { role }: Record<string, FormDataEntryValue | null>,
-    ) =>
-      Effect.gen(function* () {
-        if (role) {
-          yield* deleteSession(role as Role);
-        } else {
-          yield* deleteSession(Role.employee);
-          yield* deleteSession(Role.manager);
-        }
-        return {
-          success: true,
-          message: "logoutSuccess",
-        };
-      }),
+    ) {
+      if (role) {
+        yield* deleteSession(role as Role);
+      } else {
+        yield* deleteSession(Role.employee);
+        yield* deleteSession(Role.manager);
+      }
+      return {
+        success: true,
+        message: "logoutSuccess",
+      };
+    },
   );
 }

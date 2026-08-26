@@ -3,6 +3,12 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+generator effect {
+  provider = "effect-prisma-generator"
+  output = "../src/generated/effect-prisma.ts"
+  clientImportPath = "./prisma/client"
+}
+
 datasource db {
   provider = "postgresql"
 }

@@ -15,7 +15,7 @@ import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
 
 import { Effect } from "effect";
 import { parseTimeToSeconds, secondsToHours } from "@/lib/time";
-import prisma from "@/lib/prisma";
+import { PrismaService } from "@/generated/effect-prisma";
 import { runEffectAsFormAction } from "@/lib/effect";
 
 import {
@@ -51,32 +51,32 @@ export type TimeEntryWithRelations = TimeEntryGetPayload<{
   include: typeof timeEntryInclude;
 }>;
 
-export const getTimeEntries = cachedGetter(
-  (employeeId: number, { startDate, endDate }: DateRange) =>
-    Effect.gen(function* () {
-      const where: TimeEntryWhereInput = {
-        employeeId,
-        isDeleted: false,
-      };
+export const getTimeEntries = cachedGetter(function* (
+  employeeId: number,
+  { startDate, endDate }: DateRange,
+) {
+  const prisma = yield* PrismaService;
+  const where: TimeEntryWhereInput = {
+    employeeId,
+    isDeleted: false,
+  };
 
-      if (startDate || endDate) {
-        where.start = {};
-        if (startDate) {
-          where.start.gte = new Date(startDate);
-        }
-        if (endDate) {
-          where.start.lte = new Date(endDate);
-        }
-      }
-      const args = {
-        include: timeEntryInclude,
-        where,
-        orderBy: [{ start: SortOrder.desc }, { id: SortOrder.asc }],
-      };
-      return prisma.timeEntry.findMany(args);
-    }),
-  Role.employee,
-);
+  if (startDate || endDate) {
+    where.start = {};
+    if (startDate) {
+      where.start.gte = new Date(startDate);
+    }
+    if (endDate) {
+      where.start.lte = new Date(endDate);
+    }
+  }
+  const args = {
+    include: timeEntryInclude,
+    where,
+    orderBy: [{ start: SortOrder.desc }, { id: SortOrder.asc }],
+  };
+  return yield* prisma.timeEntry.findMany(args);
+}, Role.employee);
 
 export async function editTimeEntry(
   formState: EditTimeEntryFormState,
@@ -90,109 +90,101 @@ export async function editTimeEntry(
     formState,
     formData,
     EditTimeEntryFormSchema,
-    (_formState, { timeEntryId, projectId, startTime, hours, command }) =>
-      Effect.gen(function* () {
-        switch (command) {
-          case "save": {
-            const hourValue = secondsToHours(parseTimeToSeconds(String(hours)));
-            const start = new Date(String(startTime));
-            const end = new Date(start.getTime() + hourValue * 3600000);
-            const { id, type } = parseItemKey(String(projectId));
-            const strId = id.toString();
-            yield* Effect.tryPromise(() =>
-              putTimeEntry({
-                id: parseInt(String(timeEntryId), 10),
-                start,
-                end,
-                projects: [
-                  {
-                    id:
-                      type === ProjectType.trello ? strId : parseInt(strId, 10),
-                    type,
-                  },
-                ],
-              }),
-            );
-            return {
-              message: "Sauvegardé",
-            };
-          }
-          case "delete":
-            yield* Effect.tryPromise(() =>
-              deleteTimeEntry(parseInt(String(timeEntryId), 10)),
-            );
-            return {
-              message: "Supprimé",
-            };
-          default:
-            throw new Error(`Unhandled \`editTimeEntry\` command: ${command}`);
+    function* (_formState, { timeEntryId, projectId, startTime, hours, command }) {
+      switch (command) {
+        case "save": {
+          const hourValue = secondsToHours(parseTimeToSeconds(String(hours)));
+          const start = new Date(String(startTime));
+          const end = new Date(start.getTime() + hourValue * 3600000);
+          const { id, type } = parseItemKey(String(projectId));
+          const strId = id.toString();
+          yield* Effect.tryPromise(() =>
+            putTimeEntry({
+              id: parseInt(String(timeEntryId), 10),
+              start,
+              end,
+              projects: [
+                {
+                  id: type === ProjectType.trello ? strId : parseInt(strId, 10),
+                  type,
+                },
+              ],
+            }),
+          );
+          return {
+            message: "Sauvegardé",
+          };
         }
-      }),
+        case "delete":
+          yield* Effect.tryPromise(() =>
+            deleteTimeEntry(parseInt(String(timeEntryId), 10)),
+          );
+          return {
+            message: "Supprimé",
+          };
+        default:
+          throw new Error(`Unhandled \`editTimeEntry\` command: ${command}`);
+      }
+    },
     Role.employee,
   );
 }
 
-export const putTimeEntry = protectedEffect(
-  (
-    entry: Partial<TimeEntry> & {
-      projects: ProjectOrTask[];
+export const putTimeEntry = protectedEffect(function* (
+  entry: Partial<TimeEntry> & {
+    projects: ProjectOrTask[];
+  },
+) {
+  if (!entry.id || !entry.projects) {
+    return null; // TODO Fail more informatively?
+  }
+  const entryId = entry.id;
+
+  const prisma = yield* PrismaService;
+
+  const deleteTimeEntryProjectArgs: TimeEntryProjectDeleteManyArgs = {
+    where: {
+      timeEntryId: entryId,
     },
-  ) =>
-    Effect.gen(function* () {
-      if (!entry.id || !entry.projects) {
-        return yield* Effect.succeed(null); // TODO Fail more informatively?
-      }
+  };
 
-      const deleteTimeEntryProjectArgs: TimeEntryProjectDeleteManyArgs = {
-        where: {
-          timeEntryId: entry.id,
-        },
+  const createManyTimeEntryProjectArgs: TimeEntryProjectCreateManyArgs = {
+    data: entry.projects.map(({ id, type }) => {
+      const strId = id.toString();
+      return {
+        timeEntryId: entryId,
+        projectId: type === ProjectType.trello ? strId : null,
+        taskId: type === ProjectType.task ? parseInt(strId, 10) : null,
+        projectType: type,
       };
-      yield* Effect.tryPromise(() =>
-        prisma.timeEntryProject.deleteMany(deleteTimeEntryProjectArgs),
-      );
-
-      if (entry.id) {
-        const createManyTimeEntryProjectArgs: TimeEntryProjectCreateManyArgs = {
-          data: entry.projects.map(({ id, type }) => {
-            const strId = id.toString();
-            return {
-              timeEntryId: entry.id || -1,
-              projectId: type === ProjectType.trello ? strId : null,
-              taskId: type === ProjectType.task ? parseInt(strId, 10) : null,
-              projectType: type,
-            };
-          }),
-        };
-
-        yield* Effect.tryPromise(() =>
-          prisma.timeEntryProject.createMany(createManyTimeEntryProjectArgs),
-        );
-      }
-
-      const args: TimeEntryUpdateArgs = {
-        where: {
-          id: entry.id,
-        },
-        data: {
-          start: entry.start,
-          end: entry.end,
-        },
-      };
-      return prisma.timeEntry.update(args);
     }),
-  Role.employee,
-);
+  };
 
-export const deleteTimeEntry = protectedEffect(
-  (entryId: number) =>
+  const args: TimeEntryUpdateArgs = {
+    where: {
+      id: entryId,
+    },
+    data: {
+      start: entry.start,
+      end: entry.end,
+    },
+  };
+
+  return yield* prisma.$transaction(
     Effect.gen(function* () {
-      const args: TimeEntryDeleteArgs = {
-        where: {
-          id: entryId,
-        },
-      };
-      return prisma.timeEntry.delete(args);
+      yield* prisma.timeEntryProject.deleteMany(deleteTimeEntryProjectArgs);
+      yield* prisma.timeEntryProject.createMany(createManyTimeEntryProjectArgs);
+      return yield* prisma.timeEntry.update(args);
     }),
-  Role.employee,
-);
+  );
+}, Role.employee);
+
+export const deleteTimeEntry = protectedEffect(function* (entryId: number) {
+  const prisma = yield* PrismaService;
+  const args: TimeEntryDeleteArgs = {
+    where: {
+      id: entryId,
+    },
+  };
+  return yield* prisma.timeEntry.delete(args);
+}, Role.employee);

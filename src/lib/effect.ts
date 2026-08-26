@@ -1,24 +1,48 @@
 import "server-only";
 
-import { Effect } from "effect";
+import { Effect, type Utils } from "effect";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { SessionNotFound, verifySession } from "@/app/effects/auth";
 import { Role } from "@/generated/prisma/enums";
+import { PrismaService } from "@/generated/effect-prisma";
+import { PrismaLayer } from "@/lib/prisma";
+import { toErrorMessage } from "@/lib/prismaErrors";
 import { ParseResult, Schema } from "effect";
 
-export function cachedGetter<T, E, R>(
-  getEffect: (...args: any) => Effect.Effect<T, E, never>,
+type ErrorOf<Eff> = [Eff] extends [never]
+  ? never
+  : [Eff] extends [Utils.YieldWrap<Effect.Effect<any, infer E, any>>]
+    ? E
+    : never;
+
+function genEffect<
+  T,
+  Eff extends Utils.YieldWrap<Effect.Effect<any, any, PrismaService>>,
+>(
+  generator: () => Generator<Eff, T, any>,
+): Effect.Effect<T, ErrorOf<Eff>, PrismaService> {
+  return Effect.gen(generator) as Effect.Effect<T, ErrorOf<Eff>, PrismaService>;
+}
+
+export function cachedGetter<
+  T,
+  Eff extends Utils.YieldWrap<Effect.Effect<any, any, PrismaService>>,
+>(
+  getEffect: (...args: any) => Generator<Eff, T, any>,
   role?: Role,
   redirectTo?: string,
 ) {
-  return cache(protectedEffect<T, E, R>(getEffect, role, redirectTo));
+  return cache(protectedEffect<T, Eff>(getEffect, role, redirectTo));
 }
 
-export function protectedEffect<T, E, R>(
-  getEffect: (...args: any) => Effect.Effect<T, E, never>,
+export function protectedEffect<
+  T,
+  Eff extends Utils.YieldWrap<Effect.Effect<any, any, PrismaService>>,
+>(
+  getEffect: (...args: any) => Generator<Eff, T, any>,
   role?: Role,
   redirectTo?: string,
 ) {
@@ -48,7 +72,9 @@ export function protectedEffect<T, E, R>(
       }
     }
 
-    return Effect.runPromise(getEffect(...args));
+    return Effect.runPromise(
+      genEffect(() => getEffect(...args)).pipe(Effect.provide(PrismaLayer)),
+    );
   };
 }
 export function runEffectAsFormAction<
@@ -62,7 +88,7 @@ export function runEffectAsFormAction<
   action: (
     formState: FormState,
     formData: any,
-  ) => Effect.Effect<FormState, unknown, never>,
+  ) => Generator<any, FormState, any>,
   role?: Role,
 ): Promise<FormState> {
   return Effect.runPromise(
@@ -75,8 +101,11 @@ export function runEffectAsFormAction<
         allFormData,
         formSchema,
       );
-      return yield* action(formState, validated);
-    }).pipe(Effect.catchAll(handleFormCatchAll<FormState>(formState))),
+      return yield* Effect.gen(() => action(formState, validated));
+    }).pipe(
+      Effect.catchAll(handleFormCatchAll<FormState>(formState)),
+      Effect.provide(PrismaLayer),
+    ) as Effect.Effect<FormState, never, never>,
   );
 }
 
@@ -92,7 +121,6 @@ const handleFormCatchAll =
         },
       });
     }
-    console.error(error);
     if (
       error &&
       typeof error === "object" &&
@@ -105,7 +133,11 @@ const handleFormCatchAll =
         errors: { ...error.errors },
       });
     }
-    return Effect.fail(error);
+    return Effect.succeed({
+      ...formState,
+      success: false,
+      errors: { dataValidation: toErrorMessage(error) },
+    });
   };
 
 export function extractAllFormData(
