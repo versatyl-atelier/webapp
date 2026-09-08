@@ -15,7 +15,6 @@ import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
 
 import { Effect } from "effect";
 import { parseTimeToSeconds, secondsToHours } from "@/lib/time";
-import { PrismaService } from "@/generated/effect-prisma";
 import { runEffectAsFormAction } from "@/lib/effect";
 
 import {
@@ -28,6 +27,7 @@ import { ProjectType } from "@/generated/prisma/client";
 import { parseItemKey } from "@/lib/itemKey";
 import { ProjectOrTask } from "@/components/ProjectSelect";
 import { cachedGetter, protectedEffect } from "@/lib/effect";
+import type { PrismaService } from "@/generated/effect-prisma";
 
 type DateRange = {
   startDate: string;
@@ -51,32 +51,35 @@ export type TimeEntryWithRelations = TimeEntryGetPayload<{
   include: typeof timeEntryInclude;
 }>;
 
-export const getTimeEntries = cachedGetter(function* (
-  employeeId: number,
-  { startDate, endDate }: DateRange,
-) {
-  const prisma = yield* PrismaService;
-  const where: TimeEntryWhereInput = {
-    employeeId,
-    isDeleted: false,
-  };
+export const getTimeEntries = cachedGetter(
+  Effect.fn("getTimeEntries")(function* (
+    prisma: PrismaService,
+    employeeId: number,
+    { startDate, endDate }: DateRange,
+  ) {
+    const where: TimeEntryWhereInput = {
+      employeeId,
+      isDeleted: false,
+    };
 
-  if (startDate || endDate) {
-    where.start = {};
-    if (startDate) {
-      where.start.gte = new Date(startDate);
+    if (startDate || endDate) {
+      where.start = {};
+      if (startDate) {
+        where.start.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.start.lte = new Date(endDate);
+      }
     }
-    if (endDate) {
-      where.start.lte = new Date(endDate);
-    }
-  }
-  const args = {
-    include: timeEntryInclude,
-    where,
-    orderBy: [{ start: SortOrder.desc }, { id: SortOrder.asc }],
-  };
-  return yield* prisma.timeEntry.findMany(args);
-}, Role.employee);
+    const args = {
+      include: timeEntryInclude,
+      where,
+      orderBy: [{ start: SortOrder.desc }, { id: SortOrder.asc }],
+    };
+    return yield* prisma.timeEntry.findMany(args);
+  }),
+  Role.employee,
+);
 
 export async function editTimeEntry(
   formState: EditTimeEntryFormState,
@@ -90,7 +93,17 @@ export async function editTimeEntry(
     formState,
     formData,
     EditTimeEntryFormSchema,
-    function* (_formState, { timeEntryId, projectId, startTime, hours, command }) {
+    Effect.fn("editTimeEntry")(function* (
+      _prisma: PrismaService,
+      _formState: EditTimeEntryFormState,
+      {
+        timeEntryId,
+        projectId,
+        startTime,
+        hours,
+        command,
+      }: Record<string, FormDataEntryValue | null>,
+    ) {
       switch (command) {
         case "save": {
           const hourValue = secondsToHours(parseTimeToSeconds(String(hours)));
@@ -125,66 +138,75 @@ export async function editTimeEntry(
         default:
           throw new Error(`Unhandled \`editTimeEntry\` command: ${command}`);
       }
-    },
+    }),
     Role.employee,
   );
 }
 
-export const putTimeEntry = protectedEffect(function* (
-  entry: Partial<TimeEntry> & {
-    projects: ProjectOrTask[];
-  },
-) {
-  if (!entry.id || !entry.projects) {
-    return null; // TODO Fail more informatively?
-  }
-  const entryId = entry.id;
-
-  const prisma = yield* PrismaService;
-
-  const deleteTimeEntryProjectArgs: TimeEntryProjectDeleteManyArgs = {
-    where: {
-      timeEntryId: entryId,
+export const putTimeEntry = protectedEffect(
+  Effect.fn("putTimeEntry")(function* (
+    prisma: PrismaService,
+    entry: Partial<TimeEntry> & {
+      projects: ProjectOrTask[];
     },
-  };
+  ) {
+    if (!entry.id || !entry.projects) {
+      return null; // TODO Fail more informatively?
+    }
+    const entryId = entry.id;
 
-  const createManyTimeEntryProjectArgs: TimeEntryProjectCreateManyArgs = {
-    data: entry.projects.map(({ id, type }) => {
-      const strId = id.toString();
-      return {
+    const deleteTimeEntryProjectArgs: TimeEntryProjectDeleteManyArgs = {
+      where: {
         timeEntryId: entryId,
-        projectId: type === ProjectType.trello ? strId : null,
-        taskId: type === ProjectType.task ? parseInt(strId, 10) : null,
-        projectType: type,
-      };
-    }),
-  };
+      },
+    };
 
-  const args: TimeEntryUpdateArgs = {
-    where: {
-      id: entryId,
-    },
-    data: {
-      start: entry.start,
-      end: entry.end,
-    },
-  };
+    const createManyTimeEntryProjectArgs: TimeEntryProjectCreateManyArgs = {
+      data: entry.projects.map(({ id, type }) => {
+        const strId = id.toString();
+        return {
+          timeEntryId: entryId,
+          projectId: type === ProjectType.trello ? strId : null,
+          taskId: type === ProjectType.task ? parseInt(strId, 10) : null,
+          projectType: type,
+        };
+      }),
+    };
 
-  return yield* prisma.$transaction(
-    Effect.gen(function* () {
-      yield* prisma.timeEntryProject.deleteMany(deleteTimeEntryProjectArgs);
-      yield* prisma.timeEntryProject.createMany(createManyTimeEntryProjectArgs);
-      return yield* prisma.timeEntry.update(args);
-    }),
-  );
-}, Role.employee);
+    const args: TimeEntryUpdateArgs = {
+      where: {
+        id: entryId,
+      },
+      data: {
+        start: entry.start,
+        end: entry.end,
+      },
+    };
 
-export const deleteTimeEntry = protectedEffect(function* (entryId: number) {
-  const prisma = yield* PrismaService;
-  const args: TimeEntryDeleteArgs = {
-    where: {
-      id: entryId,
-    },
-  };
-  return yield* prisma.timeEntry.delete(args);
-}, Role.employee);
+    return yield* prisma.$transaction(
+      Effect.gen(function* () {
+        yield* prisma.timeEntryProject.deleteMany(deleteTimeEntryProjectArgs);
+        yield* prisma.timeEntryProject.createMany(
+          createManyTimeEntryProjectArgs,
+        );
+        return yield* prisma.timeEntry.update(args);
+      }),
+    );
+  }),
+  Role.employee,
+);
+
+export const deleteTimeEntry = protectedEffect(
+  Effect.fn("deleteTimeEntry")(function* (
+    prisma: PrismaService,
+    entryId: number,
+  ) {
+    const args: TimeEntryDeleteArgs = {
+      where: {
+        id: entryId,
+      },
+    };
+    return yield* prisma.timeEntry.delete(args);
+  }),
+  Role.employee,
+);

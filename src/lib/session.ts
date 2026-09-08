@@ -63,48 +63,45 @@ export const decrypt = (session: string | undefined = "") =>
       }),
   });
 
-export const createSession = (role: Role) =>
-  Effect.gen(function* () {
-    const expiresAt = new Date(Date.now() + SESSION_DURATIONS[role]);
-    const session = yield* encrypt({ expiresAt });
-    const cookieStore = yield* Effect.tryPromise(() => cookies());
-    const cookieName = getCookieName(role);
+export const createSession = Effect.fn("createSession")(function* (role: Role) {
+  const expiresAt = new Date(Date.now() + SESSION_DURATIONS[role]);
+  const session = yield* encrypt({ expiresAt });
+  const cookieStore = yield* Effect.tryPromise(() => cookies());
+  const cookieName = getCookieName(role);
 
-    cookieStore.set(cookieName, session, {
-      httpOnly: true,
-      secure: true,
-      expires: expiresAt,
-      sameSite: "lax",
-      path: "/",
-    });
+  cookieStore.set(cookieName, session, {
+    httpOnly: true,
+    secure: true,
+    expires: expiresAt,
+    sameSite: "lax",
+    path: "/",
   });
+});
 
-export const updateSession = (role: Role) =>
-  Effect.gen(function* () {
-    const cookieStore = yield* Effect.tryPromise(() => cookies());
-    const cookieName = getCookieName(role);
-    const session = cookieStore.get(cookieName)?.value;
-    const payload = yield* decrypt(session);
+export const updateSession = Effect.fn("updateSession")(function* (role: Role) {
+  const cookieStore = yield* Effect.tryPromise(() => cookies());
+  const cookieName = getCookieName(role);
+  const session = cookieStore.get(cookieName)?.value;
+  const payload = yield* decrypt(session);
 
-    yield* Effect.filterOrFail(
-      Effect.succeed({ session, payload }),
-      ({ session, payload }) => !!session && !!payload,
-      () => new SessionNotFound({ role }),
-    );
+  yield* Effect.filterOrFail(
+    Effect.succeed({ session, payload }),
+    ({ session, payload }) => !!session && !!payload,
+    () => new SessionNotFound({ role }),
+  );
 
-    cookieStore.set(cookieName, session || "", {
-      httpOnly: true,
-      secure: true,
-      expires: new Date(Date.now() + SESSION_DURATIONS[role]),
-      sameSite: "lax",
-      path: "/",
-    });
+  cookieStore.set(cookieName, session || "", {
+    httpOnly: true,
+    secure: true,
+    expires: new Date(Date.now() + SESSION_DURATIONS[role]),
+    sameSite: "lax",
+    path: "/",
   });
+});
 
-export const deleteSession = (role: Role) =>
-  Effect.gen(function* () {
-    const cookieStore = yield* Effect.tryPromise(() => cookies());
-    cookieStore.delete(getCookieName(role));
-  });
+export const deleteSession = Effect.fn("deleteSession")(function* (role: Role) {
+  const cookieStore = yield* Effect.tryPromise(() => cookies());
+  cookieStore.delete(getCookieName(role));
+});
 
 export const getCookieName = (role: Role) => SESSION_COOKIE_NAMES[role];

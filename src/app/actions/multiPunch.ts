@@ -2,7 +2,6 @@
 
 import "server-only";
 
-import { PrismaService } from "@/generated/effect-prisma";
 import { ProjectType, Role } from "@/generated/prisma/client";
 import { parseItemKey } from "@/lib/itemKey";
 import {
@@ -16,6 +15,7 @@ import {
 import { runEffectAsFormAction } from "@/lib/effect";
 import { Data, Effect } from "effect";
 import { cachedGetter } from "@/lib/effect";
+import type { PrismaService } from "@/generated/effect-prisma";
 
 class PunchAlreadyActiveError extends Data.TaggedError(
   "PunchAlreadyActiveError",
@@ -48,12 +48,12 @@ export async function startMultiPunch(
     formState,
     formData,
     StartMultiPunchSchema,
-    function* (
+    Effect.fn("startMultiPunch")(function* (
+      prisma: PrismaService,
       formState: StartMultiPunchFormState,
       { employeeId, projectIds }: Record<string, FormDataEntryValue | null>,
     ) {
       return yield* Effect.gen(function* () {
-        const prisma = yield* PrismaService;
         const id = parseInt(String(employeeId), 10);
 
         const existingPunch = yield* prisma.timeEntry.findFirst({
@@ -113,7 +113,7 @@ export async function startMultiPunch(
           }),
         ),
       );
-    },
+    }),
     Role.employee,
   );
 }
@@ -130,12 +130,12 @@ export async function endMultiPunch(
     formState,
     formData,
     EndMultiPunchSchema,
-    function* (
+    Effect.fn("endMultiPunch")(function* (
+      prisma: PrismaService,
       formState: EndMultiPunchFormState,
       { employeeId, command }: Record<string, FormDataEntryValue | null>,
     ) {
       return yield* Effect.gen(function* () {
-        const prisma = yield* PrismaService;
         const id = parseInt(String(employeeId), 10);
 
         const activePunches = yield* prisma.timeEntry.findMany({
@@ -193,36 +193,41 @@ export async function endMultiPunch(
           }),
         ),
       );
-    },
+    }),
     Role.employee,
   );
 }
 
-export const getActivePunch = cachedGetter(function* (employeeId: number) {
-  const prisma = yield* PrismaService;
-  const activePunches = yield* prisma.timeEntry.findMany({
-    where: {
-      employeeId,
-      end: null,
-      isDeleted: false,
-    },
-    include: {
-      projects: {
-        include: {
-          project: {
-            select: { name: true },
-          },
-          task: {
-            select: { name: true },
+export const getActivePunch = cachedGetter(
+  Effect.fn("getActivePunch")(function* (
+    prisma: PrismaService,
+    employeeId: number,
+  ) {
+    const activePunches = yield* prisma.timeEntry.findMany({
+      where: {
+        employeeId,
+        end: null,
+        isDeleted: false,
+      },
+      include: {
+        projects: {
+          include: {
+            project: {
+              select: { name: true },
+            },
+            task: {
+              select: { name: true },
+            },
           },
         },
       },
-    },
-  });
-  return activePunches.length > 0
-    ? {
-        startTime: activePunches[0].start,
-        activePunchProjects: activePunches[0].projects,
-      }
-    : null;
-}, Role.employee);
+    });
+    return activePunches.length > 0
+      ? {
+          startTime: activePunches[0].start,
+          activePunchProjects: activePunches[0].projects,
+        }
+      : null;
+  }),
+  Role.employee,
+);

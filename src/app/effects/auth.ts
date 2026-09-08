@@ -11,14 +11,13 @@ export class SessionNotFound extends Data.TaggedError("SessionNotFound")<{
   }
 }
 
-export const verifySession = (role: Role) =>
-  Effect.gen(function* () {
-    const requestCookies = yield* Effect.tryPromise(cookies);
-    const cookieName = getCookieName(role);
-    const cookie = requestCookies.get(cookieName);
-    const session = yield* decrypt(cookie?.value);
+export const verifySession = Effect.fn("verifySession")(function* (role: Role) {
+  const requestCookies = yield* Effect.tryPromise(cookies);
+  const cookieName = getCookieName(role);
+  const cookie = requestCookies.get(cookieName);
+  const session = yield* decrypt(cookie?.value);
 
-    if (!session) {
-      return yield* new SessionNotFound({ role });
-    }
-  });
+  if (!session) {
+    return yield* new SessionNotFound({ role });
+  }
+});

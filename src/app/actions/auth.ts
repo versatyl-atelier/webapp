@@ -16,6 +16,7 @@ import {
 } from "./auth.schemas";
 import { Role } from "@/generated/prisma/enums";
 import { runEffectAsFormAction } from "@/lib/effect";
+import type { PrismaService } from "@/generated/effect-prisma";
 
 export async function login(
   formState: LoginFormState,
@@ -29,7 +30,8 @@ export async function login(
     formState,
     formData,
     LoginFormSchema,
-    function* (
+    Effect.fn("login")(function* (
+      _prisma: PrismaService,
       formState: LoginFormState,
       { password, role }: Record<string, FormDataEntryValue | null>,
     ) {
@@ -46,7 +48,7 @@ export async function login(
 
       yield* createSession(role as Role);
       return { success: true, message: `${role as Role} login success` };
-    },
+    }),
   );
 }
 
@@ -62,7 +64,8 @@ export async function logout(
     formState,
     formData,
     LogoutFormSchema,
-    function* (
+    Effect.fn("logout")(function* (
+      _prisma: PrismaService,
       formState: LogoutFormState,
       { role }: Record<string, FormDataEntryValue | null>,
     ) {
@@ -76,6 +79,6 @@ export async function logout(
         success: true,
         message: "logoutSuccess",
       };
-    },
+    }),
   );
 }

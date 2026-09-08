@@ -2,7 +2,6 @@
 
 import "server-only";
 
-import { PrismaService } from "@/generated/effect-prisma";
 import { cachedGetter, runEffectAsFormAction } from "@/lib/effect";
 import { toUTCDate } from "@/lib/time";
 import {
@@ -17,17 +16,24 @@ import {
 } from "./frozenWeeks.schemas";
 import { FrozenWeek, Role } from "@/generated/prisma/client";
 import { verifySession } from "../effects/auth";
+import type { PrismaService } from "@/generated/effect-prisma";
+import { Effect } from "effect";
 
-export const getFrozenWeeks = cachedGetter(function* (employeeId: number) {
-  const prisma = yield* PrismaService;
-  const args: FrozenWeekFindManyArgs = {
-    where: {
-      employeeId,
-      isDeleted: false,
-    },
-  };
-  return yield* prisma.frozenWeek.findMany(args);
-}, Role.employee);
+export const getFrozenWeeks = cachedGetter(
+  Effect.fn("getFrozenWeeks")(function* (
+    prisma: PrismaService,
+    employeeId: number,
+  ) {
+    const args: FrozenWeekFindManyArgs = {
+      where: {
+        employeeId,
+        isDeleted: false,
+      },
+    };
+    return yield* prisma.frozenWeek.findMany(args);
+  }),
+  Role.employee,
+);
 
 export const freezeWeek = async (
   formState: FreezeWeekFormState,
@@ -41,7 +47,8 @@ export const freezeWeek = async (
     formState,
     formData,
     FreezeWeekFormSchema,
-    function* (
+    Effect.fn("freezeWeek")(function* (
+      prisma: PrismaService,
       _formState,
       {
         employeeId: strEmployeeId,
@@ -51,7 +58,6 @@ export const freezeWeek = async (
         frozen,
       },
     ) {
-      const prisma = yield* PrismaService;
       const employeeId = parseInt(strEmployeeId, 10);
       const weekStart = new Date(String(strWeekStart));
       const weekTotal = parseFloat(String(strWeekTotal));
@@ -102,6 +108,6 @@ export const freezeWeek = async (
       return {
         message: isFrozen ? "unfreezeSuccess" : "freezeSuccess",
       };
-    },
+    }),
   );
 };

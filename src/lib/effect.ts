@@ -1,54 +1,67 @@
 import "server-only";
 
-import { Effect, type Utils } from "effect";
+import { Effect } from "effect";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { SessionNotFound, verifySession } from "@/app/effects/auth";
 import { Role } from "@/generated/prisma/enums";
-import { PrismaService } from "@/generated/effect-prisma";
+import { Prisma } from "@/generated/prisma/client";
+import {
+  PrismaConnectionError,
+  PrismaService,
+} from "@/generated/effect-prisma";
 import { PrismaLayer } from "@/lib/prisma";
 import { toErrorMessage } from "@/lib/prismaErrors";
+import {
+  LoggingLayer,
+  requestIdFromHeaders,
+  withWideEvent,
+} from "@/lib/logging";
 import { ParseResult, Schema } from "effect";
 
-type ErrorOf<Eff> = [Eff] extends [never]
-  ? never
-  : [Eff] extends [Utils.YieldWrap<Effect.Effect<any, infer E, any>>]
-    ? E
-    : never;
-
-function genEffect<
-  T,
-  Eff extends Utils.YieldWrap<Effect.Effect<any, any, PrismaService>>,
->(
-  generator: () => Generator<Eff, T, any>,
-): Effect.Effect<T, ErrorOf<Eff>, PrismaService> {
-  return Effect.gen(generator) as Effect.Effect<T, ErrorOf<Eff>, PrismaService>;
+function recoverPrismaConnectionDefects<A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  operation: string,
+): Effect.Effect<A, E | PrismaConnectionError, R> {
+  return effect.pipe(
+    Effect.catchAllDefect((defect) => {
+      if (
+        defect instanceof Prisma.PrismaClientKnownRequestError &&
+        defect.code === "ECONNREFUSED"
+      ) {
+        return Effect.fail(
+          new PrismaConnectionError({
+            cause: defect,
+            operation,
+            model: (defect?.meta?.modelName as string) || "unknown",
+          }),
+        );
+      }
+      return Effect.die(defect);
+    }),
+  );
 }
 
-export function cachedGetter<
-  T,
-  Eff extends Utils.YieldWrap<Effect.Effect<any, any, PrismaService>>,
->(
-  getEffect: (...args: any) => Generator<Eff, T, any>,
+export function cachedGetter<T, E, R>(
+  getEffect: (prisma: PrismaService, ...args: any) => Effect.Effect<T, E, R>,
   role?: Role,
   redirectTo?: string,
 ) {
-  return cache(protectedEffect<T, Eff>(getEffect, role, redirectTo));
+  return cache(protectedEffect<T, E, R>(getEffect, role, redirectTo));
 }
 
-export function protectedEffect<
-  T,
-  Eff extends Utils.YieldWrap<Effect.Effect<any, any, PrismaService>>,
->(
-  getEffect: (...args: any) => Generator<Eff, T, any>,
+export function protectedEffect<T, E, R>(
+  getEffect: (prisma: PrismaService, ...args: any) => Effect.Effect<T, E, R>,
   role?: Role,
   redirectTo?: string,
 ) {
   return async (...args: any) => {
+    const headersList = await headers();
+    const requestId = requestIdFromHeaders(headersList);
+
     if (role) {
-      const headersList = await headers();
       const referer = headersList.get("referer");
       const fallbackRedirect =
         redirectTo ??
@@ -72,8 +85,30 @@ export function protectedEffect<
       }
     }
 
+    const operation = getEffect.name || "unnamed protected effect";
+    const name = operation;
+
     return Effect.runPromise(
-      genEffect(() => getEffect(...args)).pipe(Effect.provide(PrismaLayer)),
+      withWideEvent(
+        recoverPrismaConnectionDefects(
+          Effect.gen(function* () {
+            const prisma = yield* PrismaService;
+            return yield* getEffect(prisma, ...args);
+          }),
+          operation,
+        ),
+        {
+          message: "Protected action",
+          kind: "read",
+          requestId,
+          role,
+          name,
+          defaultLogLevel: "Debug",
+        },
+      ).pipe(
+        Effect.provide(PrismaLayer),
+        Effect.provide(LoggingLayer),
+      ) as Effect.Effect<T, E, never>,
     );
   };
 }
@@ -86,25 +121,52 @@ export function runEffectAsFormAction<
   formData: FormData,
   formSchema: FormSchema,
   action: (
+    prisma: PrismaService,
     formState: FormState,
     formData: any,
-  ) => Generator<any, FormState, any>,
+  ) => Effect.Effect<FormState, any, any>,
   role?: Role,
 ): Promise<FormState> {
   return Effect.runPromise(
     Effect.gen(function* () {
-      if (role) {
-        yield* verifySession(role);
-      }
-      const allFormData = extractAllFormData(formData);
-      const validated = yield* validateFormData<FormSchema, FormErrors>(
-        allFormData,
-        formSchema,
-      );
-      return yield* Effect.gen(() => action(formState, validated));
+      const headersList = yield* Effect.tryPromise(() => headers());
+      const requestId = requestIdFromHeaders(headersList);
+
+      const inner = recoverPrismaConnectionDefects(
+        Effect.gen(function* () {
+          if (role) {
+            yield* verifySession(role);
+          }
+          const prisma = yield* PrismaService;
+          const allFormData = extractAllFormData(formData);
+          const validated = yield* validateFormData<FormSchema, FormErrors>(
+            allFormData,
+            formSchema,
+          );
+          return yield* action(prisma, formState, validated);
+        }),
+        action.name || "runEffectAsFormAction",
+      ).pipe(Effect.catchAll(handleFormCatchAll<FormState>(formState)));
+
+      return yield* withWideEvent(inner, {
+        message: "form action",
+        kind: "mutation",
+        requestId,
+        role,
+        name: action.name || "unnamed form action",
+        defaultLogLevel: "Info",
+        setLogLevel: (value) => {
+          const errors =
+            value && typeof value === "object" && "errors" in value
+              ? (value as { errors?: Record<string, unknown> }).errors
+              : undefined;
+          const hasErrors = !!errors && Object.keys(errors).length > 0;
+          return { level: hasErrors ? "Warning" : "Info" };
+        },
+      });
     }).pipe(
-      Effect.catchAll(handleFormCatchAll<FormState>(formState)),
       Effect.provide(PrismaLayer),
+      Effect.provide(LoggingLayer),
     ) as Effect.Effect<FormState, never, never>,
   );
 }

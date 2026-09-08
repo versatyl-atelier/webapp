@@ -14,10 +14,10 @@ import {
   ObjectivesAndKilometrageFormSchema,
 } from "./objectivesAndKilometrage.schemas";
 import { Role } from "@/generated/prisma/enums";
-import { PrismaService } from "@/generated/effect-prisma";
 import { parseTimeToSeconds, secondsToHours } from "@/lib/time";
 import { runEffectAsFormAction } from "@/lib/effect";
 import { Effect } from "effect";
+import type { PrismaService } from "@/generated/effect-prisma";
 
 export async function updateObjectivesAndKilometrage(
   formState: ObjectivesAndKilometrageFormState,
@@ -31,7 +31,8 @@ export async function updateObjectivesAndKilometrage(
     formState,
     formData,
     ObjectivesAndKilometrageFormSchema,
-    function* (
+    Effect.fn("updateObjectivesAndKilometrage")(function* (
+      prisma: PrismaService,
       formState: ObjectivesAndKilometrageFormState,
       {
         employeeId,
@@ -40,7 +41,6 @@ export async function updateObjectivesAndKilometrage(
         kilometrage: strKilometrage,
       }: Record<string, FormDataEntryValue | null>,
     ) {
-      const prisma = yield* PrismaService;
       const employeeIdInt = parseInt(String(employeeId), 10);
       const weekStart = new Date(String(strWeekStart));
 
@@ -111,7 +111,7 @@ export async function updateObjectivesAndKilometrage(
       return {
         message: "Objectif et kilométrage sauvegardés!",
       };
-    },
+    }),
     Role.employee,
   );
 }
