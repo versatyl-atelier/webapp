@@ -33,6 +33,7 @@ export const encrypt = (payload: SessionPayload) =>
       new SignJWT(payload)
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
+        .setExpirationTime(payload.expiresAt)
         .sign(encodedKey),
     catch: (error) =>
       new SessionEncryptError({

@@ -4,6 +4,7 @@ import "server-only";
 import { Effect } from "effect";
 
 import { createSession, deleteSession } from "@/lib/session";
+import { verifyPassword } from "@/lib/auth";
 import { PASSWORDS } from "@/constants/auth";
 
 import {
@@ -37,13 +38,13 @@ export async function login(
     ) {
       const rolePassword = process.env[PASSWORDS[role as Role]];
 
-      if (password !== rolePassword) {
-        yield* Effect.succeed({
+      if (!verifyPassword(String(password), rolePassword)) {
+        return {
           success: false,
           errors: {
-            password: "Mauvais mot de passe",
+            password: ["Mauvais mot de passe"],
           },
-        });
+        };
       }
 
       yield* createSession(role as Role);
