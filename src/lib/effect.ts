@@ -49,12 +49,13 @@ export function cachedGetter<T, E, R>(
   role?: Role,
   redirectTo?: string,
 ) {
-  return cache(protectedEffect<T, E, R>(getEffect, role, redirectTo));
+  return cache(protectedEffect<T, E, R>(getEffect, role, "read", redirectTo));
 }
 
 export function protectedEffect<T, E, R>(
   getEffect: (prisma: PrismaService, ...args: any) => Effect.Effect<T, E, R>,
   role?: Role,
+  kind: "read" | "mutation" = "read",
   redirectTo?: string,
 ) {
   return async (...args: any) => {
@@ -96,11 +97,11 @@ export function protectedEffect<T, E, R>(
         ),
         {
           message: "Protected action",
-          kind: "read",
+          kind,
           requestId,
           role,
           name,
-          defaultLogLevel: "Debug",
+          defaultLogLevel: kind === "mutation" ? "Info" : "Debug",
         },
       ).pipe(
         Effect.provide(PrismaLayer),
@@ -192,11 +193,13 @@ const handleFormCatchAll =
         errors: { ...error.errors },
       });
     }
-    return Effect.succeed({
-      ...formState,
-      success: false,
-      errors: { dataValidation: toErrorMessage(error) },
-    });
+    return Effect.logError("Unhandled form action error", error).pipe(
+      Effect.as({
+        ...formState,
+        success: false,
+        errors: { dataValidation: toErrorMessage(error) },
+      }),
+    );
   };
 
 export function extractAllFormData(

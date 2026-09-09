@@ -111,12 +111,17 @@ export async function editTimeEntry(
         }: Record<string, FormDataEntryValue | null>,
       ) {
         const entryId = parseInt(String(timeEntryId), 10);
+        yield* Effect.annotateLogsScoped({ timeEntryId: entryId });
+
         const findArgs: TimeEntryFindFirstArgs = {
           where: { id: entryId, isDeleted: false },
         };
         const existingEntry = yield* prisma.timeEntry.findFirst(findArgs);
 
         if (existingEntry?.employeeId) {
+          yield* Effect.annotateLogsScoped({
+            employeeId: existingEntry.employeeId,
+          });
           yield* assertWeekNotFrozen(
             prisma,
             existingEntry.employeeId,
@@ -175,6 +180,7 @@ export const putTimeEntry = protectedEffect(
       return null; // TODO Fail more informatively?
     }
     const entryId = entry.id;
+    yield* Effect.annotateLogsScoped({ timeEntryId: entryId });
 
     const deleteTimeEntryProjectArgs: TimeEntryProjectDeleteManyArgs = {
       where: {
@@ -215,6 +221,7 @@ export const putTimeEntry = protectedEffect(
     );
   }),
   Role.employee,
+  "mutation",
 );
 
 export const deleteTimeEntry = protectedEffect(
@@ -222,6 +229,7 @@ export const deleteTimeEntry = protectedEffect(
     prisma: PrismaService,
     entryId: number,
   ) {
+    yield* Effect.annotateLogsScoped({ timeEntryId: entryId });
     const args: TimeEntryDeleteArgs = {
       where: {
         id: entryId,
@@ -230,4 +238,5 @@ export const deleteTimeEntry = protectedEffect(
     return yield* prisma.timeEntry.delete(args);
   }),
   Role.employee,
+  "mutation",
 );

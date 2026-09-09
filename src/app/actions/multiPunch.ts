@@ -60,6 +60,7 @@ export async function startMultiPunch(
       ) {
         const id = parseInt(String(employeeId), 10);
         const now = new Date();
+        yield* Effect.annotateLogsScoped({ employeeId: id });
 
         yield* assertWeekNotFrozen(prisma, id, now);
 
@@ -144,6 +145,7 @@ export async function endMultiPunch(
       ) {
         const id = parseInt(String(employeeId), 10);
         const endTime = new Date();
+        yield* Effect.annotateLogsScoped({ employeeId: id });
 
         yield* assertWeekNotFrozen(prisma, id, endTime);
 

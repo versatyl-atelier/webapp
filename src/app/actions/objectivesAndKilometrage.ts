@@ -48,6 +48,10 @@ export async function updateObjectivesAndKilometrage(
       ) {
         const employeeIdInt = parseInt(String(employeeId), 10);
         const weekStart = new Date(String(strWeekStart));
+        yield* Effect.annotateLogsScoped({
+          employeeId: employeeIdInt,
+          weekStart: weekStart.toISOString(),
+        });
 
         const objectiveSeconds = parseTimeToSeconds(String(strObjective));
         const objective = secondsToHours(objectiveSeconds);

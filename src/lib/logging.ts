@@ -84,6 +84,11 @@ export const withWideEvent = <A, E, R>(
           errorTag: _tag,
         });
       }
+      if (Option.isSome(Cause.dieOption(exit.cause))) {
+        return Effect.logFatal(message, exit.cause).pipe(
+          Effect.annotateLogs({ outcome: FAILURE }),
+        );
+      }
       return Effect.logError(message, exit.cause).pipe(
         Effect.annotateLogs({ outcome: FAILURE }),
       );

@@ -36,6 +36,5 @@ export function toErrorMessage(error: unknown): string {
       return message;
     }
   }
-  console.error(error);
   return GENERIC_ERROR_MESSAGE;
 }

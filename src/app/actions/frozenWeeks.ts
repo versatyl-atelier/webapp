@@ -60,6 +60,10 @@ export const freezeWeek = async (
     ) {
       const employeeId = parseInt(strEmployeeId, 10);
       const weekStart = new Date(String(strWeekStart));
+      yield* Effect.annotateLogsScoped({
+        employeeId,
+        weekStart: weekStart.toISOString(),
+      });
       const weekTotal = parseFloat(String(strWeekTotal));
       const objective = parseFloat(String(strObjective));
 
