@@ -3,6 +3,7 @@
   "version": "3.0.0",
   "private": true,
   "scripts": {
+    "postinstall": "npm run db:generate",
     "test": "vitest",
     "test:ci": "npm run db:validate && npm run type-check && vitest run",
     "dev": "next dev",
