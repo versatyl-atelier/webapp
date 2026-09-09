@@ -66,7 +66,7 @@ export async function logout(
     LogoutFormSchema,
     Effect.fn("logout")(function* (
       _prisma: PrismaService,
-      formState: LogoutFormState,
+      _formState: LogoutFormState,
       { role }: Record<string, FormDataEntryValue | null>,
     ) {
       if (role) {
