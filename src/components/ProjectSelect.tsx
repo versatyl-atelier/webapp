@@ -32,6 +32,7 @@ type ProjectSelectProps = {
   maxSelections?: number;
   defaultSelected?: ProjectOrTask | ProjectOrTask[];
   className?: string;
+  disabled?: boolean;
 };
 
 export default function ProjectSelect({
@@ -39,6 +40,7 @@ export default function ProjectSelect({
   maxSelections,
   defaultSelected,
   className = "",
+  disabled = false,
 }: ProjectSelectProps) {
   const { projectsPromise, tasksPromise } = usePageContext();
   const projects = use(projectsPromise) || [];
@@ -105,6 +107,7 @@ export default function ProjectSelect({
               : setSelected(defaultValue);
           }}
           name={multiple ? "projectIds" : "projectId"}
+          disabled={disabled}
         >
           <div className="relative">
             {multiple ? (

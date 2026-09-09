@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getFrozenWeeks } from "@/app/actions/frozenWeeks";
+import { WEEK_FROZEN_MESSAGE } from "@/app/effects/frozenWeeks";
 import { getWeeklyKilometrage } from "@/app/actions/weeklyKilometrage";
 import Clock from "@/components/Clock";
 import { FreezeForm } from "@/components/FreezeForm";
@@ -151,6 +152,7 @@ export default async function EmployeePage({
   const weekFrozen = !!frozenWeeks?.find((entry) =>
     isSameUTCDate(entry.weekStart, weekStart),
   );
+  const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
 
   const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
 
@@ -284,7 +286,8 @@ export default async function EmployeePage({
                     {/* Frozen Banner */}
                     {weekFrozen && (
                       <div className="bg-punch-accent-hover text-2xs px-2 py-2 text-center font-bold text-white sm:px-3">
-                        Semaine gelée - Lecture seule
+                        Semaine gelée (Lecture seule) : Demander à un
+                        gestionnaire pour dégeler
                       </div>
                     )}
 
@@ -334,6 +337,7 @@ export default async function EmployeePage({
                                   <EditTimeEntryForm
                                     key={entry.id}
                                     entry={entry}
+                                    disabled={disabledReason}
                                   />
                                 );
                               })}
@@ -362,12 +366,14 @@ export default async function EmployeePage({
                   weekStart={weekStart}
                   currentObjective={objective}
                   currentKilometrage={weeklyKilometrage?.kilometrage ?? 0}
+                  disabled={disabledReason}
                 />
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3">
                 <MultiPunchForm
                   employeeId={employeeId}
                   activePunch={activePunch}
+                  disabled={disabledReason}
                 />
               </div>
             </main>

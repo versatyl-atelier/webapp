@@ -16,6 +16,10 @@ import { runEffectAsFormAction } from "@/lib/effect";
 import { Data, Effect } from "effect";
 import { cachedGetter } from "@/lib/effect";
 import type { PrismaService } from "@/generated/effect-prisma";
+import {
+  assertWeekNotFrozen,
+  WEEK_FROZEN_MESSAGE,
+} from "@/app/effects/frozenWeeks";
 
 class PunchAlreadyActiveError extends Data.TaggedError(
   "PunchAlreadyActiveError",
@@ -55,6 +59,9 @@ export async function startMultiPunch(
     ) {
       return yield* Effect.gen(function* () {
         const id = parseInt(String(employeeId), 10);
+        const now = new Date();
+
+        yield* assertWeekNotFrozen(prisma, id, now);
 
         const existingPunch = yield* prisma.timeEntry.findFirst({
           where: {
@@ -71,7 +78,6 @@ export async function startMultiPunch(
         const projectData = projectIdsToProjectData(
           Array.isArray(projectIds) ? projectIds : [],
         );
-        const now = new Date();
 
         yield* prisma.$transaction(
           Effect.gen(function* () {
@@ -105,13 +111,18 @@ export async function startMultiPunch(
           message: "Punch démarré",
         };
       }).pipe(
-        Effect.catchTag("PunchAlreadyActiveError", () =>
-          Effect.succeed({
-            errors: {
-              projectIds: ["Un punch est déjà actif"],
-            },
-          }),
-        ),
+        Effect.catchTags({
+          PunchAlreadyActiveError: () =>
+            Effect.succeed({
+              errors: {
+                projectIds: ["Un punch est déjà actif"],
+              },
+            }),
+          WeekFrozenError: () =>
+            Effect.succeed({
+              errors: { dataValidation: WEEK_FROZEN_MESSAGE },
+            }),
+        }),
       );
     }),
     Role.employee,
@@ -137,6 +148,9 @@ export async function endMultiPunch(
     ) {
       return yield* Effect.gen(function* () {
         const id = parseInt(String(employeeId), 10);
+        const endTime = new Date();
+
+        yield* assertWeekNotFrozen(prisma, id, endTime);
 
         const activePunches = yield* prisma.timeEntry.findMany({
           where: {
@@ -149,8 +163,6 @@ export async function endMultiPunch(
         if (activePunches.length === 0) {
           return yield* new NoActivePunchError();
         }
-
-        const endTime = new Date();
 
         if (command === "cancel") {
           yield* prisma.timeEntry.updateMany({
@@ -185,13 +197,18 @@ export async function endMultiPunch(
           message: "Punch terminé",
         };
       }).pipe(
-        Effect.catchTag("NoActivePunchError", () =>
-          Effect.succeed({
-            errors: {
-              command: ["Aucun punch actif"],
-            },
-          }),
-        ),
+        Effect.catchTags({
+          NoActivePunchError: () =>
+            Effect.succeed({
+              errors: {
+                command: ["Aucun punch actif"],
+              },
+            }),
+          WeekFrozenError: () =>
+            Effect.succeed({
+              errors: { dataValidation: WEEK_FROZEN_MESSAGE },
+            }),
+        }),
       );
     }),
     Role.employee,

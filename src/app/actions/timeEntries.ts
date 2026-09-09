@@ -4,6 +4,7 @@ import "server-only";
 
 import {
   TimeEntryDeleteArgs,
+  TimeEntryFindFirstArgs,
   TimeEntryGetPayload,
   TimeEntryProjectCreateManyArgs,
   TimeEntryProjectDeleteManyArgs,
@@ -28,6 +29,10 @@ import { parseItemKey } from "@/lib/itemKey";
 import { ProjectOrTask } from "@/components/ProjectSelect";
 import { cachedGetter, protectedEffect } from "@/lib/effect";
 import type { PrismaService } from "@/generated/effect-prisma";
+import {
+  assertWeekNotFrozen,
+  WEEK_FROZEN_MESSAGE,
+} from "@/app/effects/frozenWeeks";
 
 type DateRange = {
   startDate: string;
@@ -94,7 +99,7 @@ export async function editTimeEntry(
     formData,
     EditTimeEntryFormSchema,
     Effect.fn("editTimeEntry")(function* (
-      _prisma: PrismaService,
+      prisma: PrismaService,
       _formState: EditTimeEntryFormState,
       {
         timeEntryId,
@@ -104,40 +109,62 @@ export async function editTimeEntry(
         command,
       }: Record<string, FormDataEntryValue | null>,
     ) {
-      switch (command) {
-        case "save": {
-          const hourValue = secondsToHours(parseTimeToSeconds(String(hours)));
-          const start = new Date(String(startTime));
-          const end = new Date(start.getTime() + hourValue * 3600000);
-          const { id, type } = parseItemKey(String(projectId));
-          const strId = id.toString();
-          yield* Effect.tryPromise(() =>
-            putTimeEntry({
-              id: parseInt(String(timeEntryId), 10),
-              start,
-              end,
-              projects: [
-                {
-                  id: type === ProjectType.trello ? strId : parseInt(strId, 10),
-                  type,
-                },
-              ],
-            }),
+      return yield* Effect.gen(function* () {
+        const entryId = parseInt(String(timeEntryId), 10);
+        const findArgs: TimeEntryFindFirstArgs = {
+          where: { id: entryId, isDeleted: false },
+        };
+        const existingEntry = yield* prisma.timeEntry.findFirst(findArgs);
+
+        if (existingEntry?.employeeId) {
+          yield* assertWeekNotFrozen(
+            prisma,
+            existingEntry.employeeId,
+            existingEntry.start,
           );
-          return {
-            message: "Sauvegardé",
-          };
         }
-        case "delete":
-          yield* Effect.tryPromise(() =>
-            deleteTimeEntry(parseInt(String(timeEntryId), 10)),
-          );
-          return {
-            message: "Supprimé",
-          };
-        default:
-          throw new Error(`Unhandled \`editTimeEntry\` command: ${command}`);
-      }
+
+        switch (command) {
+          case "save": {
+            const hourValue = secondsToHours(parseTimeToSeconds(String(hours)));
+            const start = new Date(String(startTime));
+            const end = new Date(start.getTime() + hourValue * 3600000);
+            const { id, type } = parseItemKey(String(projectId));
+            const strId = id.toString();
+            yield* Effect.tryPromise(() =>
+              putTimeEntry({
+                id: entryId,
+                start,
+                end,
+                projects: [
+                  {
+                    id:
+                      type === ProjectType.trello ? strId : parseInt(strId, 10),
+                    type,
+                  },
+                ],
+              }),
+            );
+            return {
+              message: "Sauvegardé",
+            };
+          }
+          case "delete":
+            yield* Effect.tryPromise(() => deleteTimeEntry(entryId));
+            return {
+              message: "Supprimé",
+            };
+          default:
+            throw new Error(`Unhandled \`editTimeEntry\` command: ${command}`);
+        }
+      }).pipe(
+        // TODO Any way to avoid this duplication across all the form actions?
+        Effect.catchTag("WeekFrozenError", () =>
+          Effect.succeed({
+            errors: { dataValidation: WEEK_FROZEN_MESSAGE },
+          }),
+        ),
+      );
     }),
     Role.employee,
   );

@@ -80,12 +80,15 @@ export function getThisWeek(weekOffset: number = 0) {
   };
 }
 export function getMonday(weekOffset: number = 0): Date {
-  let i = 0;
   const today = new Date();
   today.setDate(today.getDate() + weekOffset * 7);
-  const day = today.getDay();
-  const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-  const result = new Date(today.setDate(diff));
+  return getMondayOfDate(today);
+}
+export function getMondayOfDate(date: Date): Date {
+  const result = new Date(date);
+  const day = result.getDay();
+  const diff = result.getDate() - day + (day === 0 ? -6 : 1);
+  result.setDate(diff);
   result.setHours(0, 0, 0, 0);
   return result;
 }

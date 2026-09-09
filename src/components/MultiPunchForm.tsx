@@ -29,6 +29,7 @@ type ActivePunchData = {
 type MultiPunchFormProps = {
   employeeId: number;
   activePunch: ActivePunchData;
+  disabled?: string;
 };
 
 function calculateElapsedTime(startTime: Date): DisplayTime {
@@ -46,6 +47,7 @@ function calculateElapsedTime(startTime: Date): DisplayTime {
 export default function MultiPunchForm({
   employeeId,
   activePunch: serverActivePunch,
+  disabled,
 }: MultiPunchFormProps) {
   const router = useRouter();
   const punchIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -87,7 +89,7 @@ export default function MultiPunchForm({
         duration: 5000,
       });
     } else if (startState.errors?.projectIds) {
-      toast.error(startState.errors.projectIds[0], { position: "top-left" });
+      toast.error(startState.errors.projectIds[0], { position: "top-left" }); // TODO: Does this belong as `projectIds`?
     }
   }, [startState, router]);
 
@@ -169,7 +171,7 @@ export default function MultiPunchForm({
           ))}
           <Button
             type="submit"
-            disabled={startPending}
+            disabled={startPending || !!disabled}
             className="bg-punch-accent hover:bg-punch-accent-hover mt-2 w-full rounded-sm py-2 text-xs font-semibold text-white uppercase disabled:opacity-50"
           >
             {startPending ? "..." : "Punch In"}
@@ -197,7 +199,7 @@ export default function MultiPunchForm({
                 type="submit"
                 name="command"
                 value="end"
-                disabled={endPending}
+                disabled={endPending || !!disabled}
                 className="bg-punch-neg-diff hover:bg-punch-neg-diff/90 flex-1 rounded-sm py-2 font-semibold text-white disabled:opacity-50"
               >
                 {endPending ? "..." : "Punch Out"}
@@ -207,7 +209,7 @@ export default function MultiPunchForm({
                 name="command"
                 value="cancel"
                 onClick={handleCancelClick}
-                disabled={endPending}
+                disabled={endPending || !!disabled}
                 className="flex-1 rounded-sm bg-gray-400 py-2 font-semibold text-white hover:bg-gray-500 disabled:opacity-50"
               >
                 {endPending ? "..." : "Annuler"}

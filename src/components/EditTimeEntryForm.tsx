@@ -28,9 +28,13 @@ import { ProjectType } from "@/generated/prisma/enums";
 
 export type EditTimeEntryFormProps = {
   entry: TimeEntryWithRelations;
+  disabled?: string;
 };
 
-export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
+export default function EditTimeEntryForm({
+  entry,
+  disabled,
+}: EditTimeEntryFormProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [state, action, pending] = useActionState(editTimeEntry, undefined);
@@ -117,6 +121,7 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
                     ? ProjectType.trello
                     : ProjectType.task,
               }}
+              disabled={pending || !!disabled}
             />
             {state?.errors?.projectId?.map((error: string) => (
               <FieldError key={error}>- {error}</FieldError>
@@ -135,6 +140,7 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
                 defaultValue={formatTimeDisplay(calculateHours())}
                 className="w-full rounded border-2 border-black px-1.5 py-1 text-xs text-black"
                 placeholder="Ex: 8.75 ou 8h45"
+                disabled={pending || !!disabled}
               />
               {state?.errors?.hours?.map((error: string) => (
                 <FieldError key={error}>- {error}</FieldError>
@@ -144,7 +150,7 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
           <DialogFooter className="mt-5 flex justify-center gap-2.5 border-t-0 bg-white">
             <Button
               type="submit"
-              disabled={pending}
+              disabled={pending || !!disabled}
               id="saveTimeEntry"
               name="command"
               value="save"
@@ -155,7 +161,7 @@ export default function EditTimeEntryForm({ entry }: EditTimeEntryFormProps) {
             </Button>
             <Button
               type="submit"
-              disabled={pending}
+              disabled={pending || !!disabled}
               id="deleteTimeEntry"
               name="command"
               value="delete"

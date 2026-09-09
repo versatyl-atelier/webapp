@@ -14,7 +14,7 @@ import {
   type FreezeWeekFormErrors,
   FreezeWeekFormSchema,
 } from "./frozenWeeks.schemas";
-import { FrozenWeek, Role } from "@/generated/prisma/client";
+import { Role } from "@/generated/prisma/client";
 import { verifySession } from "../effects/auth";
 import type { PrismaService } from "@/generated/effect-prisma";
 import { Effect } from "effect";

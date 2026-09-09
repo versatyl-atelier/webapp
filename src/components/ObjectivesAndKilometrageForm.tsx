@@ -17,6 +17,7 @@ export type ObjectivesAndKilometrageFormProps = {
   weekStart: Date;
   currentObjective: number;
   currentKilometrage?: number;
+  disabled?: string;
 };
 
 export function ObjectivesAndKilometrageForm({
@@ -24,6 +25,7 @@ export function ObjectivesAndKilometrageForm({
   weekStart,
   currentObjective,
   currentKilometrage = 0,
+  disabled,
 }: ObjectivesAndKilometrageFormProps) {
   const router = useRouter();
   const [state, action, pending] = useActionState(
@@ -99,7 +101,7 @@ export function ObjectivesAndKilometrageForm({
               name="objective"
               defaultValue={formatTimeDisplay(currentObjective)}
               placeholder="Ex: 36.75 ou 36h 45m"
-              disabled={pending}
+              disabled={pending || !!disabled}
               className="rounded-sm border-2 border-black bg-white text-center text-xs"
             />
           </div>
@@ -115,7 +117,7 @@ export function ObjectivesAndKilometrageForm({
               min="0"
               step="1"
               placeholder="Kilomètres"
-              disabled={pending}
+              disabled={pending || !!disabled}
               className="rounded-sm border-2 border-black bg-white text-center text-xs"
             />
           </div>
@@ -123,7 +125,7 @@ export function ObjectivesAndKilometrageForm({
 
         <Button
           type="submit"
-          disabled={pending}
+          disabled={pending || !!disabled}
           className="hover:bg-punch-accent w-full rounded-sm bg-black font-bold text-white uppercase disabled:opacity-50"
         >
           Sauver

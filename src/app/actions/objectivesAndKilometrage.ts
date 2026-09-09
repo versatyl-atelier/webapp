@@ -18,6 +18,10 @@ import { parseTimeToSeconds, secondsToHours } from "@/lib/time";
 import { runEffectAsFormAction } from "@/lib/effect";
 import { Effect } from "effect";
 import type { PrismaService } from "@/generated/effect-prisma";
+import {
+  assertWeekNotFrozen,
+  WEEK_FROZEN_MESSAGE,
+} from "@/app/effects/frozenWeeks";
 
 export async function updateObjectivesAndKilometrage(
   formState: ObjectivesAndKilometrageFormState,
@@ -65,52 +69,62 @@ export async function updateObjectivesAndKilometrage(
         };
       }
 
-      const employeeUpdateArgs: EmployeeUpdateArgs = {
-        where: { id: employeeIdInt },
-        data: { weeklyTarget: objective },
-      };
+      return yield* Effect.gen(function* () {
+        yield* assertWeekNotFrozen(prisma, employeeIdInt, weekStart);
 
-      const objectiveArgs: WeeklyObjectiveUpsertArgs = {
-        where: {
-          employeeId_weekStart: {
+        const employeeUpdateArgs: EmployeeUpdateArgs = {
+          where: { id: employeeIdInt },
+          data: { weeklyTarget: objective },
+        };
+
+        const objectiveArgs: WeeklyObjectiveUpsertArgs = {
+          where: {
+            employeeId_weekStart: {
+              employeeId: employeeIdInt,
+              weekStart,
+            },
+          },
+          update: { objective },
+          create: {
             employeeId: employeeIdInt,
             weekStart,
+            objective,
           },
-        },
-        update: { objective },
-        create: {
-          employeeId: employeeIdInt,
-          weekStart,
-          objective,
-        },
-      };
+        };
 
-      const kilometrageArgs: WeeklyKilometrageUpsertArgs = {
-        where: {
-          employeeId_weekStart: {
+        const kilometrageArgs: WeeklyKilometrageUpsertArgs = {
+          where: {
+            employeeId_weekStart: {
+              employeeId: employeeIdInt,
+              weekStart,
+            },
+          },
+          update: { kilometrage },
+          create: {
             employeeId: employeeIdInt,
             weekStart,
+            kilometrage,
           },
-        },
-        update: { kilometrage },
-        create: {
-          employeeId: employeeIdInt,
-          weekStart,
-          kilometrage,
-        },
-      };
+        };
 
-      yield* prisma.$transaction(
-        Effect.gen(function* () {
-          yield* prisma.employee.update(employeeUpdateArgs);
-          yield* prisma.weeklyObjective.upsert(objectiveArgs);
-          yield* prisma.weeklyKilometrage.upsert(kilometrageArgs);
-        }),
+        yield* prisma.$transaction(
+          Effect.gen(function* () {
+            yield* prisma.employee.update(employeeUpdateArgs);
+            yield* prisma.weeklyObjective.upsert(objectiveArgs);
+            yield* prisma.weeklyKilometrage.upsert(kilometrageArgs);
+          }),
+        );
+
+        return {
+          message: "Objectif et kilométrage sauvegardés!",
+        };
+      }).pipe(
+        Effect.catchTag("WeekFrozenError", () =>
+          Effect.succeed({
+            errors: { dataValidation: WEEK_FROZEN_MESSAGE },
+          }),
+        ),
       );
-
-      return {
-        message: "Objectif et kilométrage sauvegardés!",
-      };
     }),
     Role.employee,
   );
