@@ -91,10 +91,7 @@ export function protectedEffect<T, E, R>(
     return Effect.runPromise(
       withWideEvent(
         recoverPrismaConnectionDefects(
-          Effect.gen(function* () {
-            const prisma = yield* PrismaService;
-            return yield* getEffect(prisma, ...args);
-          }),
+          Effect.flatMap(PrismaService, (prisma) => getEffect(prisma, ...args)),
           operation,
         ),
         {
@@ -128,43 +125,43 @@ export function runEffectAsFormAction<
   role?: Role,
 ): Promise<FormState> {
   return Effect.runPromise(
-    Effect.gen(function* () {
-      const headersList = yield* Effect.tryPromise(() => headers());
-      const requestId = requestIdFromHeaders(headersList);
+    Effect.tryPromise(() => headers()).pipe(
+      Effect.flatMap((headersList) => {
+        const requestId = requestIdFromHeaders(headersList);
 
-      const inner = recoverPrismaConnectionDefects(
-        Effect.gen(function* () {
-          if (role) {
-            yield* verifySession(role);
-          }
-          const prisma = yield* PrismaService;
-          const allFormData = extractAllFormData(formData);
-          const validated = yield* validateFormData<FormSchema, FormErrors>(
-            allFormData,
-            formSchema,
-          );
-          return yield* action(prisma, formState, validated);
-        }),
-        action.name || "runEffectAsFormAction",
-      ).pipe(Effect.catchAll(handleFormCatchAll<FormState>(formState)));
+        const inner = recoverPrismaConnectionDefects(
+          Effect.gen(function* () {
+            if (role) {
+              yield* verifySession(role);
+            }
+            const prisma = yield* PrismaService;
+            const allFormData = extractAllFormData(formData);
+            const validated = yield* validateFormData<FormSchema, FormErrors>(
+              allFormData,
+              formSchema,
+            );
+            return yield* action(prisma, formState, validated);
+          }),
+          action.name || "runEffectAsFormAction",
+        ).pipe(Effect.catchAll(handleFormCatchAll<FormState>(formState)));
 
-      return yield* withWideEvent(inner, {
-        message: "form action",
-        kind: "mutation",
-        requestId,
-        role,
-        name: action.name || "unnamed form action",
-        defaultLogLevel: "Info",
-        setLogLevel: (value) => {
-          const errors =
-            value && typeof value === "object" && "errors" in value
-              ? (value as { errors?: Record<string, unknown> }).errors
-              : undefined;
-          const hasErrors = !!errors && Object.keys(errors).length > 0;
-          return { level: hasErrors ? "Warning" : "Info" };
-        },
-      });
-    }).pipe(
+        return withWideEvent(inner, {
+          message: "form action",
+          kind: "mutation",
+          requestId,
+          role,
+          name: action.name || "unnamed form action",
+          defaultLogLevel: "Info",
+          setLogLevel: (value) => {
+            const errors =
+              value && typeof value === "object" && "errors" in value
+                ? (value as { errors?: Record<string, unknown> }).errors
+                : undefined;
+            const hasErrors = !!errors && Object.keys(errors).length > 0;
+            return { level: hasErrors ? "Warning" : "Info" };
+          },
+        });
+      }),
       Effect.provide(PrismaLayer),
       Effect.provide(LoggingLayer),
     ) as Effect.Effect<FormState, never, never>,

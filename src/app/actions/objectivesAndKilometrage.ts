@@ -20,7 +20,7 @@ import { Effect } from "effect";
 import type { PrismaService } from "@/generated/effect-prisma";
 import {
   assertWeekNotFrozen,
-  WEEK_FROZEN_MESSAGE,
+  handleWeekFrozen,
 } from "@/app/effects/frozenWeeks";
 
 export async function updateObjectivesAndKilometrage(
@@ -35,41 +35,41 @@ export async function updateObjectivesAndKilometrage(
     formState,
     formData,
     ObjectivesAndKilometrageFormSchema,
-    Effect.fn("updateObjectivesAndKilometrage")(function* (
-      prisma: PrismaService,
-      formState: ObjectivesAndKilometrageFormState,
-      {
-        employeeId,
-        weekStart: strWeekStart,
-        objective: strObjective,
-        kilometrage: strKilometrage,
-      }: Record<string, FormDataEntryValue | null>,
-    ) {
-      const employeeIdInt = parseInt(String(employeeId), 10);
-      const weekStart = new Date(String(strWeekStart));
+    Effect.fn("updateObjectivesAndKilometrage")(
+      function* (
+        prisma: PrismaService,
+        formState: ObjectivesAndKilometrageFormState,
+        {
+          employeeId,
+          weekStart: strWeekStart,
+          objective: strObjective,
+          kilometrage: strKilometrage,
+        }: Record<string, FormDataEntryValue | null>,
+      ) {
+        const employeeIdInt = parseInt(String(employeeId), 10);
+        const weekStart = new Date(String(strWeekStart));
 
-      const objectiveSeconds = parseTimeToSeconds(String(strObjective));
-      const objective = secondsToHours(objectiveSeconds);
+        const objectiveSeconds = parseTimeToSeconds(String(strObjective));
+        const objective = secondsToHours(objectiveSeconds);
 
-      const kilometrage = parseFloat(String(strKilometrage)) || 0;
+        const kilometrage = parseFloat(String(strKilometrage)) || 0;
 
-      if (objective < 5 || objective > 60) {
-        return {
-          errors: {
-            dataValidation: "Objectif doit être entre 5h et 60h",
-          },
-        };
-      }
+        if (objective < 5 || objective > 60) {
+          return {
+            errors: {
+              dataValidation: "Objectif doit être entre 5h et 60h",
+            },
+          };
+        }
 
-      if (kilometrage < 0) {
-        return {
-          errors: {
-            dataValidation: "Kilométrage ne peut pas être négatif",
-          },
-        };
-      }
+        if (kilometrage < 0) {
+          return {
+            errors: {
+              dataValidation: "Kilométrage ne peut pas être négatif",
+            },
+          };
+        }
 
-      return yield* Effect.gen(function* () {
         yield* assertWeekNotFrozen(prisma, employeeIdInt, weekStart);
 
         const employeeUpdateArgs: EmployeeUpdateArgs = {
@@ -118,14 +118,9 @@ export async function updateObjectivesAndKilometrage(
         return {
           message: "Objectif et kilométrage sauvegardés!",
         };
-      }).pipe(
-        Effect.catchTag("WeekFrozenError", () =>
-          Effect.succeed({
-            errors: { dataValidation: WEEK_FROZEN_MESSAGE },
-          }),
-        ),
-      );
-    }),
+      },
+      Effect.catchTag("WeekFrozenError", handleWeekFrozen),
+    ),
     Role.employee,
   );
 }

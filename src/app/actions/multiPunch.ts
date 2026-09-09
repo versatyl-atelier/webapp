@@ -18,7 +18,7 @@ import { cachedGetter } from "@/lib/effect";
 import type { PrismaService } from "@/generated/effect-prisma";
 import {
   assertWeekNotFrozen,
-  WEEK_FROZEN_MESSAGE,
+  handleWeekFrozen,
 } from "@/app/effects/frozenWeeks";
 
 class PunchAlreadyActiveError extends Data.TaggedError(
@@ -52,12 +52,12 @@ export async function startMultiPunch(
     formState,
     formData,
     StartMultiPunchSchema,
-    Effect.fn("startMultiPunch")(function* (
-      prisma: PrismaService,
-      formState: StartMultiPunchFormState,
-      { employeeId, projectIds }: Record<string, FormDataEntryValue | null>,
-    ) {
-      return yield* Effect.gen(function* () {
+    Effect.fn("startMultiPunch")(
+      function* (
+        prisma: PrismaService,
+        formState: StartMultiPunchFormState,
+        { employeeId, projectIds }: Record<string, FormDataEntryValue | null>,
+      ) {
         const id = parseInt(String(employeeId), 10);
         const now = new Date();
 
@@ -110,21 +110,16 @@ export async function startMultiPunch(
         return {
           message: "Punch démarré",
         };
-      }).pipe(
-        Effect.catchTags({
-          PunchAlreadyActiveError: () =>
-            Effect.succeed({
-              errors: {
-                projectIds: ["Un punch est déjà actif"],
-              },
-            }),
-          WeekFrozenError: () =>
-            Effect.succeed({
-              errors: { dataValidation: WEEK_FROZEN_MESSAGE },
-            }),
+      },
+      Effect.catchTag("PunchAlreadyActiveError", () =>
+        Effect.succeed({
+          errors: {
+            projectIds: ["Un punch est déjà actif"],
+          },
         }),
-      );
-    }),
+      ),
+      Effect.catchTag("WeekFrozenError", handleWeekFrozen),
+    ),
     Role.employee,
   );
 }
@@ -141,12 +136,12 @@ export async function endMultiPunch(
     formState,
     formData,
     EndMultiPunchSchema,
-    Effect.fn("endMultiPunch")(function* (
-      prisma: PrismaService,
-      formState: EndMultiPunchFormState,
-      { employeeId, command }: Record<string, FormDataEntryValue | null>,
-    ) {
-      return yield* Effect.gen(function* () {
+    Effect.fn("endMultiPunch")(
+      function* (
+        prisma: PrismaService,
+        formState: EndMultiPunchFormState,
+        { employeeId, command }: Record<string, FormDataEntryValue | null>,
+      ) {
         const id = parseInt(String(employeeId), 10);
         const endTime = new Date();
 
@@ -196,21 +191,16 @@ export async function endMultiPunch(
         return {
           message: "Punch terminé",
         };
-      }).pipe(
-        Effect.catchTags({
-          NoActivePunchError: () =>
-            Effect.succeed({
-              errors: {
-                command: ["Aucun punch actif"],
-              },
-            }),
-          WeekFrozenError: () =>
-            Effect.succeed({
-              errors: { dataValidation: WEEK_FROZEN_MESSAGE },
-            }),
+      },
+      Effect.catchTag("NoActivePunchError", () =>
+        Effect.succeed({
+          errors: {
+            command: ["Aucun punch actif"],
+          },
         }),
-      );
-    }),
+      ),
+      Effect.catchTag("WeekFrozenError", handleWeekFrozen),
+    ),
     Role.employee,
   );
 }

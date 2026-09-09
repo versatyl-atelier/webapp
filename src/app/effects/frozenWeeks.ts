@@ -11,6 +11,11 @@ export class WeekFrozenError extends Data.TaggedError("WeekFrozenError")<{
   readonly weekStart: Date;
 }> {}
 
+export const handleWeekFrozen = () =>
+  Effect.succeed({
+    errors: { dataValidation: WEEK_FROZEN_MESSAGE },
+  });
+
 export const assertWeekNotFrozen = Effect.fn("assertWeekNotFrozen")(function* (
   prisma: PrismaService,
   employeeId: number,

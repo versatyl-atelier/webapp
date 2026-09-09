@@ -31,7 +31,7 @@ import { cachedGetter, protectedEffect } from "@/lib/effect";
 import type { PrismaService } from "@/generated/effect-prisma";
 import {
   assertWeekNotFrozen,
-  WEEK_FROZEN_MESSAGE,
+  handleWeekFrozen,
 } from "@/app/effects/frozenWeeks";
 
 type DateRange = {
@@ -98,18 +98,18 @@ export async function editTimeEntry(
     formState,
     formData,
     EditTimeEntryFormSchema,
-    Effect.fn("editTimeEntry")(function* (
-      prisma: PrismaService,
-      _formState: EditTimeEntryFormState,
-      {
-        timeEntryId,
-        projectId,
-        startTime,
-        hours,
-        command,
-      }: Record<string, FormDataEntryValue | null>,
-    ) {
-      return yield* Effect.gen(function* () {
+    Effect.fn("editTimeEntry")(
+      function* (
+        prisma: PrismaService,
+        _formState: EditTimeEntryFormState,
+        {
+          timeEntryId,
+          projectId,
+          startTime,
+          hours,
+          command,
+        }: Record<string, FormDataEntryValue | null>,
+      ) {
         const entryId = parseInt(String(timeEntryId), 10);
         const findArgs: TimeEntryFindFirstArgs = {
           where: { id: entryId, isDeleted: false },
@@ -157,15 +157,9 @@ export async function editTimeEntry(
           default:
             throw new Error(`Unhandled \`editTimeEntry\` command: ${command}`);
         }
-      }).pipe(
-        // TODO Any way to avoid this duplication across all the form actions?
-        Effect.catchTag("WeekFrozenError", () =>
-          Effect.succeed({
-            errors: { dataValidation: WEEK_FROZEN_MESSAGE },
-          }),
-        ),
-      );
-    }),
+      },
+      Effect.catchTag("WeekFrozenError", handleWeekFrozen),
+    ),
     Role.employee,
   );
 }
