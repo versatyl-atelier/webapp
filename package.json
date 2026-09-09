@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "test": "vitest",
-    "test:ci": "npm run db:validate && npm run type-check",
+    "test:ci": "npm run db:validate && npm run type-check && vitest run",
     "dev": "next dev",
     "db:dev": "docker-compose -f docker-compose.yml up",
     "db:validate": "prisma validate",
