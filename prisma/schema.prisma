@@ -4,8 +4,8 @@ generator client {
 }
 
 generator effect {
-  provider = "effect-prisma-generator"
-  output = "../src/generated/effect-prisma.ts"
+  provider         = "effect-prisma-generator"
+  output           = "../src/generated/effect-prisma.ts"
   clientImportPath = "./prisma/client"
 }
 
