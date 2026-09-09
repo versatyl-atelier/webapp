@@ -26,6 +26,9 @@ export default async function proxy(req: NextRequest) {
         Effect.catchTag("Unauthorized", (error) => {
           return Effect.succeed(false);
         }),
+        Effect.catchTag("SessionDecryptError", (error) => {
+          return Effect.succeed(false);
+        }),
       ),
       {
         message: "Proxy request",
