@@ -6,7 +6,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { freezeWeek } from "@/actions/frozenWeeks";
-import dino from "@/app/employee/[id]/dino.gif";
+import dino from "@/app/punch/employe/[id]/dino.gif";
 import { Alert, AlertDescription, AlertAction } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FieldError, FieldGroup } from "@/components/ui/field";

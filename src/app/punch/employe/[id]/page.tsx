@@ -1,13 +1,13 @@
-import Image from "next/image";
 import Link from "next/link";
 import { getFrozenWeeks } from "@/actions/frozenWeeks";
 import { WEEK_FROZEN_MESSAGE } from "@/schemas/frozenWeeks.schemas";
 import { getWeeklyKilometrage } from "@/actions/weeklyKilometrage";
-import Clock from "@/components/Clock";
+
 import { FreezeForm } from "@/components/FreezeForm";
 import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
 import MultiPunchForm from "@/components/MultiPunchForm";
 import { Button } from "@/components/ui/button";
+import Clock from "@/components/Clock";
 import { notFound } from "next/navigation";
 import { getEmployee } from "@/actions/employees";
 import { getTimeEntries } from "@/actions/timeEntries";
@@ -22,19 +22,20 @@ import {
 } from "@/lib/time";
 import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
+import { VersatylSidebarTrigger } from "@/components/VersatylSidebarTrigger";
 import { PageContextProvider } from "./context-provider";
-import {
-  Sidebar,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarMenuItem,
-  SidebarMenuAction,
-  SidebarInset,
-} from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { isOpen } from "@/lib/sidebar";
+
+import { PunchSidebar } from "../../PunchSidebar";
+import { ChevronDown } from "lucide-react";
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+} from "@/components/ui/breadcrumb";
 
 const defaultWeeklyTarget = 40; // TODO Find better place for this magic value
 
@@ -158,45 +159,37 @@ export default async function EmployeePage({
 
   const activePunch = await getActivePunch(employeeId);
 
-  const defaultOpen = await isOpen();
+  const isSidebarOpen = await isOpen();
 
   return (
     <PageContextProvider
       projectsPromise={projectsPromise}
       tasksPromise={tasksPromise}
     >
-      <SidebarProvider defaultOpen={defaultOpen}>
-        <PageSidebar />
+      <SidebarProvider defaultOpen={isSidebarOpen}>
+        <PunchSidebar />
         <SidebarInset>
-          <div className="bg-punch-light flex min-h-screen w-full min-w-md flex-col px-4">
-            <SidebarTrigger />
-            {/* Header */}
-            <header className="border-punch-dark m-1.5 rounded-md border-2 bg-white px-5 py-4">
-              <div className="mx-auto flex items-center justify-between">
-                <h1 className="text-punch-dark text-xl font-bold">
-                  <Link href="/punch/home">
-                    <Image
-                      src="/logo.png"
-                      alt="Atelier Versatyl"
-                      width={36}
-                      height={36}
-                      className="mr-4 inline-block h-9 w-9"
-                    />
-                  </Link>
-                  Atelier Versatyl
-                </h1>
-                <div className="flex space-x-4">
-                  <Clock />
-                  <Button
-                    className="bg-punch-accent hover:bg-punch-accent-hover rounded-sm px-6 py-2 font-semibold text-white"
-                    asChild
-                  >
-                    <Link href="/punch">Terminé</Link>
-                  </Button>
-                </div>
+          <div className="bg-punch-light flex min-h-screen w-full min-w-md flex-col">
+            <div className="flex flex-row items-baseline">
+              <VersatylSidebarTrigger />
+              <div className="flex w-full flex-row justify-between px-8 py-2">
+                <Breadcrumb className="inline-block">
+                  <BreadcrumbList className="text-foreground hover:text-accent">
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <h1 className="ml-2 inline-block">
+                          <Link href="/punch">
+                            {employee.name}{" "}
+                            <ChevronDown className="inline-block" />
+                          </Link>
+                        </h1>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+                <Clock className="self-end" />
               </div>
-            </header>
-
+            </div>
             <main className="flex flex-1 flex-col gap-2.5 p-1.5">
               <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[180px_1fr_180px]">
                 <aside className="border-punch-dark w-full rounded-lg border-2 bg-white p-2.5">
@@ -381,30 +374,5 @@ export default async function EmployeePage({
         </SidebarInset>
       </SidebarProvider>
     </PageContextProvider>
-  );
-}
-
-function PageSidebar() {
-  return (
-    <Sidebar
-      variant="sidebar"
-      className="border-r-muted mt-10 h-[calc(100svh-40px)]"
-    >
-      <SidebarHeader className="px-0 py-2">
-        <SidebarMenu>
-          <SidebarMenuItem className="text-punch-dark inline-block h-full py-2 pl-10">
-            <SidebarMenuAction
-              asChild
-              className="text-muted-foreground top-0 right-auto left-0 size-10 text-base"
-            >
-              <Link href="/">←</Link>
-            </SidebarMenuAction>
-            <span className="mr-3 text-base">⏱</span>
-            <span className="text-sm font-bold">Punch</span>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <Separator />
-    </Sidebar>
   );
 }
