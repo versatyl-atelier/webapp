@@ -4,10 +4,10 @@ import { cookies } from "next/headers";
 
 import { SignJWT, jwtVerify } from "jose";
 import { Role } from "@/generated/prisma/client";
-import type { SessionPayload } from "@/app/actions/auth.schemas";
+import type { SessionPayload } from "@/schemas/auth.schemas";
 import { SESSION_COOKIE_NAMES, SECURE_COOKIES } from "@/constants/auth";
 import { Data, Effect } from "effect";
-import { SessionNotFound } from "@/app/effects/auth";
+import { SessionNotFound } from "@/schemas/auth.schemas";
 
 const SESSION_DURATIONS: Record<Role, number> = {
   [Role.employee]: 365 * 24 * 60 * 60 * 1000,

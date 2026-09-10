@@ -1,5 +1,6 @@
 import { Schema } from "effect";
-import { FormState } from "./FormState";
+import { FormState } from "@/schemas/forms.schemas";
+import { TimeEntryGetPayload } from "@/generated/prisma/models";
 
 export const EditTimeEntryFormSchema = Schema.Struct({
   timeEntryId: Schema.String,
@@ -28,3 +29,25 @@ export type Employee = {
   name: string;
   weeklyTarget?: number;
 };
+
+export type DateRange = {
+  startDate: string;
+  endDate: string;
+};
+
+export const timeEntryInclude = {
+  projects: {
+    include: {
+      project: {
+        select: { name: true },
+      },
+      task: {
+        select: { name: true },
+      },
+    },
+  },
+};
+
+export type TimeEntryWithRelations = TimeEntryGetPayload<{
+  include: typeof timeEntryInclude;
+}>;

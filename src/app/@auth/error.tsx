@@ -16,9 +16,9 @@ export default function ErrorPage({
 
   return (
     <>
-      <h2>Something went wrong!</h2>
+      <h2>Quelque chose a foiré !</h2>
       <Button onClick={() => unstable_retry()}>
-        {"Try again (`unstable_retry()`)"}
+        {"Réessayer (`unstable_retry()`)"}
       </Button>
     </>
   );

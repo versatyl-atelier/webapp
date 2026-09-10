@@ -1,12 +1,8 @@
 import { Schema } from "effect";
 
 import { Role } from "@/generated/prisma/client";
-import { FormState } from "./FormState";
-
-export type AuthErrorState = {
-  error: "auth_required";
-  role: Role;
-};
+import { FormState } from "@/schemas/forms.schemas";
+import { Data } from "effect";
 
 export type SessionPayload = {
   expiresAt: Date;
@@ -37,3 +33,11 @@ export const LogoutFormSchema = Schema.Struct({
 });
 
 export type LogoutFormErrors = never;
+
+export class SessionNotFound extends Data.TaggedError("SessionNotFound")<{
+  readonly role: Role;
+}> {
+  public toString() {
+    return `SessionNotFound:${this.role}`;
+  }
+}

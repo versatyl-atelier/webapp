@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { Effect } from "effect";
 
-import { Role } from "../src/generated/prisma/enums";
+import { Role } from "@/generated/prisma/enums";
 
 const cookieStore = {
   get: vi.fn(),
@@ -12,8 +12,8 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => cookieStore),
 }));
 
-import { encrypt, getCookieName } from "../src/lib/session";
-import proxy from "../src/proxy";
+import { encrypt, getCookieName } from "@/lib/session";
+import proxy from "@/proxy";
 
 function requestFor(pathname: string) {
   return new NextRequest(new URL(pathname, "https://versatyl.test"));

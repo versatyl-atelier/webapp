@@ -4,7 +4,7 @@ import { TriangleAlert } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { updateObjectivesAndKilometrage } from "@/app/actions/objectivesAndKilometrage";
+import { updateObjectivesAndKilometrage } from "@/actions/objectivesAndKilometrage";
 import { Alert, AlertDescription, AlertAction } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FieldError, FieldGroup } from "@/components/ui/field";

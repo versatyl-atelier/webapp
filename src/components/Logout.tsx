@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 
-import { logout } from "@/app/actions/auth";
+import { logout } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Role } from "@/generated/prisma/enums";
@@ -32,9 +32,7 @@ export function LogoutForm({ role, redirectTo }: LogoutFormProps) {
         id="role"
         name="role"
         type="hidden"
-        value={
-          isManager ? Role.manager : isEmployee ? Role.employee : ""
-        }
+        value={isManager ? Role.manager : isEmployee ? Role.employee : ""}
       />
       <Button type="submit" disabled={pending} variant="destructive">
         Déconnexion

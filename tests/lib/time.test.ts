@@ -11,7 +11,7 @@ import {
   isSameDay,
   isSameUTCDate,
   toUTCDate,
-} from "../../src/lib/time";
+} from "@/lib/time";
 
 describe("parseTimeToSeconds", () => {
   it("treats a number below 100 as hours", () => {
@@ -135,15 +135,13 @@ describe("getMonday / getThisWeek", () => {
 
 describe("isSameDay", () => {
   it("is true for the same calendar day at different times", () => {
-    expect(
-      isSameDay(new Date(2024, 0, 8, 1), new Date(2024, 0, 8, 23)),
-    ).toBe(true);
+    expect(isSameDay(new Date(2024, 0, 8, 1), new Date(2024, 0, 8, 23))).toBe(
+      true,
+    );
   });
 
   it("is false for different calendar days", () => {
-    expect(isSameDay(new Date(2024, 0, 8), new Date(2024, 0, 9))).toBe(
-      false,
-    );
+    expect(isSameDay(new Date(2024, 0, 8), new Date(2024, 0, 9))).toBe(false);
   });
 });
 

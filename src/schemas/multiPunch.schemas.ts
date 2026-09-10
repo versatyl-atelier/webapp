@@ -1,5 +1,6 @@
-import { FormState } from "./FormState";
+import { FormState } from "@/schemas/forms.schemas";
 import { Schema } from "effect";
+import { Data } from "effect";
 
 const ProjectIdsFromJson = Schema.parseJson(
   Schema.Array(Schema.String).pipe(
@@ -43,3 +44,11 @@ export type EndMultiPunchFormState =
       errors?: EndMultiPunchFormErrors;
     })
   | undefined;
+
+export class PunchAlreadyActiveError extends Data.TaggedError(
+  "PunchAlreadyActiveError",
+)<{}> {}
+
+export class NoActivePunchError extends Data.TaggedError(
+  "NoActivePunchError",
+)<{}> {}

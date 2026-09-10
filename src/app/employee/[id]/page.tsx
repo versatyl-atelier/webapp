@@ -1,26 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getFrozenWeeks } from "@/app/actions/frozenWeeks";
-import { WEEK_FROZEN_MESSAGE } from "@/app/effects/frozenWeeks";
-import { getWeeklyKilometrage } from "@/app/actions/weeklyKilometrage";
+import { getFrozenWeeks } from "@/actions/frozenWeeks";
+import { WEEK_FROZEN_MESSAGE } from "@/schemas/frozenWeeks.schemas";
+import { getWeeklyKilometrage } from "@/actions/weeklyKilometrage";
 import Clock from "@/components/Clock";
 import { FreezeForm } from "@/components/FreezeForm";
 import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
 import MultiPunchForm from "@/components/MultiPunchForm";
 import { Button } from "@/components/ui/button";
 import { notFound } from "next/navigation";
-import { getEmployee } from "@/app/actions/employees";
-import { getTimeEntries } from "@/app/actions/timeEntries";
-import { getActivePunch } from "@/app/actions/multiPunch";
-import { getProjects } from "@/app/actions/projects";
-import { getTasks } from "@/app/actions/tasks";
+import { getEmployee } from "@/actions/employees";
+import { getTimeEntries } from "@/actions/timeEntries";
+import { getActivePunch } from "@/actions/multiPunch";
+import { getProjects } from "@/actions/projects";
+import { getTasks } from "@/actions/tasks";
 import {
   formatTimeDisplay,
   getThisWeek,
   isSameDay,
   isSameUTCDate,
 } from "@/lib/time";
-import type { TimeEntryWithRelations } from "@/app/actions/timeEntries";
+import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
 import { PageContextProvider } from "./context-provider";
 import {

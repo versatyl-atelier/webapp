@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Cause, Effect, Exit, Option } from "effect";
 
-import { Role } from "../../src/generated/prisma/enums";
+import { Role } from "@/generated/prisma/enums";
 
 const cookieStore = {
   get: vi.fn(),
@@ -13,12 +13,7 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => cookieStore),
 }));
 
-import {
-  encrypt,
-  decrypt,
-  createSession,
-  getCookieName,
-} from "../../src/lib/session";
+import { encrypt, decrypt, createSession, getCookieName } from "@/lib/session";
 
 describe("getCookieName", () => {
   it("resolves the configured cookie name for each role", () => {
@@ -87,7 +82,7 @@ describe("createSession", () => {
     expect(name).toBe("versatyl-session-employe");
     expect(options).toMatchObject({
       httpOnly: true,
-      secure: true,
+      secure: false, // secure only in production
       sameSite: "lax",
       path: "/",
     });

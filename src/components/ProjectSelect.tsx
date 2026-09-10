@@ -21,7 +21,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { usePageContext } from "@/app/employee/[id]/context-provider";
 
 import { ProjectType } from "@/generated/prisma/enums";
-import { parseItemKey, stringifyItemKey } from "../lib/itemKey";
+import { parseItemKey, stringifyItemKey } from "@/lib/itemKey";
 
 export type ProjectOrTask = {
   id: string | number;

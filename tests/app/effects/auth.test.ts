@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Cause, Effect, Exit, Option } from "effect";
 
-import { Role } from "../../../src/generated/prisma/enums";
+import { Role } from "@/generated/prisma/enums";
 
 const cookieStore = {
   get: vi.fn(),
@@ -11,8 +11,9 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => cookieStore),
 }));
 
-import { encrypt } from "../../../src/lib/session";
-import { verifySession, SessionNotFound } from "../../../src/app/effects/auth";
+import { encrypt } from "@/lib/session";
+import { verifySession } from "@/effects/auth";
+import { SessionNotFound } from "@/schemas/auth.schemas";
 
 describe("verifySession", () => {
   beforeEach(() => {

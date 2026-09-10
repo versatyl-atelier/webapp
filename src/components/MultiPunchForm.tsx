@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { startMultiPunch, endMultiPunch } from "@/app/actions/multiPunch";
+import { startMultiPunch, endMultiPunch } from "@/actions/multiPunch";
 import { Button } from "@/components/ui/button";
 import ProjectSelect from "@/components/ProjectSelect";
 import { Field, FieldError } from "./ui/field";

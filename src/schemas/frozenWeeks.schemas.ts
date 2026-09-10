@@ -1,5 +1,14 @@
 import { Schema } from "effect";
-import { FormState } from "./FormState";
+import { FormState } from "@/schemas/forms.schemas";
+import { Data } from "effect";
+
+export const WEEK_FROZEN_MESSAGE =
+  "Cette semaine est gelée. Un gestionnaire doit la dégeler pour permettre des modifications.";
+
+export class WeekFrozenError extends Data.TaggedError("WeekFrozenError")<{
+  readonly employeeId: number;
+  readonly weekStart: Date;
+}> {}
 
 export const FreezeWeekFormSchema = Schema.Struct({
   employeeId: Schema.String,

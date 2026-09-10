@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { editTimeEntry } from "@/app/actions/timeEntries";
+import { editTimeEntry } from "@/actions/timeEntries";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,7 +23,7 @@ import ProjectSelect from "@/components/ProjectSelect";
 import { formatTimeDisplay } from "@/lib/time";
 import { Input } from "./ui/input";
 import { useRouter } from "next/navigation";
-import type { TimeEntryWithRelations } from "@/app/actions/timeEntries";
+import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
 import { ProjectType } from "@/generated/prisma/enums";
 
 export type EditTimeEntryFormProps = {

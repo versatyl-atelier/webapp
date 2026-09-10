@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { verifyPassword } from "../../src/lib/auth";
+import { verifyPassword } from "@/lib/auth";
 
 describe("verifyPassword", () => {
   it("returns true when the input matches the expected password", () => {

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { EmployeeSelect } from "@/components/EmployeeSelect";
 
-import { getEmployees } from "@/app/actions/employees";
+import { getEmployees } from "@/actions/employees";
 
 export const dynamic = "force-dynamic";
 

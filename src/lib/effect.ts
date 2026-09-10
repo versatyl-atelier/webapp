@@ -5,7 +5,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
-import { SessionNotFound, verifySession } from "@/app/effects/auth";
+import { verifySession } from "@/effects/auth";
+import { SessionNotFound } from "@/schemas/auth.schemas";
 import { Role } from "@/generated/prisma/enums";
 import { Prisma } from "@/generated/prisma/client";
 import {

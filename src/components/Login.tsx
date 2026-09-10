@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
-import { login } from "@/app/actions/auth";
+import { login } from "@/actions/auth";
 import { Role } from "@/generated/prisma/enums";
 import { useRouter } from "next/navigation";
 import { useAuthEvents } from "@/contexts/auth-events-provider";

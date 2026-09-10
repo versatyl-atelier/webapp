@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import { FormState } from "./FormState";
+import { FormState } from "@/schemas/forms.schemas";
 
 export const ObjectivesAndKilometrageFormSchema = Schema.Struct({
   employeeId: Schema.String,
