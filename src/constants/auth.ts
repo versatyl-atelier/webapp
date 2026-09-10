@@ -21,6 +21,8 @@ export const COOKIE_CONFIG = {
   maxAge: undefined,
 };
 
+export const SECURE_COOKIES = process.env.NODE_ENV === "production";
+
 export const PASSWORDS: Record<Role, string> = {
   employee: "VERSATYL_PASSWORD_EMPLOYEE",
   manager: "VERSATYL_PASSWORD_MANAGER",

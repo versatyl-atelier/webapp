@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import { Role } from "@/generated/prisma/client";
 import type { SessionPayload } from "@/app/actions/auth.schemas";
-import { SESSION_COOKIE_NAMES } from "@/constants/auth";
+import { SESSION_COOKIE_NAMES, SECURE_COOKIES } from "@/constants/auth";
 import { Data, Effect } from "effect";
 import { SessionNotFound } from "@/app/effects/auth";
 
@@ -72,7 +72,7 @@ export const createSession = Effect.fn("createSession")(function* (role: Role) {
 
   cookieStore.set(cookieName, session, {
     httpOnly: true,
-    secure: true,
+    secure: SECURE_COOKIES,
     expires: expiresAt,
     sameSite: "lax",
     path: "/",
@@ -93,7 +93,7 @@ export const updateSession = Effect.fn("updateSession")(function* (role: Role) {
 
   cookieStore.set(cookieName, session || "", {
     httpOnly: true,
-    secure: true,
+    secure: SECURE_COOKIES,
     expires: new Date(Date.now() + SESSION_DURATIONS[role]),
     sameSite: "lax",
     path: "/",
