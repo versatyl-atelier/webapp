@@ -13,7 +13,7 @@ export const config = {
   matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],
 };
 
-const protectedRoutes = ["/punch", "/employee"];
+const protectedRoutes = ["/punch"];
 
 export class Unauthorized extends Data.TaggedError("Unauthorized") {}
 

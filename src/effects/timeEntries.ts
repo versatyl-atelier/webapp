@@ -37,6 +37,7 @@ export const deleteTimeEntryEffect = Effect.fn("deleteTimeEntry")(function* (
   };
   return yield* prisma.timeEntry.delete(args);
 });
+
 export const getTimeEntriesEffect = Effect.fn("getTimeEntries")(function* (
   prisma: PrismaService,
   employeeId: number,
@@ -63,6 +64,7 @@ export const getTimeEntriesEffect = Effect.fn("getTimeEntries")(function* (
   };
   return yield* prisma.timeEntry.findMany(args);
 });
+
 export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
   function* (
     prisma: PrismaService,
@@ -129,6 +131,7 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
   },
   Effect.catchTag("WeekFrozenError", handleWeekFrozen),
 );
+
 export const putTimeEntryEffect = Effect.fn("putTimeEntry")(function* (
   prisma: PrismaService,
   entry: Partial<TimeEntry> & {

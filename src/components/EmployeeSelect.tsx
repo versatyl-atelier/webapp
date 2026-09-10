@@ -12,35 +12,40 @@ import { Employee } from "@/generated/prisma/client";
 
 type EmployeeSelectProps = {
   employees: Employee[];
+  className?: string;
 };
 
-export function EmployeeSelect({ employees }: EmployeeSelectProps) {
+export function EmployeeSelect({ employees, className }: EmployeeSelectProps) {
   return (
-    <Combobox
-      items={employees}
-      autoHighlight
-      itemToStringLabel={(employee: Employee) => employee.name}
-      onValueChange={(employee) => {
-        if (employee) {
-          window.location.href = `/employee/${employee.id}`;
-        }
-      }}
-    >
-      <ComboboxInput
-        className="border-punch-dark hover:border-punch-accent focus-visible:border-punch-accent active:border-punch-accent border-2 py-7"
-        placeholder="-- Choisir employé --"
-        showClear
-      />
-      <ComboboxContent>
-        <ComboboxEmpty>Aucun employé trouvé</ComboboxEmpty>
-        <ComboboxList>
-          {(employee) => (
-            <ComboboxItem key={employee.id} value={employee}>
-              {employee.name}
-            </ComboboxItem>
-          )}
-        </ComboboxList>
-      </ComboboxContent>
-    </Combobox>
+    <div className={className}>
+      <Combobox
+        items={employees}
+        autoHighlight
+        itemToStringLabel={(employee: Employee) => employee.name}
+        onValueChange={(employee) => {
+          if (employee) {
+            window.location.href = `/punch/employe/${employee.id}`;
+          }
+        }}
+        defaultOpen
+      >
+        <ComboboxInput
+          className="border-punch-dark hover:border-punch-accent focus-visible:border-punch-accent active:border-punch-accent border-2 py-2"
+          placeholder="-- Choisir employé --"
+          autoFocus
+          showClear
+        />
+        <ComboboxContent>
+          <ComboboxEmpty>Aucun employé trouvé</ComboboxEmpty>
+          <ComboboxList className="max-h-11/12">
+            {(employee) => (
+              <ComboboxItem key={employee.id} value={employee}>
+                {employee.name}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    </div>
   );
 }
