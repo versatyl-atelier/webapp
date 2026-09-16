@@ -1,10 +1,15 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
 const defaultTimeString = "00:00:00";
 
-export default function Clock() {
+type ClockProps = {
+  className?: string;
+};
+
+export default function Clock({ className }: ClockProps) {
   const [timeString, setTimeString] = useState(defaultTimeString);
 
   useEffect(() => {
@@ -22,7 +27,11 @@ export default function Clock() {
 
   return (
     <div
-      className={`rounded-sm bg-black px-2 py-1 font-mono transition-colors ${timeString === defaultTimeString ? "text-transparent" : "text-white"}`}
+      className={cn(
+        "rounded-sm bg-black px-2 py-1 font-mono transition-colors",
+        timeString === defaultTimeString ? "text-transparent" : "text-white",
+        className,
+      )}
     >
       {timeString}
     </div>

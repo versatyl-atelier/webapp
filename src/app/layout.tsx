@@ -54,7 +54,9 @@ export default function RootLayout({
                   <rect x="7" y="7" width="4" height="4" rx="1" />
                 </svg>
               </Link>
-              <h1 className="inline-block font-bold">Versatyl</h1>
+              <h1 className="inline-block font-bold">
+                <Link href="/">Versatyl</Link>
+              </h1>
             </div>
             <div className="my-auto">
               <LogoutButton />

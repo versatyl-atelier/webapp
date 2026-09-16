@@ -26,7 +26,7 @@ const apps: AppCard[] = [
     tags: ["Nouveau"],
   },
   {
-    href: "punch/home",
+    href: "punch",
     icon: "⏱",
     title: "Punch",
     description: "Timesheet atelier",
@@ -64,7 +64,7 @@ export default async function Home() {
             <Link href={href}>
               <Card
                 className={cn(
-                  "h-36 w-44 shadow-sm hover:shadow-lg transition-shadow",
+                  "h-36 w-44 shadow-sm transition-shadow hover:shadow-lg",
                   disabled ? "opacity-35" : "",
                 )}
               >
