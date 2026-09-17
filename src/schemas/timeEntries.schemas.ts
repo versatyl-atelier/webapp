@@ -24,6 +24,48 @@ export type EditTimeEntryFormState =
     })
   | undefined;
 
+export const AddManualTimeFormSchema = Schema.Struct({
+  employeeId: Schema.String,
+  projectId: Schema.String,
+  hours: Schema.String,
+  date: Schema.String,
+  command: Schema.Literal("add", "lunch"),
+});
+
+export type AddManualTimeFormErrors = {
+  employeeId?: string[];
+  projectId?: string[];
+  hours?: string[];
+  date?: string[];
+  command?: string[];
+};
+
+export type AddManualTimeFormState =
+  | (FormState & {
+      errors?: AddManualTimeFormErrors;
+    })
+  | undefined;
+
+export const FillDayFormSchema = Schema.Struct({
+  employeeId: Schema.String,
+  projectId: Schema.String,
+  target: Schema.String,
+  date: Schema.String,
+});
+
+export type FillDayFormErrors = {
+  employeeId?: string[];
+  projectId?: string[];
+  target?: string[];
+  date?: string[];
+};
+
+export type FillDayFormState =
+  | (FormState & {
+      errors?: FillDayFormErrors;
+    })
+  | undefined;
+
 export type Employee = {
   id: number;
   name: string;

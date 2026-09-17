@@ -28,6 +28,7 @@ export type ProjectOrTask = {
   type: ProjectType;
 };
 type ProjectSelectProps = {
+  title?: string | null;
   multiple?: boolean;
   maxSelections?: number;
   defaultSelected?: ProjectOrTask | ProjectOrTask[];
@@ -36,6 +37,7 @@ type ProjectSelectProps = {
 };
 
 export default function ProjectSelect({
+  title = null,
   multiple = false,
   maxSelections,
   defaultSelected,
@@ -59,7 +61,12 @@ export default function ProjectSelect({
   }
 
   function getProjectName(value: string) {
-    return getProjectOrTask(parseItemKey(value))?.name || value;
+    const item = parseItemKey(value);
+    const { id } = item;
+    if (id === "") {
+      return "";
+    }
+    return getProjectOrTask(item)?.name || value;
   }
 
   const value = Array.isArray(selected)
@@ -79,12 +86,17 @@ export default function ProjectSelect({
     setSelected(value ? parseItemKey(value) : defaultValue);
   }
 
+  const label =
+    title === null
+      ? multiple
+        ? `Projet(s)/Tâche(s)${maxSelections ? ` (jusqu\'à ${maxSelections})` : ""}`
+        : "Projet/Tâche"
+      : title;
+
   return (
     <Field className={className}>
       <FieldLabel className="mb-1 block text-xs font-semibold text-black uppercase">
-        {multiple
-          ? `Projet(s)/Tâche(s)${maxSelections ? ` (jusqu\'à ${maxSelections})` : ""}`
-          : "Projet/Tâche"}
+        {label}
       </FieldLabel>
       <Suspense
         fallback={

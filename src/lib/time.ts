@@ -55,6 +55,13 @@ export function secondsToHours(seconds: number): number {
   return seconds / 3600;
 }
 
+export function calculateHoursNeeded(
+  targetHours: number,
+  existingHours: number,
+): number {
+  return Math.round((targetHours - existingHours) * 60) / 60;
+}
+
 export function formatTimeDisplay(decimal: number): string {
   if (!decimal || Number.isNaN(decimal)) return "0h 0m";
 

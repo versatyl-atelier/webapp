@@ -43,6 +43,8 @@
   --punch-today: #fef5e9;
   --punch-pos-diff: #27ae60;
   --punch-neg-diff: #e74c3c;
+  --punch-secondary-bg: #9b59b6;
+  --punch-secondary-border: #8e44ad;
 }
 
 .dark {
@@ -85,6 +87,8 @@
   --punch-today: #fef5e9;
   --punch-pos-diff: #27ae60;
   --punch-neg-diff: #e74c3c;
+  --punch-secondary-bg: #9b59b6;
+  --punch-secondary-border: #8e44ad;
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -131,6 +135,8 @@
   --color-punch-today: var(--punch-today);
   --color-punch-pos-diff: var(--punch-pos-diff);
   --color-punch-neg-diff: var(--punch-neg-diff);
+  --color-punch-secondary-bg: var(--punch-secondary-bg);
+  --color-punch-secondary-border: var(--punch-secondary-border);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

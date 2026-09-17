@@ -6,6 +6,8 @@ import { getWeeklyKilometrage } from "@/actions/weeklyKilometrage";
 import { FreezeForm } from "@/components/FreezeForm";
 import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
 import MultiPunchForm from "@/components/MultiPunchForm";
+import ManualTimeForm from "@/components/ManualTimeForm";
+import FillDayForm from "@/components/FillDayForm";
 import { Button } from "@/components/ui/button";
 import Clock from "@/components/Clock";
 import { notFound } from "next/navigation";
@@ -143,6 +145,19 @@ export default async function EmployeePage({
       total,
     });
   }
+
+  const dateOptions = daysData.map((day, i) => ({
+    value: day.date.toISOString().split("T")[0],
+    label: `${dayNames[i].slice(0, 3)} ${day.date
+      .getDate()
+      .toString()
+      .padStart(2, "0")}/${(day.date.getMonth() + 1).toString().padStart(2, "0")}`,
+  }));
+  const todayIso = today.toISOString().split("T")[0];
+  const defaultDate = weekOffset === 0 ? todayIso : dateOptions[0]?.value;
+  const dailyHours = Object.fromEntries(
+    daysData.map((day, i) => [dateOptions[i].value, day.total]),
+  );
 
   const projectsPromise = getProjects(employeeId);
   const tasksPromise = getTasks();
@@ -362,10 +377,23 @@ export default async function EmployeePage({
                   disabled={disabledReason}
                 />
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
                 <MultiPunchForm
                   employeeId={employeeId}
                   activePunch={activePunch}
+                  disabled={disabledReason}
+                />
+                <ManualTimeForm
+                  employeeId={employeeId}
+                  dateOptions={dateOptions}
+                  defaultDate={defaultDate}
+                  disabled={disabledReason}
+                />
+                <FillDayForm
+                  employeeId={employeeId}
+                  dateOptions={dateOptions}
+                  defaultDate={defaultDate}
+                  dailyHours={dailyHours}
                   disabled={disabledReason}
                 />
               </div>
