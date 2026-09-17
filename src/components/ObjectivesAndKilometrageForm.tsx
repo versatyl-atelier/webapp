@@ -1,13 +1,11 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { updateObjectivesAndKilometrage } from "@/actions/objectivesAndKilometrage";
-import { Alert, AlertDescription, AlertAction } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { FieldError, FieldGroup } from "@/components/ui/field";
+import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import { Input } from "@/components/ui/input";
 import { formatTimeDisplay } from "@/lib/time";
 import { useRouter } from "next/navigation";
@@ -32,13 +30,8 @@ export function ObjectivesAndKilometrageForm({
     updateObjectivesAndKilometrage,
     undefined,
   );
-  const [hideSchemaValidationError, setHideSchemaValidationError] =
-    useState(false);
-  const [hideDataValidationError, setHideDataValidationError] = useState(false);
 
   useEffect(() => {
-    setHideSchemaValidationError(false);
-    setHideDataValidationError(false);
     if (state?.message === "Objectif et kilométrage sauvegardés!") {
       toast.success("Objectif et kilométrage sauvegardés!", {
         duration: 3000,
@@ -58,38 +51,7 @@ export function ObjectivesAndKilometrageForm({
         <Input type="hidden" name="employeeId" value={employeeId} />
         <Input type="hidden" name="weekStart" value={weekStart.toString()} />
 
-        <FieldGroup>
-          {state?.errors?.schemaValidation && !hideSchemaValidationError && (
-            <FieldError>
-              <Alert>
-                <TriangleAlert className="text-amber-500" />
-                <AlertDescription className="bg-black text-white">
-                  {state.errors.schemaValidation}
-                </AlertDescription>
-                <AlertAction>
-                  <Button onClick={() => setHideSchemaValidationError(true)}>
-                    x
-                  </Button>
-                </AlertAction>
-              </Alert>
-            </FieldError>
-          )}
-          {state?.errors?.dataValidation && !hideDataValidationError && (
-            <FieldError>
-              <Alert className="border-punch-accent rounded-sm border-2 bg-black text-white">
-                <TriangleAlert className="fill-amber-400 stroke-black" />
-                <AlertDescription className="font-bold">
-                  {state.errors.dataValidation}
-                </AlertDescription>
-                <AlertAction>
-                  <Button onClick={() => setHideDataValidationError(true)}>
-                    x
-                  </Button>
-                </AlertAction>
-              </Alert>
-            </FieldError>
-          )}
-        </FieldGroup>
+        <FormValidationAlerts errors={state?.errors} />
 
         <div className="space-y-2">
           <div>

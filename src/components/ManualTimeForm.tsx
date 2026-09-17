@@ -1,19 +1,13 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { addManualTime } from "@/actions/timeEntries";
-import { Alert, AlertDescription, AlertAction } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import ProjectSelect from "@/components/ProjectSelect";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -46,13 +40,8 @@ export default function ManualTimeForm({
 }: ManualTimeFormProps) {
   const router = useRouter();
   const [state, action, pending] = useActionState(addManualTime, undefined);
-  const [hideSchemaValidationError, setHideSchemaValidationError] =
-    useState(false);
-  const [hideDataValidationError, setHideDataValidationError] = useState(false);
 
   useEffect(() => {
-    setHideSchemaValidationError(false);
-    setHideDataValidationError(false);
     if (!state?.message) return;
 
     router.refresh();
@@ -66,38 +55,7 @@ export default function ManualTimeForm({
       </div>
       <form action={action} className="space-y-2.5">
         <input type="hidden" name="employeeId" value={employeeId} />
-        <FieldGroup>
-          {state?.errors?.schemaValidation && !hideSchemaValidationError && (
-            <FieldError>
-              <Alert>
-                <TriangleAlert className="text-amber-500" />
-                <AlertDescription className="bg-black text-white">
-                  {state.errors.schemaValidation}
-                </AlertDescription>
-                <AlertAction>
-                  <Button onClick={() => setHideSchemaValidationError(true)}>
-                    x
-                  </Button>
-                </AlertAction>
-              </Alert>
-            </FieldError>
-          )}
-          {state?.errors?.dataValidation && !hideDataValidationError && (
-            <FieldError>
-              <Alert className="border-punch-accent rounded-sm border-2 bg-black text-white">
-                <TriangleAlert className="fill-amber-400 stroke-black" />
-                <AlertDescription className="font-bold">
-                  {state.errors.dataValidation}
-                </AlertDescription>
-                <AlertAction>
-                  <Button onClick={() => setHideDataValidationError(true)}>
-                    x
-                  </Button>
-                </AlertAction>
-              </Alert>
-            </FieldError>
-          )}
-        </FieldGroup>
+        <FormValidationAlerts errors={state?.errors} />
         <ProjectSelect className="p-1.5" disabled={pending || !!disabled} />
         {state?.errors?.projectId?.map((error: string) => (
           <FieldError key={error}>- {error}</FieldError>

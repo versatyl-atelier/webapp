@@ -1,15 +1,13 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
 import Image from "next/image";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { freezeWeek } from "@/actions/frozenWeeks";
 import dino from "@/app/punch/employe/[id]/dino.gif";
-import { Alert, AlertDescription, AlertAction } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { FieldError, FieldGroup } from "@/components/ui/field";
+import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { Role } from "@/generated/prisma/enums";
@@ -34,12 +32,7 @@ export function FreezeForm({
   const formRef = useRef<HTMLFormElement>(null);
   const setPendingAuthRole = useResubmitOnAuth(formRef);
   const [state, action, pending] = useActionState(freezeWeek, undefined);
-  const [hideSchemaValidationError, setHideSchemaValidationError] =
-    useState(false);
-  const [hideDataValidationError, setHideDataValidationError] = useState(false);
   useEffect(() => {
-    setHideSchemaValidationError(false);
-    setHideDataValidationError(false);
     if (state?.errors?.auth) {
       const [, role] = state.errors.auth.split(":");
       setPendingAuthRole(role as Role);
@@ -79,38 +72,10 @@ export function FreezeForm({
       <Input type="hidden" name="weekTotal" value={weekTotal} />
       <Input type="hidden" name="objective" value={objective} />
       <Input type="hidden" name="frozen" value={weekFrozen ? 1 : 0} />
-      <FieldGroup className="absolute top-16 left-4 w-5/6">
-        {state?.errors?.schemaValidation && !hideSchemaValidationError && (
-          <FieldError>
-            <Alert>
-              <TriangleAlert className="text-amber-500" />
-              <AlertDescription className="bg-black text-white">
-                {state.errors.schemaValidation}
-              </AlertDescription>
-              <AlertAction className="top-1">
-                <Button onClick={() => setHideSchemaValidationError(true)}>
-                  x
-                </Button>
-              </AlertAction>
-            </Alert>
-          </FieldError>
-        )}
-        {state?.errors?.dataValidation && !hideDataValidationError && (
-          <FieldError>
-            <Alert className="border-punch-accent rounded-sm border-2 bg-black text-white">
-              <TriangleAlert className="fill-amber-400 stroke-black" />
-              <AlertDescription className="font-bold">
-                {state.errors.dataValidation}
-              </AlertDescription>
-              <AlertAction className="top-1">
-                <Button onClick={() => setHideDataValidationError(true)}>
-                  x
-                </Button>
-              </AlertAction>
-            </Alert>
-          </FieldError>
-        )}
-      </FieldGroup>
+      <FormValidationAlerts
+        errors={state?.errors}
+        className="absolute top-16 left-4 w-5/6"
+      />
 
       <Button
         type="submit"

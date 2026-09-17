@@ -1,19 +1,13 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { fillDay } from "@/actions/timeEntries";
-import { Alert, AlertDescription, AlertAction } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import ProjectSelect from "@/components/ProjectSelect";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -51,17 +45,12 @@ export default function FillDayForm({
   const [state, action, pending] = useActionState(fillDay, undefined);
   const [date, setDate] = useState(defaultDate ?? dateOptions[0]?.value);
   const [target, setTarget] = useState(DEFAULT_FILL_TARGET);
-  const [hideSchemaValidationError, setHideSchemaValidationError] =
-    useState(false);
-  const [hideDataValidationError, setHideDataValidationError] = useState(false);
 
   const targetHours = secondsToHours(parseTimeToSeconds(target));
   const existingHours = dailyHours[date ?? ""] ?? 0;
   const hoursToAdd = calculateHoursNeeded(targetHours, existingHours);
 
   useEffect(() => {
-    setHideSchemaValidationError(false);
-    setHideDataValidationError(false);
     if (!state?.message) return;
 
     router.refresh();
@@ -75,38 +64,7 @@ export default function FillDayForm({
       </div>
       <form action={action} className="space-y-2.5">
         <input type="hidden" name="employeeId" value={employeeId} />
-        <FieldGroup>
-          {state?.errors?.schemaValidation && !hideSchemaValidationError && (
-            <FieldError>
-              <Alert>
-                <TriangleAlert className="text-amber-500" />
-                <AlertDescription className="bg-black text-white">
-                  {state.errors.schemaValidation}
-                </AlertDescription>
-                <AlertAction>
-                  <Button onClick={() => setHideSchemaValidationError(true)}>
-                    x
-                  </Button>
-                </AlertAction>
-              </Alert>
-            </FieldError>
-          )}
-          {state?.errors?.dataValidation && !hideDataValidationError && (
-            <FieldError>
-              <Alert className="border-punch-accent rounded-sm border-2 bg-black text-white">
-                <TriangleAlert className="fill-amber-400 stroke-black" />
-                <AlertDescription className="font-bold">
-                  {state.errors.dataValidation}
-                </AlertDescription>
-                <AlertAction>
-                  <Button onClick={() => setHideDataValidationError(true)}>
-                    x
-                  </Button>
-                </AlertAction>
-              </Alert>
-            </FieldError>
-          )}
-        </FieldGroup>
+        <FormValidationAlerts errors={state?.errors} />
         <Field>
           <FieldLabel className="mb-1 block text-xs font-semibold text-black uppercase">
             Date
