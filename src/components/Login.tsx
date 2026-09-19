@@ -12,8 +12,9 @@ import { Button } from "./ui/button";
 
 type LoginFormProps = {
   redirectTo?: string;
+  defaultEmail?: string;
 };
-export function LoginForm({ redirectTo }: LoginFormProps) {
+export function LoginForm({ redirectTo, defaultEmail }: LoginFormProps) {
   const router = useRouter();
   const { emitAuthSuccess } = useAuthEvents();
   const [state, action, pending] = useActionState(login, undefined);
@@ -33,7 +34,13 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
     <form action={action} className="flex max-w-prose flex-col gap-2">
       <Field>
         <FieldLabel htmlFor="email">Courriel</FieldLabel>
-        <Input id="email" name="email" type="email" autoComplete="email" />
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          defaultValue={defaultEmail}
+        />
         <FieldError>
           {state?.errors?.email?.map((error) => (
             <p key={error}>- {error}</p>

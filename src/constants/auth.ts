@@ -12,6 +12,7 @@ export const MIN_PASSWORD_LENGTH = 8;
 export const LOGIN_PATH = "/login";
 export const CHANGE_PASSWORD_PATH = "/change-password";
 export const REDIRECT_TO_PARAM = "redirectTo";
+export const EMAIL_PARAM = "email";
 export const PROTECTED_PATH_PREFIXES = ["/punch", CHANGE_PASSWORD_PATH];
 
 export const SESSION_NOT_FOUND_ERROR = "SessionNotFound";
@@ -21,11 +22,14 @@ export const FIBER_FAILURE_NAME_PREFIX = "(FiberFailure) ";
 
 export const LOGIN_SUCCESS_MESSAGE = "loginSuccess";
 export const LOGOUT_SUCCESS_MESSAGE = "logoutSuccess";
+export const SWITCH_EMPLOYEE_SUCCESS_MESSAGE = "switchEmployeeSuccess";
 export const CHANGE_PASSWORD_SUCCESS_MESSAGE = "changePasswordSuccess";
 export const CREATE_USER_SUCCESS_MESSAGE = "Compte créé";
 
 export const INVALID_CREDENTIALS_MESSAGE = "Courriel ou mot de passe invalide";
 export const FORBIDDEN_MESSAGE = "Accès refusé";
+export const SWITCH_NOT_REQUIRED_MESSAGE =
+  "Ce dossier est déjà accessible avec votre compte";
 export const PASSWORDS_DO_NOT_MATCH_MESSAGE =
   "Les mots de passe ne correspondent pas";
 export const INVALID_CURRENT_PASSWORD_MESSAGE = "Mot de passe actuel invalide";

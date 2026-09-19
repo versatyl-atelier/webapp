@@ -17,6 +17,8 @@ import {
   NAME_REQUIRED_MESSAGE,
   NO_EMPLOYEE_ID,
   PASSWORDS_DO_NOT_MATCH_MESSAGE,
+  SWITCH_EMPLOYEE_SUCCESS_MESSAGE,
+  SWITCH_NOT_REQUIRED_MESSAGE,
 } from "@/constants/auth";
 import type { PrismaService } from "@/generated/effect-prisma";
 import { Role } from "@/generated/prisma/enums";
@@ -32,6 +34,7 @@ import {
   type CreateUserFormState,
   type LoginFormState,
   type LogoutFormState,
+  type SwitchEmployeeFormState,
 } from "@/schemas/auth.schemas";
 
 const authApi = <A>(call: () => Promise<A>) =>
@@ -128,6 +131,34 @@ export const logoutEffect = Effect.fn("logout")(function* (
     Effect.catchTag("AuthApiError", dieOnUnexpected),
   );
   return { success: true, message: LOGOUT_SUCCESS_MESSAGE };
+});
+
+export const switchEmployeeEffect = Effect.fn("switchEmployee")(function* (
+  prisma: PrismaService,
+  _formState: SwitchEmployeeFormState,
+  { employeeId }: Record<string, number>,
+) {
+  const session = yield* getActiveSession();
+  if (canAccessEmployee(session, employeeId)) {
+    return {
+      success: false,
+      errors: { dataValidation: SWITCH_NOT_REQUIRED_MESSAGE },
+    };
+  }
+  const user = yield* prisma.user.findUnique({
+    where: { employeeId },
+    select: { email: true },
+  });
+  const requestHeaders = yield* Effect.tryPromise(headers);
+  yield* authApi(() => auth.api.signOut({ headers: requestHeaders })).pipe(
+    Effect.catchTag("AuthApiError", dieOnUnexpected),
+  );
+  return {
+    success: true,
+    message: SWITCH_EMPLOYEE_SUCCESS_MESSAGE,
+    employeeId,
+    email: user?.email,
+  };
 });
 
 export const changePasswordEffect = Effect.fn("changePassword")(

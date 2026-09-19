@@ -14,6 +14,9 @@ import {
   LogoutFormSchema,
   LogoutFormState,
   LogoutFormErrors,
+  SwitchEmployeeFormSchema,
+  SwitchEmployeeFormState,
+  SwitchEmployeeFormErrors,
 } from "@/schemas/auth.schemas";
 import { Role } from "@/generated/prisma/enums";
 import { runEffectAsFormAction } from "@/lib/effect";
@@ -22,6 +25,7 @@ import {
   createUserEffect,
   loginEffect,
   logoutEffect,
+  switchEmployeeEffect,
 } from "@/effects/auth";
 
 export async function login(
@@ -44,6 +48,19 @@ export async function logout(
     typeof LogoutFormSchema,
     LogoutFormErrors
   >(formState, formData, LogoutFormSchema, logoutEffect);
+}
+
+export async function switchEmployee(
+  formState: SwitchEmployeeFormState,
+  formData: FormData,
+): Promise<SwitchEmployeeFormState> {
+  return runEffectAsFormAction<
+    SwitchEmployeeFormState,
+    typeof SwitchEmployeeFormSchema,
+    SwitchEmployeeFormErrors
+  >(formState, formData, SwitchEmployeeFormSchema, switchEmployeeEffect, [
+    Role.employee,
+  ]);
 }
 
 export async function changePassword(

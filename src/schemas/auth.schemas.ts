@@ -37,6 +37,15 @@ export type LogoutFormState = FormState | undefined;
 
 export const LogoutFormSchema = Schema.Struct({});
 
+export const SwitchEmployeeFormSchema = Schema.Struct({
+  employeeId: Schema.NumberFromString.pipe(Schema.int()),
+});
+
+export type SwitchEmployeeFormErrors = never;
+
+export type SwitchEmployeeFormState =
+  (FormState & { employeeId?: number; email?: string }) | undefined;
+
 export type LogoutFormErrors = never;
 
 export const ChangePasswordFormSchema = Schema.Struct({

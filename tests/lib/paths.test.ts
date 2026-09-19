@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import { changePasswordPath, isProtectedPath, loginPath } from "@/lib/paths";
+import {
+  changePasswordPath,
+  employeePath,
+  isProtectedPath,
+  loginPath,
+} from "@/lib/paths";
 
 describe("loginPath", () => {
   it("has no query string without a redirect", () => {
@@ -11,6 +16,22 @@ describe("loginPath", () => {
     expect(loginPath("/punch/employe/1?weekOffset=-1")).toBe(
       "/login?redirectTo=%2Fpunch%2Femploye%2F1%3FweekOffset%3D-1",
     );
+  });
+
+  it("adds the e-mail after the redirect target", () => {
+    expect(loginPath("/punch/employe/2", "a@b.c")).toBe(
+      "/login?redirectTo=%2Fpunch%2Femploye%2F2&email=a%40b.c",
+    );
+  });
+
+  it("adds the e-mail alone", () => {
+    expect(loginPath(undefined, "a@b.c")).toBe("/login?email=a%40b.c");
+  });
+});
+
+describe("employeePath", () => {
+  it("builds the employee page path", () => {
+    expect(employeePath(4)).toBe("/punch/employe/4");
   });
 });
 

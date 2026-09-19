@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 import { LoginForm } from "@/components/Login";
-import { REDIRECT_TO_PARAM } from "@/constants/auth";
+import { EMAIL_PARAM, REDIRECT_TO_PARAM } from "@/constants/auth";
 
 export type LoginPageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -8,6 +8,7 @@ export type LoginPageProps = {
 
 const LoginSearchParamsSchema = Schema.Struct({
   [REDIRECT_TO_PARAM]: Schema.optional(Schema.String),
+  [EMAIL_PARAM]: Schema.optional(Schema.String),
 });
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -16,7 +17,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   );
   return (
     <main className="mt-2 flex flex-col items-center justify-center">
-      <LoginForm redirectTo={data[REDIRECT_TO_PARAM]} />
+      <LoginForm
+        redirectTo={data[REDIRECT_TO_PARAM]}
+        defaultEmail={data[EMAIL_PARAM]}
+      />
     </main>
   );
 }
