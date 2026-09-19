@@ -26,7 +26,9 @@ import {
   putTimeEntryEffect,
 } from "@/effects/timeEntries";
 
-export const getTimeEntries = cachedGetter(getTimeEntriesEffect, Role.employee);
+export const getTimeEntries = cachedGetter(getTimeEntriesEffect, [
+  Role.employee,
+]);
 
 export async function editTimeEntry(
   formState: EditTimeEntryFormState,
@@ -36,23 +38,19 @@ export async function editTimeEntry(
     EditTimeEntryFormState,
     typeof EditTimeEntryFormSchema,
     EditTimeEntryFormErrors
-  >(
-    formState,
-    formData,
-    EditTimeEntryFormSchema,
-    editTimeEntryEffect,
+  >(formState, formData, EditTimeEntryFormSchema, editTimeEntryEffect, [
     Role.employee,
-  );
+  ]);
 }
 export const putTimeEntry = protectedEffect(
   putTimeEntryEffect,
-  Role.employee,
+  [Role.employee],
   "mutation",
 );
 
 export const deleteTimeEntry = protectedEffect(
   deleteTimeEntryEffect,
-  Role.employee,
+  [Role.employee],
   "mutation",
 );
 
@@ -64,13 +62,9 @@ export async function addManualTime(
     AddManualTimeFormState,
     typeof AddManualTimeFormSchema,
     AddManualTimeFormErrors
-  >(
-    formState,
-    formData,
-    AddManualTimeFormSchema,
-    addManualTimeEffect,
+  >(formState, formData, AddManualTimeFormSchema, addManualTimeEffect, [
     Role.employee,
-  );
+  ]);
 }
 
 export async function fillDay(
@@ -81,5 +75,5 @@ export async function fillDay(
     FillDayFormState,
     typeof FillDayFormSchema,
     FillDayFormErrors
-  >(formState, formData, FillDayFormSchema, fillDayEffect, Role.employee);
+  >(formState, formData, FillDayFormSchema, fillDayEffect, [Role.employee]);
 }

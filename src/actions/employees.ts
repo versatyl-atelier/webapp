@@ -8,11 +8,11 @@ import {
   getEmployeesWithoutAccountEffect,
 } from "@/effects/employees";
 
-export const getEmployee = cachedGetter(getEmployeeEffect, Role.employee);
+export const getEmployee = cachedGetter(getEmployeeEffect, [Role.employee]);
 
-export const getEmployees = cachedGetter(getEmployeesEffect, Role.manager);
+export const getEmployees = cachedGetter(getEmployeesEffect, [Role.employee]);
 
 export const getEmployeesWithoutAccount = cachedGetter(
   getEmployeesWithoutAccountEffect,
-  Role.manager,
+  [Role.manager],
 );

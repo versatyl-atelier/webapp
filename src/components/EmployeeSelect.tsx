@@ -8,14 +8,20 @@ import {
   ComboboxEmpty,
   ComboboxList,
 } from "@/components/ui/combobox";
+import { cn } from "@/lib/utils";
 import { Employee } from "@/generated/prisma/client";
 
 type EmployeeSelectProps = {
   employees: Employee[];
+  currentEmployeeId: number | null;
   className?: string;
 };
 
-export function EmployeeSelect({ employees, className }: EmployeeSelectProps) {
+export function EmployeeSelect({
+  employees,
+  currentEmployeeId,
+  className,
+}: EmployeeSelectProps) {
   return (
     <div className={className}>
       <Combobox
@@ -39,7 +45,14 @@ export function EmployeeSelect({ employees, className }: EmployeeSelectProps) {
           <ComboboxEmpty>Aucun employé trouvé</ComboboxEmpty>
           <ComboboxList className="max-h-11/12">
             {(employee) => (
-              <ComboboxItem key={employee.id} value={employee}>
+              <ComboboxItem
+                key={employee.id}
+                value={employee}
+                className={cn(
+                  employee.id === currentEmployeeId &&
+                    "bg-punch-accent/15 font-bold",
+                )}
+              >
                 {employee.name}
               </ComboboxItem>
             )}

@@ -16,14 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CREATE_USER_SUCCESS_MESSAGE, NO_EMPLOYEE_ID } from "@/constants/auth";
+import {
+  CREATE_USER_SUCCESS_MESSAGE,
+  NO_EMPLOYEE_ID,
+  NO_EMPLOYEE_LABEL,
+  ROLE_LABELS,
+} from "@/constants/auth";
 import { Role } from "@/generated/prisma/enums";
-
-const ROLE_LABELS: Record<Role, string> = {
-  [Role.employee]: "Employé",
-  [Role.manager]: "Gestionnaire",
-};
-const NO_EMPLOYEE_LABEL = "Aucun employé";
 
 type CreateUserFormProps = {
   employees: { id: number; name: string }[];

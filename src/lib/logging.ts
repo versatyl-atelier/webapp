@@ -37,7 +37,7 @@ export interface WideEventOptions<A> {
   readonly message: string;
   readonly kind: string;
   readonly name?: string;
-  readonly role?: Role;
+  readonly roles?: readonly Role[];
   readonly requestId: string;
   readonly defaultLogLevel: LogLevel.Literal;
   readonly setLogLevel?: (value: A) => { level: LogLevel.Literal };
@@ -63,7 +63,7 @@ export const withWideEvent = <A, E, R>(
       requestId: options.requestId,
       kind: options.kind,
       ...(options.name ? { name: options.name } : {}),
-      ...(options.role ? { role: options.role } : {}),
+      ...(options.roles ? { roles: options.roles } : {}),
     });
     return yield* effect;
   }).pipe(

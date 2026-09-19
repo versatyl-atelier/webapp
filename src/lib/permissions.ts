@@ -27,6 +27,10 @@ export function hasRole(actual: Role, required: Role): boolean {
   return ROLE_RANK[actual] >= ROLE_RANK[required];
 }
 
+export function hasAnyRole(actual: Role, required: readonly Role[]): boolean {
+  return required.some((role) => hasRole(actual, role));
+}
+
 export function canAccessEmployee(
   session: Pick<AppSession, "role" | "employeeId">,
   employeeId: number | null,

@@ -12,7 +12,9 @@ import {
 import { Role } from "@/generated/prisma/client";
 import { freezeWeekEffect, getFrozenWeeksEffect } from "@/effects/frozenWeeks";
 
-export const getFrozenWeeks = cachedGetter(getFrozenWeeksEffect, Role.employee);
+export const getFrozenWeeks = cachedGetter(getFrozenWeeksEffect, [
+  Role.employee,
+]);
 
 export const freezeWeek = async (
   formState: FreezeWeekFormState,

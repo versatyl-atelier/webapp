@@ -21,7 +21,7 @@ import {
 import type { PrismaService } from "@/generated/effect-prisma";
 import { Role } from "@/generated/prisma/enums";
 import { auth } from "@/lib/auth";
-import { canAccessEmployee, hasRole, toAppSession } from "@/lib/permissions";
+import { canAccessEmployee, hasAnyRole, toAppSession } from "@/lib/permissions";
 import { getSession } from "@/lib/session";
 import {
   AuthApiError,
@@ -68,10 +68,12 @@ export const getActiveSession = Effect.fn("getActiveSession")(function* () {
   return session;
 });
 
-export const verifySession = Effect.fn("verifySession")(function* (role: Role) {
+export const verifySession = Effect.fn("verifySession")(function* (
+  roles: readonly Role[],
+) {
   const session = yield* getActiveSession();
-  if (!hasRole(session.role, role)) {
-    return yield* new Forbidden({ role });
+  if (!hasAnyRole(session.role, roles)) {
+    return yield* new Forbidden({ roles });
   }
   return session;
 });

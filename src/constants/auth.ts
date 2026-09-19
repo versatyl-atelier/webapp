@@ -42,3 +42,9 @@ export const NO_EMPLOYEE_LINKED_MESSAGE =
   "Aucun dossier employé n'est associé à ce compte. Demandez à un gestionnaire de le lier.";
 
 export const NO_EMPLOYEE_ID = "none";
+export const NO_EMPLOYEE_LABEL = "Aucun employé";
+
+export const ROLE_LABELS: Record<Role, string> = {
+  [Role.employee]: "Employé",
+  [Role.manager]: "Gestionnaire",
+};

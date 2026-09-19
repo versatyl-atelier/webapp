@@ -27,13 +27,9 @@ export async function startMultiPunch(
     StartMultiPunchFormState,
     typeof StartMultiPunchSchema,
     StartMultiPunchFormErrors
-  >(
-    formState,
-    formData,
-    StartMultiPunchSchema,
-    startMultiPunchEffect,
+  >(formState, formData, StartMultiPunchSchema, startMultiPunchEffect, [
     Role.employee,
-  );
+  ]);
 }
 
 export async function endMultiPunch(
@@ -44,13 +40,11 @@ export async function endMultiPunch(
     EndMultiPunchFormState,
     typeof EndMultiPunchSchema,
     EndMultiPunchFormErrors
-  >(
-    formState,
-    formData,
-    EndMultiPunchSchema,
-    endMultiPunchEffect,
+  >(formState, formData, EndMultiPunchSchema, endMultiPunchEffect, [
     Role.employee,
-  );
+  ]);
 }
 
-export const getActivePunch = cachedGetter(getActivePunchEffect, Role.employee);
+export const getActivePunch = cachedGetter(getActivePunchEffect, [
+  Role.employee,
+]);

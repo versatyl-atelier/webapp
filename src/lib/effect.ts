@@ -58,15 +58,15 @@ function recoverPrismaConnectionDefects<A, E, R>(
 
 export function cachedGetter<T, E, R>(
   getEffect: (prisma: PrismaService, ...args: any) => Effect.Effect<T, E, R>,
-  role?: Role,
+  roles?: readonly Role[],
   redirectTo?: string,
 ) {
-  return cache(protectedEffect<T, E, R>(getEffect, role, "read", redirectTo));
+  return cache(protectedEffect<T, E, R>(getEffect, roles, "read", redirectTo));
 }
 
 export function protectedEffect<T, E, R>(
   getEffect: (prisma: PrismaService, ...args: any) => Effect.Effect<T, E, R>,
-  role?: Role,
+  roles?: readonly Role[],
   kind: "read" | "mutation" = "read",
   redirectTo?: string,
 ) {
@@ -81,8 +81,8 @@ export function protectedEffect<T, E, R>(
         withWideEvent(
           recoverPrismaConnectionDefects(
             Effect.gen(function* () {
-              if (role) {
-                yield* verifySession(role);
+              if (roles) {
+                yield* verifySession(roles);
               }
               const prisma = yield* PrismaService;
               return yield* getEffect(prisma, ...args);
@@ -93,7 +93,7 @@ export function protectedEffect<T, E, R>(
             message: "Protected action",
             kind,
             requestId,
-            role,
+            roles,
             name,
             defaultLogLevel: kind === "mutation" ? "Info" : "Debug",
           },
@@ -141,7 +141,7 @@ export function runEffectAsFormAction<
     formState: FormState,
     formData: any,
   ) => Effect.Effect<FormState, any, any>,
-  role?: Role,
+  roles?: readonly Role[],
 ): Promise<FormState> {
   return Effect.runPromise(
     Effect.tryPromise(() => headers()).pipe(
@@ -150,8 +150,8 @@ export function runEffectAsFormAction<
 
         const inner = recoverPrismaConnectionDefects(
           Effect.gen(function* () {
-            if (role) {
-              yield* verifySession(role);
+            if (roles) {
+              yield* verifySession(roles);
             }
             const prisma = yield* PrismaService;
             const allFormData = extractAllFormData(formData);
@@ -168,7 +168,7 @@ export function runEffectAsFormAction<
           message: "form action",
           kind: "mutation",
           requestId,
-          role,
+          roles,
           name: action.name || "unnamed form action",
           defaultLogLevel: "Info",
           setLogLevel: (value) => {

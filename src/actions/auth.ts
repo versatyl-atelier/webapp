@@ -65,5 +65,7 @@ export async function createUser(
     CreateUserFormState,
     typeof CreateUserFormSchema,
     CreateUserFormErrors
-  >(formState, formData, CreateUserFormSchema, createUserEffect, Role.manager);
+  >(formState, formData, CreateUserFormSchema, createUserEffect, [
+    Role.manager,
+  ]);
 }

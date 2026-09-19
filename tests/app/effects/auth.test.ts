@@ -82,19 +82,23 @@ describe("verifySession", () => {
   it("lets an employee through an employee check", async () => {
     getSession.mockResolvedValue(employeeSession);
 
-    expect(Exit.isSuccess(await run(verifySession(Role.employee)))).toBe(true);
+    expect(Exit.isSuccess(await run(verifySession([Role.employee])))).toBe(
+      true,
+    );
   });
 
   it("lets a manager through an employee check", async () => {
     getSession.mockResolvedValue(managerSession);
 
-    expect(Exit.isSuccess(await run(verifySession(Role.employee)))).toBe(true);
+    expect(Exit.isSuccess(await run(verifySession([Role.employee])))).toBe(
+      true,
+    );
   });
 
   it("forbids an employee from a manager check", async () => {
     getSession.mockResolvedValue(employeeSession);
 
-    const exit = await run(verifySession(Role.manager));
+    const exit = await run(verifySession([Role.manager]));
 
     expect(Option.getOrNull(failureOf(exit))).toBeInstanceOf(Forbidden);
   });
@@ -102,7 +106,7 @@ describe("verifySession", () => {
   it("fails with SessionNotFound when signed out", async () => {
     getSession.mockResolvedValue(null);
 
-    const exit = await run(verifySession(Role.employee));
+    const exit = await run(verifySession([Role.employee]));
 
     expect(Option.getOrNull(failureOf(exit))).toBeInstanceOf(SessionNotFound);
   });

@@ -24,6 +24,6 @@ export async function updateObjectivesAndKilometrage(
     formData,
     ObjectivesAndKilometrageFormSchema,
     updateObjectivesAndKilometrageEffect,
-    Role.employee,
+    [Role.employee],
   );
 }
