@@ -8,6 +8,7 @@ import {
   NoActivePunchError,
   PunchAlreadyActiveError,
 } from "@/schemas/multiPunch.schemas";
+import { assertEmployeeAccess } from "@/effects/auth";
 import { assertWeekNotFrozen, handleWeekFrozen } from "@/effects/frozenWeeks";
 
 export const startMultiPunchEffect = Effect.fn("startMultiPunch")(
@@ -18,6 +19,7 @@ export const startMultiPunchEffect = Effect.fn("startMultiPunch")(
   ) {
     const id = parseInt(String(employeeId), 10);
     const now = new Date();
+    yield* assertEmployeeAccess(id);
     yield* Effect.annotateLogsScoped({ employeeId: id });
 
     yield* assertWeekNotFrozen(prisma, id, now);
@@ -87,6 +89,7 @@ export const endMultiPunchEffect = Effect.fn("endMultiPunch")(
   ) {
     const id = parseInt(String(employeeId), 10);
     const endTime = new Date();
+    yield* assertEmployeeAccess(id);
     yield* Effect.annotateLogsScoped({ employeeId: id });
 
     yield* assertWeekNotFrozen(prisma, id, endTime);
@@ -149,6 +152,7 @@ export const getActivePunchEffect = Effect.fn("getActivePunch")(function* (
   prisma: PrismaService,
   employeeId: number,
 ) {
+  yield* assertEmployeeAccess(employeeId);
   const activePunches = yield* prisma.timeEntry.findMany({
     where: {
       employeeId,

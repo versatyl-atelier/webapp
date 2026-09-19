@@ -2,11 +2,22 @@ import "server-only";
 
 import { Effect } from "effect";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
 import { verifySession } from "@/effects/auth";
-import { SessionNotFound } from "@/schemas/auth.schemas";
+import {
+  Forbidden,
+  PasswordChangeRequired,
+  SessionNotFound,
+} from "@/schemas/auth.schemas";
+import {
+  FIBER_FAILURE_NAME_PREFIX,
+  FORBIDDEN_MESSAGE,
+  PASSWORD_CHANGE_REQUIRED_ERROR,
+  SESSION_NOT_FOUND_ERROR,
+} from "@/constants/auth";
+import { changePasswordPath, loginPath } from "@/lib/paths";
 import { Role } from "@/generated/prisma/enums";
 import { Prisma } from "@/generated/prisma/client";
 import {
@@ -62,55 +73,61 @@ export function protectedEffect<T, E, R>(
   return async (...args: any) => {
     const headersList = await headers();
     const requestId = requestIdFromHeaders(headersList);
-
-    if (role) {
-      const referer = headersList.get("referer");
-      const fallbackRedirect =
-        redirectTo ??
-        (referer ? new URL(referer).pathname + new URL(referer).search : "/");
-
-      try {
-        await Effect.runPromise(verifySession(role));
-      } catch (error) {
-        const anyError: any = error;
-        if (anyError?.name === "(FiberFailure) SessionNotFound") {
-          const qs = new URLSearchParams();
-          if (role) {
-            qs.append("role", role);
-          }
-          if (redirectTo) {
-            qs.append("redirectTo", encodeURIComponent(fallbackRedirect));
-          }
-          redirect(`/login?${qs.toString()}`);
-        }
-        throw error;
-      }
-    }
-
     const operation = getEffect.name || "unnamed protected effect";
     const name = operation;
 
-    return Effect.runPromise(
-      withWideEvent(
-        recoverPrismaConnectionDefects(
-          Effect.flatMap(PrismaService, (prisma) => getEffect(prisma, ...args)),
-          operation,
-        ),
-        {
-          message: "Protected action",
-          kind,
-          requestId,
-          role,
-          name,
-          defaultLogLevel: kind === "mutation" ? "Info" : "Debug",
-        },
-      ).pipe(
-        Effect.provide(PrismaLayer),
-        Effect.provide(LoggingLayer),
-      ) as Effect.Effect<T, E, never>,
-    );
+    try {
+      return await Effect.runPromise(
+        withWideEvent(
+          recoverPrismaConnectionDefects(
+            Effect.gen(function* () {
+              if (role) {
+                yield* verifySession(role);
+              }
+              const prisma = yield* PrismaService;
+              return yield* getEffect(prisma, ...args);
+            }),
+            operation,
+          ),
+          {
+            message: "Protected action",
+            kind,
+            requestId,
+            role,
+            name,
+            defaultLogLevel: kind === "mutation" ? "Info" : "Debug",
+          },
+        ).pipe(
+          Effect.provide(PrismaLayer),
+          Effect.provide(LoggingLayer),
+        ) as Effect.Effect<T, E, never>,
+      );
+    } catch (error) {
+      return handleAuthFailure(error, redirectTo);
+    }
   };
 }
+
+function isFailureTagged(error: unknown, tag: string) {
+  return (
+    error instanceof Error &&
+    error.name === `${FIBER_FAILURE_NAME_PREFIX}${tag}`
+  );
+}
+
+function handleAuthFailure(error: unknown, redirectTo?: string): never {
+  if (isFailureTagged(error, SESSION_NOT_FOUND_ERROR)) {
+    redirect(loginPath(redirectTo));
+  }
+  if (isFailureTagged(error, PASSWORD_CHANGE_REQUIRED_ERROR)) {
+    redirect(changePasswordPath(redirectTo));
+  }
+  if (isFailureTagged(error, "Forbidden")) {
+    notFound();
+  }
+  throw error;
+}
+
 export function runEffectAsFormAction<
   FormState,
   FormSchema extends Schema.Schema<any, any, never>,
@@ -173,13 +190,23 @@ export function runEffectAsFormAction<
 const handleFormCatchAll =
   <FormState>(formState: FormState) =>
   (error: unknown) => {
-    if (error instanceof SessionNotFound) {
+    if (
+      error instanceof SessionNotFound ||
+      error instanceof PasswordChangeRequired
+    ) {
       return Effect.succeed({
         ...formState,
         success: false,
         errors: {
           auth: error.toString(),
         },
+      });
+    }
+    if (error instanceof Forbidden) {
+      return Effect.succeed({
+        ...formState,
+        success: false,
+        errors: { dataValidation: FORBIDDEN_MESSAGE },
       });
     }
     if (

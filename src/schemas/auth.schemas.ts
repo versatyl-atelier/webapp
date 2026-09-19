@@ -1,43 +1,103 @@
-import { Schema } from "effect";
+import { Data, Schema } from "effect";
 
+import {
+  MIN_PASSWORD_LENGTH,
+  PASSWORD_CHANGE_REQUIRED_ERROR,
+  SESSION_NOT_FOUND_ERROR,
+} from "@/constants/auth";
 import { Role } from "@/generated/prisma/client";
 import { FormState } from "@/schemas/forms.schemas";
-import { Data } from "effect";
 
-export type SessionPayload = {
-  expiresAt: Date;
+export type AppSession = {
+  userId: string;
+  role: Role;
+  employeeId: number | null;
+  mustChangePassword: boolean;
 };
 
 export const LoginFormSchema = Schema.Struct({
+  email: Schema.String.pipe(Schema.minLength(1)),
   password: Schema.String.pipe(Schema.minLength(1)),
-  role: Schema.Enums(Role),
 });
 
 export type LoginFormErrors = {
+  email?: string[];
   password?: string[];
-  role?: string[];
 };
 
 export type LoginFormState =
   | (FormState & {
       errors?: LoginFormErrors;
       success?: boolean;
-      error?: string;
+      mustChangePassword?: boolean;
     })
   | undefined;
 
 export type LogoutFormState = FormState | undefined;
 
-export const LogoutFormSchema = Schema.Struct({
-  role: Schema.Union(Schema.Enums(Role), Schema.Literal("")),
-});
+export const LogoutFormSchema = Schema.Struct({});
 
 export type LogoutFormErrors = never;
 
-export class SessionNotFound extends Data.TaggedError("SessionNotFound")<{
-  readonly role: Role;
-}> {
+export const ChangePasswordFormSchema = Schema.Struct({
+  currentPassword: Schema.String.pipe(Schema.minLength(1)),
+  newPassword: Schema.String.pipe(Schema.minLength(MIN_PASSWORD_LENGTH)),
+  confirmPassword: Schema.String,
+});
+
+export type ChangePasswordFormErrors = {
+  currentPassword?: string[];
+  newPassword?: string[];
+  confirmPassword?: string[];
+};
+
+export type ChangePasswordFormState =
+  (FormState & { errors?: ChangePasswordFormErrors }) | undefined;
+
+export const CreateUserFormSchema = Schema.Struct({
+  email: Schema.String.pipe(Schema.minLength(1)),
+  password: Schema.String.pipe(Schema.minLength(MIN_PASSWORD_LENGTH)),
+  role: Schema.Enums(Role),
+  employeeId: Schema.String,
+  name: Schema.String,
+});
+
+export type CreateUserFormErrors = {
+  email?: string[];
+  password?: string[];
+  role?: string[];
+  employeeId?: string[];
+  name?: string[];
+};
+
+export type CreateUserFormState =
+  (FormState & { errors?: CreateUserFormErrors }) | undefined;
+
+export class SessionNotFound extends Data.TaggedError(SESSION_NOT_FOUND_ERROR) {
   public toString() {
-    return `SessionNotFound:${this.role}`;
+    return SESSION_NOT_FOUND_ERROR;
   }
 }
+
+export class PasswordChangeRequired extends Data.TaggedError(
+  PASSWORD_CHANGE_REQUIRED_ERROR,
+) {
+  public toString() {
+    return PASSWORD_CHANGE_REQUIRED_ERROR;
+  }
+}
+
+export class Forbidden extends Data.TaggedError("Forbidden")<{
+  readonly role?: Role;
+  readonly employeeId?: number | null;
+}> {
+  public toString() {
+    return "Forbidden";
+  }
+}
+
+export class AuthApiError extends Data.TaggedError("AuthApiError")<{
+  readonly code: string | undefined;
+  readonly status: string | number | undefined;
+  readonly cause: unknown;
+}> {}

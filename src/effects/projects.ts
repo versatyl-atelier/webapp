@@ -5,11 +5,13 @@ import {
   ProjectFindManyArgs,
 } from "@/generated/prisma/models";
 import { Effect } from "effect";
+import { assertEmployeeAccess } from "@/effects/auth";
 
 export const getProjectsEffect = Effect.fn("getProjects")(function* (
   prisma: PrismaService,
   employeeId: number,
 ) {
+  yield* assertEmployeeAccess(employeeId);
   const opts: StatutSourcePermissionFindManyArgs = {
     where: {
       statut: {

@@ -6,6 +6,7 @@ import {
 } from "@/generated/prisma/models";
 import { parseTimeToSeconds, secondsToHours } from "@/lib/time";
 import { Effect } from "effect";
+import { assertEmployeeAccess } from "@/effects/auth";
 import type { ObjectivesAndKilometrageFormState } from "@/schemas/objectivesAndKilometrage.schemas";
 import { assertWeekNotFrozen, handleWeekFrozen } from "@/effects/frozenWeeks";
 
@@ -23,6 +24,7 @@ export const updateObjectivesAndKilometrageEffect = Effect.fn(
     }: Record<string, FormDataEntryValue | null>,
   ) {
     const employeeIdInt = parseInt(String(employeeId), 10);
+    yield* assertEmployeeAccess(employeeIdInt);
     const weekStart = new Date(String(strWeekStart));
     yield* Effect.annotateLogsScoped({
       employeeId: employeeIdInt,

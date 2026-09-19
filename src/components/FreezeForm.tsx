@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { Role } from "@/generated/prisma/enums";
+import { PASSWORD_CHANGE_REQUIRED_ERROR } from "@/constants/auth";
 import { useResubmitOnAuth } from "@/hooks/auth";
+import { changePasswordPath, loginPath } from "@/lib/paths";
 
 export type FreezeFormProps = {
   employeeId: number;
@@ -30,13 +31,16 @@ export function FreezeForm({
 }: FreezeFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const setPendingAuthRole = useResubmitOnAuth(formRef);
+  const setPendingAuth = useResubmitOnAuth(formRef);
   const [state, action, pending] = useActionState(freezeWeek, undefined);
   useEffect(() => {
     if (state?.errors?.auth) {
-      const [, role] = state.errors.auth.split(":");
-      setPendingAuthRole(role as Role);
-      return router.push(`/login?role=${role}`);
+      setPendingAuth();
+      return router.push(
+        state.errors.auth === PASSWORD_CHANGE_REQUIRED_ERROR
+          ? changePasswordPath()
+          : loginPath(),
+      );
     }
     if (state?.message === "freezeSuccess") {
       router.refresh();

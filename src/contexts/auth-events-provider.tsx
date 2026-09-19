@@ -7,12 +7,11 @@ import {
   useContext,
   useRef,
 } from "react";
-import { Role } from "@/generated/prisma/enums";
 
-type AuthSuccessListener = (role: Role) => void;
+type AuthSuccessListener = () => void;
 
 interface AuthEventsContextType {
-  emitAuthSuccess: (role: Role) => void;
+  emitAuthSuccess: () => void;
   subscribeAuthSuccess: (listener: AuthSuccessListener) => () => void;
 }
 
@@ -21,8 +20,8 @@ const AuthEventsContext = createContext<AuthEventsContextType | null>(null);
 export function AuthEventsProvider({ children }: PropsWithChildren) {
   const listenersRef = useRef(new Set<AuthSuccessListener>());
 
-  const emitAuthSuccess = useCallback((role: Role) => {
-    listenersRef.current.forEach((listener) => listener(role));
+  const emitAuthSuccess = useCallback(() => {
+    listenersRef.current.forEach((listener) => listener());
   }, []);
 
   const subscribeAuthSuccess = useCallback((listener: AuthSuccessListener) => {

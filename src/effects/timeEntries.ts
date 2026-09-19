@@ -32,17 +32,31 @@ import {
   parseTimeToSeconds,
   calculateHoursNeeded,
 } from "@/lib/time";
+import { assertEmployeeAccess } from "@/effects/auth";
 import { assertWeekNotFrozen, handleWeekFrozen } from "@/effects/frozenWeeks";
 import { ProjectOrTask } from "@/components/ProjectSelect";
 
 const LUNCH_TASK_NAME = "Dîner";
 const LUNCH_HOURS = 0.5;
 
+const assertTimeEntryAccess = Effect.fn("assertTimeEntryAccess")(function* (
+  prisma: PrismaService,
+  entryId: number,
+) {
+  const args: TimeEntryFindFirstArgs = {
+    where: { id: entryId },
+    select: { employeeId: true },
+  };
+  const entry = yield* prisma.timeEntry.findFirst(args);
+  yield* assertEmployeeAccess(entry?.employeeId ?? null);
+});
+
 export const deleteTimeEntryEffect = Effect.fn("deleteTimeEntry")(function* (
   prisma: PrismaService,
   entryId: number,
 ) {
   yield* Effect.annotateLogsScoped({ timeEntryId: entryId });
+  yield* assertTimeEntryAccess(prisma, entryId);
   const args: TimeEntryDeleteArgs = {
     where: {
       id: entryId,
@@ -56,6 +70,7 @@ export const getTimeEntriesEffect = Effect.fn("getTimeEntries")(function* (
   employeeId: number,
   { startDate, endDate }: DateRange,
 ) {
+  yield* assertEmployeeAccess(employeeId);
   const where: TimeEntryWhereInput = {
     employeeId,
     isDeleted: false,
@@ -98,6 +113,7 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
     };
     const existingEntry = yield* prisma.timeEntry.findFirst(findArgs);
 
+    yield* assertEmployeeAccess(existingEntry?.employeeId ?? null);
     if (existingEntry?.employeeId) {
       yield* Effect.annotateLogsScoped({
         employeeId: existingEntry.employeeId,
@@ -156,6 +172,7 @@ export const putTimeEntryEffect = Effect.fn("putTimeEntry")(function* (
   }
   const entryId = entry.id;
   yield* Effect.annotateLogsScoped({ timeEntryId: entryId });
+  yield* assertTimeEntryAccess(prisma, entryId);
 
   const deleteTimeEntryProjectArgs: TimeEntryProjectDeleteManyArgs = {
     where: {
@@ -234,6 +251,7 @@ export const addManualTimeEffect = Effect.fn("addManualTime")(
     }: Record<string, FormDataEntryValue | null>,
   ) {
     const id = parseInt(String(employeeId), 10);
+    yield* assertEmployeeAccess(id);
     yield* Effect.annotateLogsScoped({ employeeId: id });
 
     const { dayStart } = dayBounds(String(date));
@@ -322,6 +340,7 @@ export const fillDayEffect = Effect.fn("fillDay")(
     }: Record<string, FormDataEntryValue | null>,
   ) {
     const id = parseInt(String(employeeId), 10);
+    yield* assertEmployeeAccess(id);
     yield* Effect.annotateLogsScoped({ employeeId: id });
 
     const { dayStart } = dayBounds(String(date));

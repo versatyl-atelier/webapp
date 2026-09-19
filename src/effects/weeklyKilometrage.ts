@@ -2,9 +2,11 @@ import type { PrismaService } from "@/generated/effect-prisma";
 import type { WeeklyKilometrageFindFirstArgs } from "@/generated/prisma/models";
 import { toUTCDate } from "@/lib/time";
 import { Effect } from "effect";
+import { assertEmployeeAccess } from "@/effects/auth";
 
 export const getWeeklyKilometrageEffect = Effect.fn("getWeeklyKilometrage")(
   function* (prisma: PrismaService, employeeId: number, weekStart: Date) {
+    yield* assertEmployeeAccess(employeeId);
     const args: WeeklyKilometrageFindFirstArgs = {
       where: {
         employeeId,

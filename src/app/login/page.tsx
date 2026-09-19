@@ -1,14 +1,13 @@
 import { Schema } from "effect";
 import { LoginForm } from "@/components/Login";
-import { Role } from "@/generated/prisma/enums";
+import { REDIRECT_TO_PARAM } from "@/constants/auth";
 
 export type LoginPageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 const LoginSearchParamsSchema = Schema.Struct({
-  role: Schema.Enums(Role),
-  redirectTo: Schema.optional(Schema.String),
+  [REDIRECT_TO_PARAM]: Schema.optional(Schema.String),
 });
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -17,7 +16,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   );
   return (
     <main className="mt-2 flex flex-col items-center justify-center">
-      <LoginForm role={data.role} redirectTo={data.redirectTo} />
+      <LoginForm redirectTo={data[REDIRECT_TO_PARAM]} />
     </main>
   );
 }

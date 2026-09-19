@@ -151,7 +151,10 @@ export default async function EmployeePage({
     label: `${dayNames[i].slice(0, 3)} ${day.date
       .getDate()
       .toString()
-      .padStart(2, "0")}/${(day.date.getMonth() + 1).toString().padStart(2, "0")}`,
+      .padStart(
+        2,
+        "0",
+      )}/${(day.date.getMonth() + 1).toString().padStart(2, "0")}`,
   }));
   const todayIso = today.toISOString().split("T")[0];
   const defaultDate = weekOffset === 0 ? todayIso : dateOptions[0]?.value;

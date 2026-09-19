@@ -2,6 +2,7 @@ import type { PrismaService } from "@/generated/effect-prisma";
 import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
 import type { EmployeeFindManyArgs } from "@/generated/prisma/models";
 import { Effect } from "effect";
+import { assertEmployeeAccess } from "@/effects/auth";
 
 export const getEmployeesEffect = Effect.fn("getEmployees")(function* (
   prisma: PrismaService,
@@ -26,6 +27,7 @@ export const getEmployeeEffect = Effect.fn("getEmployee")(function* (
   prisma: PrismaService,
   id: number,
 ) {
+  yield* assertEmployeeAccess(id);
   const args = {
     include: {
       weeklyObjectives: {
@@ -41,4 +43,23 @@ export const getEmployeeEffect = Effect.fn("getEmployee")(function* (
   };
   const employees = yield* prisma.employee.findUnique(args);
   return employees;
+});
+
+export const getEmployeesWithoutAccountEffect = Effect.fn(
+  "getEmployeesWithoutAccount",
+)(function* (prisma: PrismaService) {
+  const args: EmployeeFindManyArgs = {
+    where: {
+      isDeleted: false,
+      user: null,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: {
+      displayOrder: SortOrder.asc,
+    },
+  };
+  return yield* prisma.employee.findMany(args);
 });

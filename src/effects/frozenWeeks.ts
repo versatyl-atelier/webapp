@@ -7,7 +7,7 @@ import {
 import type { PrismaService } from "@/generated/effect-prisma";
 import { Effect } from "effect";
 import { Role } from "@/generated/prisma/enums";
-import { verifySession } from "@/effects/auth";
+import { assertEmployeeAccess, verifySession } from "@/effects/auth";
 import {
   WEEK_FROZEN_MESSAGE,
   WeekFrozenError,
@@ -41,6 +41,7 @@ export const getFrozenWeeksEffect = Effect.fn("getFrozenWeeks")(function* (
   prisma: PrismaService,
   employeeId: number,
 ) {
+  yield* assertEmployeeAccess(employeeId);
   const args: FrozenWeekFindManyArgs = {
     where: {
       employeeId,
@@ -62,6 +63,7 @@ export const freezeWeekEffect = Effect.fn("freezeWeek")(function* (
   },
 ) {
   const employeeId = parseInt(strEmployeeId, 10);
+  yield* assertEmployeeAccess(employeeId);
   const weekStart = new Date(String(strWeekStart));
   yield* Effect.annotateLogsScoped({
     employeeId,

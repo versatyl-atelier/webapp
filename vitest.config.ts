@@ -13,11 +13,8 @@ export default defineConfig({
     setupFiles: ["./tests/setup.ts"],
     env: {
       LOG_LEVEL: "off",
-      SESSION_SECRET: "test-session-secret-do-not-use-in-production",
-      SESSION_COOKIE_EMPLOYEE: "versatyl-session-employe",
-      SESSION_COOKIE_MANAGER: "versatyl-session-gestionnaire",
-      VERSATYL_PASSWORD_EMPLOYEE: "test-employee-password",
-      VERSATYL_PASSWORD_MANAGER: "test-manager-password",
+      BETTER_AUTH_SECRET: "test-auth-secret-do-not-use-in-production",
+      BETTER_AUTH_URL: "http://localhost:3000",
     },
   },
 });
