@@ -25,6 +25,7 @@
     "with-remote-db": "cross-env NODE_OPTIONS=\"-r dotenv/config\" DOTENV_CONFIG_PATH=.env.remote",
     "db:reset:remote": "npm run with-remote-db -- npm run db:reset",
     "db:deploy:remote": "npm run with-remote-db -- npm run db:deploy",
+    "db:seed:remote": "npm run with-remote-db -- npm run db:seed",
     "analyze": "next experimental-analyze",
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
