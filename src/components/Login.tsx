@@ -78,7 +78,11 @@ export function LoginForm({ redirectTo, defaultEmail }: LoginFormProps) {
 
 export function LoginButton() {
   return (
-    <Link href={loginPath()} title="Connexion">
+    <Link
+      href={loginPath()}
+      title="Connexion"
+      className="hover:text-punch-accent"
+    >
       <LogIn />
     </Link>
   );

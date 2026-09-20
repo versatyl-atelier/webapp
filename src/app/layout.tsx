@@ -5,7 +5,7 @@ import "./globals.css";
 import pkg from "@/../package.json";
 import Link from "next/link";
 import { LoginButton } from "@/components/Login";
-import { LogoutButton } from "@/components/Logout";
+import { LogoutForm } from "@/components/Logout";
 import { AuthEventsProvider } from "@/contexts/auth-events-provider";
 import { getSession } from "@/lib/session";
 
@@ -62,14 +62,7 @@ export default async function RootLayout({
               </h1>
             </div>
             <div className="my-auto flex items-center gap-2">
-              {session ? (
-                <>
-                  <span className="text-sm">{session.name}</span>
-                  <LogoutButton />
-                </>
-              ) : (
-                <LoginButton />
-              )}
+              {session ? <LogoutForm name={session.name} /> : <LoginButton />}
             </div>
           </header>
           <div className="py-10">{children}</div>
