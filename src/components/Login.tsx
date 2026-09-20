@@ -1,11 +1,13 @@
 "use client";
 
+import { LogIn } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useEffect } from "react";
 import { login } from "@/actions/auth";
 import { useRouter } from "next/navigation";
 import { useAuthEvents } from "@/contexts/auth-events-provider";
 import { LOGIN_SUCCESS_MESSAGE } from "@/constants/auth";
-import { changePasswordPath } from "@/lib/paths";
+import { changePasswordPath, loginPath } from "@/lib/paths";
 import { Field, FieldError, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -27,7 +29,12 @@ export function LoginForm({ redirectTo, defaultEmail }: LoginFormProps) {
       return router.push(changePasswordPath(redirectTo));
     }
     emitAuthSuccess();
-    return redirectTo ? router.push(redirectTo) : router.back();
+    if (redirectTo) {
+      router.push(redirectTo);
+    } else {
+      router.back();
+    }
+    router.refresh();
   }, [state, redirectTo, router, emitAuthSuccess]);
 
   return (
@@ -66,5 +73,13 @@ export function LoginForm({ redirectTo, defaultEmail }: LoginFormProps) {
         Se connecter
       </Button>
     </form>
+  );
+}
+
+export function LoginButton() {
+  return (
+    <Link href={loginPath()} title="Connexion">
+      <LogIn />
+    </Link>
   );
 }

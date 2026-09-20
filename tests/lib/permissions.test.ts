@@ -70,12 +70,14 @@ describe("toAppSession", () => {
     expect(
       toAppSession({
         id: "u1",
+        name: "User One",
         role: "employee",
         employeeId: 3,
         mustChangePassword: true,
       }),
     ).toEqual({
       userId: "u1",
+      name: "User One",
       role: Role.employee,
       employeeId: 3,
       mustChangePassword: true,
@@ -83,8 +85,11 @@ describe("toAppSession", () => {
   });
 
   it("defaults missing optional fields", () => {
-    expect(toAppSession({ id: "u2", role: "manager" })).toEqual({
+    expect(
+      toAppSession({ id: "u2", name: "User Two", role: "manager" }),
+    ).toEqual({
       userId: "u2",
+      name: "User Two",
       role: Role.manager,
       employeeId: null,
       mustChangePassword: false,
@@ -92,7 +97,11 @@ describe("toAppSession", () => {
   });
 
   it("returns null when the role is missing or unknown", () => {
-    expect(toAppSession({ id: "u3", role: null })).toBeNull();
-    expect(toAppSession({ id: "u4", role: "admin" })).toBeNull();
+    expect(
+      toAppSession({ id: "u3", name: "User Three", role: null }),
+    ).toBeNull();
+    expect(
+      toAppSession({ id: "u4", name: "User Four", role: "admin" }),
+    ).toBeNull();
   });
 });

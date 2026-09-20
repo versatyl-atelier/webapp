@@ -22,12 +22,14 @@ import {
 
 const employeeSession: AppSession = {
   userId: "u-employee",
+  name: "Employee",
   role: Role.employee,
   employeeId: 7,
   mustChangePassword: false,
 };
 const managerSession: AppSession = {
   userId: "u-manager",
+  name: "Manager",
   role: Role.manager,
   employeeId: null,
   mustChangePassword: false,

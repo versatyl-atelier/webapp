@@ -43,6 +43,7 @@ export function canAccessEmployee(
 
 type SessionUser = {
   id: string;
+  name: string;
   role?: string | null;
   employeeId?: number | null;
   mustChangePassword?: boolean | null;
@@ -55,6 +56,7 @@ export function toAppSession(user: SessionUser): AppSession | null {
   }
   return {
     userId: user.id,
+    name: user.name,
     role,
     employeeId: user.employeeId ?? null,
     mustChangePassword: user.mustChangePassword ?? false,

@@ -10,6 +10,7 @@ import { FormState } from "@/schemas/forms.schemas";
 
 export type AppSession = {
   userId: string;
+  name: string;
   role: Role;
   employeeId: number | null;
   mustChangePassword: boolean;

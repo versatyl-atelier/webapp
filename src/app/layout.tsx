@@ -4,8 +4,10 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import pkg from "@/../package.json";
 import Link from "next/link";
+import { LoginButton } from "@/components/Login";
 import { LogoutButton } from "@/components/Logout";
 import { AuthEventsProvider } from "@/contexts/auth-events-provider";
+import { getSession } from "@/lib/session";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,13 +25,14 @@ export const metadata: Metadata = {
     "Application web pour les employés et gestionnaires de Versatyl Atelier",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
   auth,
 }: Readonly<{
   children: React.ReactNode;
   auth: React.ReactNode;
 }>) {
+  const session = await getSession();
   return (
     <html
       lang="en"
@@ -58,8 +61,15 @@ export default function RootLayout({
                 <Link href="/">Versatyl</Link>
               </h1>
             </div>
-            <div className="my-auto">
-              <LogoutButton />
+            <div className="my-auto flex items-center gap-2">
+              {session ? (
+                <>
+                  <span className="text-sm">{session.name}</span>
+                  <LogoutButton />
+                </>
+              ) : (
+                <LoginButton />
+              )}
             </div>
           </header>
           <div className="py-10">{children}</div>
