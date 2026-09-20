@@ -29,7 +29,8 @@ export function ChangePasswordForm({ redirectTo }: ChangePasswordFormProps) {
     if (state?.message === CHANGE_PASSWORD_SUCCESS_MESSAGE) {
       toast.success("Mot de passe modifié", { position: "top-left" });
       emitAuthSuccess();
-      return router.push(redirectTo || "/");
+      router.push(redirectTo || "/");
+      return router.refresh();
     }
   }, [state, redirectTo, router, emitAuthSuccess]);
 
