@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 import { EmployeeSelect } from "@/components/EmployeeSelect";
@@ -5,6 +7,7 @@ import { EmployeeSelect } from "@/components/EmployeeSelect";
 import { getEmployees } from "@/actions/employees";
 import { pinEmployeeFirst } from "@/lib/employees";
 import { Role } from "@/generated/prisma/enums";
+import { employeePath } from "@/lib/paths";
 import { requireActiveSession } from "@/lib/session";
 import { isOpen } from "@/lib/sidebar";
 import { PunchSidebar } from "./PunchSidebar";
@@ -14,6 +17,9 @@ export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const session = await requireActiveSession("/punch");
+  if (session.employeeId !== null) {
+    redirect(employeePath(session.employeeId));
+  }
   const employees = await getEmployees();
   const isSidebarOpen = await isOpen();
   return (
