@@ -5,13 +5,13 @@ import {
   ProjectFindManyArgs,
 } from "@/generated/prisma/models";
 import { Effect } from "effect";
-import { assertEmployeeAccess } from "@/effects/auth";
+import { assertEmployeeAccess, getActiveSession } from "@/effects/auth";
+import { Role } from "@/generated/prisma/enums";
 
-export const getProjectsEffect = Effect.fn("getProjects")(function* (
+const getAllowedSourceIds = Effect.fn("getAllowedSourceIds")(function* (
   prisma: PrismaService,
   employeeId: number,
 ) {
-  yield* assertEmployeeAccess(employeeId);
   const opts: StatutSourcePermissionFindManyArgs = {
     where: {
       statut: {
@@ -26,9 +26,17 @@ export const getProjectsEffect = Effect.fn("getProjects")(function* (
       sourceId: true,
     },
   };
-  const allowedSources = (yield* prisma.statutSourcePermission.findMany(
-    opts,
-  )).map(({ sourceId }) => sourceId);
+  return (yield* prisma.statutSourcePermission.findMany(opts)).map(
+    ({ sourceId }) => sourceId,
+  );
+});
+
+export const getProjectsEffect = Effect.fn("getProjects")(function* (
+  prisma: PrismaService,
+  employeeId: number,
+) {
+  yield* assertEmployeeAccess(employeeId);
+  const allowedSources = yield* getAllowedSourceIds(prisma, employeeId);
   if (allowedSources.length === 0) {
     return [];
   }
@@ -59,4 +67,25 @@ export const getAllProjectsEffect = Effect.fn("getAllProjects")(function* (
     },
   };
   return yield* prisma.project.findMany(args);
+});
+
+export const getProjectEffect = Effect.fn("getProject")(function* (
+  prisma: PrismaService,
+  id: string,
+) {
+  const session = yield* getActiveSession();
+  if (session.role === Role.manager) {
+    return yield* prisma.project.findUnique({
+      where: { id },
+      select: { id: true, name: true },
+    });
+  }
+  if (session.employeeId === null) {
+    return null;
+  }
+  const allowedSources = yield* getAllowedSourceIds(prisma, session.employeeId);
+  return yield* prisma.project.findFirst({
+    where: { id, sourceId: { in: allowedSources } },
+    select: { id: true, name: true },
+  });
 });

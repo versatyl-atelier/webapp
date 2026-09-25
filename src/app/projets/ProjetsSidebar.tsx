@@ -1,6 +1,7 @@
 import { getAllProjects, getProjects } from "@/actions/projects";
 import { ProjectsFilter } from "@/components/ProjectsFilter";
 import { ToolSidebar } from "@/components/ToolSidebar";
+import { Button } from "@/components/ui/button";
 import {
   SidebarContent,
   SidebarFooter,
@@ -26,7 +27,7 @@ export async function ProjetsSidebar() {
 
   return (
     <ToolSidebar title="Projets" href="/projets">
-      <SidebarContent className="overflow-hidden">
+      <SidebarContent>
         <ProjectsFilter
           projects={projects.map(({ id, name, isDeleted }) => ({
             id,
@@ -37,7 +38,9 @@ export async function ProjetsSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuButton>+ Nouveau projet</SidebarMenuButton>
+          <SidebarMenuButton asChild>
+            <Button variant="default">+ Nouveau projet</Button>
+          </SidebarMenuButton>
         </SidebarMenu>
       </SidebarFooter>
     </ToolSidebar>

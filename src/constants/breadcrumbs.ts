@@ -3,6 +3,9 @@ export const PARAM_SEGMENT_PATTERN = /^\[(.+)\]$/;
 export const EMPLOYEE_CRUMB_PATTERN = "/punch/employe/[id]";
 export const EMPLOYEE_ID_PARAM = "id";
 
+export const PROJECT_CRUMB_PATTERN = "/projets/[id]";
+export const PROJECT_ID_PARAM = "id";
+
 export const STATIC_CRUMB_LABELS: Record<string, string> = {
   "/change-password": "Changer le mot de passe",
   "/login": "Connexion",
