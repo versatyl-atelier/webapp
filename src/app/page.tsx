@@ -32,7 +32,7 @@ const apps: AppCard[] = [
     description: "Timesheet atelier",
   },
   {
-    href: "lanceur",
+    href: "lanceur-de-dates",
     icon: "📅",
     title: "Lanceur",
     description: "Planification production",

@@ -10,7 +10,7 @@ export function VersatylSidebarTrigger({
     <SidebarTrigger
       size="icon"
       className={cn(
-        "bg-sidebar border-sidebar-accent absolute rounded-l-none border",
+        "bg-sidebar border-sidebar-accent absolute rounded-l-none border pt-2",
         className,
       )}
     />

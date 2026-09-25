@@ -3,11 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import pkg from "@/../package.json";
-import Link from "next/link";
-import { LoginButton } from "@/components/Login";
-import { LogoutForm } from "@/components/Logout";
+import { Header } from "@/components/Header";
 import { AuthEventsProvider } from "@/contexts/auth-events-provider";
-import { getSession } from "@/lib/session";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,14 +22,13 @@ export const metadata: Metadata = {
     "Application web pour les employés et gestionnaires de Versatyl Atelier",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
   auth,
 }: Readonly<{
   children: React.ReactNode;
   auth: React.ReactNode;
 }>) {
-  const session = await getSession();
   return (
     <html
       lang="en"
@@ -40,32 +36,8 @@ export default async function RootLayout({
     >
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <AuthEventsProvider>
-          <header className="fixed z-30 flex w-full justify-between bg-white px-4 py-2 shadow-sm">
-            <div className="flex gap-2">
-              <Link
-                href="/"
-                className="inline-block size-6 rounded-sm bg-black p-1 text-white"
-              >
-                <svg
-                  viewBox="0 0 12 12"
-                  className="size-full"
-                  fill="currentColor"
-                >
-                  <rect x="1" y="1" width="4" height="4" rx="1" />
-                  <rect x="7" y="1" width="4" height="4" rx="1" />
-                  <rect x="1" y="7" width="4" height="4" rx="1" />
-                  <rect x="7" y="7" width="4" height="4" rx="1" />
-                </svg>
-              </Link>
-              <h1 className="inline-block font-bold">
-                <Link href="/">Versatyl</Link>
-              </h1>
-            </div>
-            <div className="my-auto flex items-center gap-2">
-              {session ? <LogoutForm name={session.name} /> : <LoginButton />}
-            </div>
-          </header>
-          <div className="py-10">{children}</div>
+          <Header />
+          <div className="pt-11">{children}</div>
           <footer className="fixed bottom-0 mt-4 mb-2 w-full text-center text-[10px] text-gray-500 print:mt-4">
             Version {pkg.version} - Atelier Versatyl © 2025
           </footer>

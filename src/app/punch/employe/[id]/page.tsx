@@ -9,7 +9,7 @@ import MultiPunchForm from "@/components/MultiPunchForm";
 import ManualTimeForm from "@/components/ManualTimeForm";
 import FillDayForm from "@/components/FillDayForm";
 import { Button } from "@/components/ui/button";
-import Clock from "@/components/Clock";
+
 import { notFound } from "next/navigation";
 import { getEmployee } from "@/actions/employees";
 import { getTimeEntries } from "@/actions/timeEntries";
@@ -24,20 +24,7 @@ import {
 } from "@/lib/time";
 import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
-import { VersatylSidebarTrigger } from "@/components/VersatylSidebarTrigger";
 import { PageContextProvider } from "./context-provider";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { isOpen } from "@/lib/sidebar";
-
-import { PunchSidebar } from "../../PunchSidebar";
-import { ChevronDown } from "lucide-react";
-
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from "@/components/ui/breadcrumb";
 
 const defaultWeeklyTarget = 40; // TODO Find better place for this magic value
 
@@ -177,233 +164,198 @@ export default async function EmployeePage({
 
   const activePunch = await getActivePunch(employeeId);
 
-  const isSidebarOpen = await isOpen();
-
   return (
     <PageContextProvider
       projectsPromise={projectsPromise}
       tasksPromise={tasksPromise}
     >
-      <SidebarProvider defaultOpen={isSidebarOpen}>
-        <PunchSidebar />
-        <SidebarInset>
-          <div className="bg-punch-light flex min-h-screen w-full min-w-md flex-col">
-            <div className="flex flex-row items-baseline">
-              <VersatylSidebarTrigger />
-              <div className="flex w-full flex-row justify-between px-8 py-2">
-                <Breadcrumb className="inline-block">
-                  <BreadcrumbList className="text-foreground hover:text-accent">
-                    <BreadcrumbItem>
-                      <BreadcrumbLink asChild>
-                        <h1 className="ml-2 inline-block">
-                          <Link href="/punch">
-                            {employee.name}{" "}
-                            <ChevronDown className="inline-block" />
-                          </Link>
-                        </h1>
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
-                <Clock className="self-end" />
+      <main className="flex flex-1 flex-col gap-2.5 p-1.5">
+        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[180px_1fr_180px]">
+          <aside className="border-punch-dark w-full rounded-lg border-2 bg-white p-2.5">
+            <h2 className="border-punch-accent mb-2 border-b-2 pb-1 text-center text-sm font-bold">
+              Résumé
+            </h2>
+
+            <div className="space-y-1.5">
+              {/* Weekly Hours */}
+              <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
+                <div className="text-lg font-bold">
+                  {formatTimeDisplay(weekly)}
+                </div>
+                <div className="text-xs uppercase">Heures Semaine</div>
+              </div>
+
+              {/* Daily Hours */}
+              <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
+                <div className="text-lg font-bold">
+                  {formatTimeDisplay(daily)}
+                </div>
+                <div className="text-xs uppercase">Heures Aujourd'hui</div>
+              </div>
+
+              {/* Difference */}
+              <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
+                <div
+                  className={`text-lg font-bold ${isDifferencePosive ? "text-punch-pos-diff" : "text-punch-neg-diff"}`}
+                >
+                  {isDifferencePosive ? "+" : ""}
+                  {formatTimeDisplay(Math.abs(hoursDifference))}
+                </div>
+                <div className="text-punch-dark text-xs uppercase">
+                  Différence
+                </div>
+              </div>
+
+              {/* Employee Name */}
+              <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
+                <div className="text-lg font-bold text-black">
+                  {employee.name}
+                </div>
+                <div className="text-punch-dark text-xs uppercase">Employé</div>
               </div>
             </div>
-            <main className="flex flex-1 flex-col gap-2.5 p-1.5">
-              <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[180px_1fr_180px]">
-                <aside className="border-punch-dark w-full rounded-lg border-2 bg-white p-2.5">
-                  <h2 className="border-punch-accent mb-2 border-b-2 pb-1 text-center text-sm font-bold">
-                    Résumé
-                  </h2>
+          </aside>
+          <div>
+            <div className="border-punch-dark flex h-full flex-col rounded-lg border-2 bg-white">
+              {/* Week Navigation */}
+              <div className="border-punch-dark bg-punch-light flex items-center justify-between border-b-2 px-2 py-2 sm:px-3">
+                <Button
+                  disabled={!canGoBack}
+                  className="text-2xs rounded-sm bg-black font-bold text-white disabled:opacity-50 sm:px-2"
+                >
+                  <Link href={`?weekOffset=${weekOffset - 1}`}>
+                    ← Précédente
+                  </Link>
+                </Button>
 
-                  <div className="space-y-1.5">
-                    {/* Weekly Hours */}
-                    <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
-                      <div className="text-lg font-bold">
-                        {formatTimeDisplay(weekly)}
-                      </div>
-                      <div className="text-xs uppercase">Heures Semaine</div>
+                <div className="text-xs font-bold text-black sm:text-sm">
+                  {weekTitle}
+                </div>
+
+                <div className="flex gap-0.5 sm:gap-2">
+                  <FreezeForm
+                    employeeId={employeeId}
+                    weekStart={weekStart}
+                    weekTotal={weekly}
+                    objective={objective}
+                    weekFrozen={weekFrozen}
+                  />
+                  <Button
+                    disabled={!canGoForward}
+                    className="text-2xs rounded-sm bg-black font-bold text-white disabled:opacity-50 sm:px-2"
+                  >
+                    <Link href={`?weekOffset=${weekOffset + 1}`}>
+                      Suivante →
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Frozen Banner */}
+              {weekFrozen && (
+                <div className="bg-punch-accent-hover text-2xs px-2 py-2 text-center font-bold text-white sm:px-3">
+                  Semaine gelée (Lecture seule) : Demander à un gestionnaire
+                  pour dégeler
+                </div>
+              )}
+
+              {/* Week Grid */}
+              <div className="flex flex-col">
+                {/* Day Headers */}
+                <div className="bg-punch-dark grid grid-cols-7 gap-px border-b">
+                  {dayNames.map((name, i) => (
+                    <div
+                      key={name}
+                      className="bg-black px-0.5 py-1 text-center sm:px-1"
+                    >
+                      <div className="text-xs font-bold text-white">{name}</div>
+                      {daysData[i] && (
+                        <div className="text-xs font-bold text-white">
+                          {daysData[i].date
+                            .getDate()
+                            .toString()
+                            .padStart(2, "0")}
+                          /
+                          {(daysData[i].date.getMonth() + 1)
+                            .toString()
+                            .padStart(2, "0")}
+                        </div>
+                      )}
                     </div>
+                  ))}
+                </div>
 
-                    {/* Daily Hours */}
-                    <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
-                      <div className="text-lg font-bold">
-                        {formatTimeDisplay(daily)}
-                      </div>
-                      <div className="text-xs uppercase">
-                        Heures Aujourd'hui
-                      </div>
-                    </div>
-
-                    {/* Difference */}
-                    <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
+                {/* Day Content */}
+                <div className="bg-punch-light grid grid-cols-7 gap-px p-px">
+                  {daysData.map((day) => {
+                    const isToday =
+                      new Date(day.dateStr).toDateString() ===
+                      new Date().toDateString();
+                    return (
                       <div
-                        className={`text-lg font-bold ${isDifferencePosive ? "text-punch-pos-diff" : "text-punch-neg-diff"}`}
+                        key={day.dateStr}
+                        className={`min-h-48 overflow-y-auto p-0.5 sm:min-h-64 sm:p-1 ${
+                          isToday ? "bg-punch-today" : "bg-white"
+                        }`}
                       >
-                        {isDifferencePosive ? "+" : ""}
-                        {formatTimeDisplay(Math.abs(hoursDifference))}
-                      </div>
-                      <div className="text-punch-dark text-xs uppercase">
-                        Différence
-                      </div>
-                    </div>
-
-                    {/* Employee Name */}
-                    <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
-                      <div className="text-lg font-bold text-black">
-                        {employee.name}
-                      </div>
-                      <div className="text-punch-dark text-xs uppercase">
-                        Employé
-                      </div>
-                    </div>
-                  </div>
-                </aside>
-                <div>
-                  <div className="border-punch-dark flex h-full flex-col rounded-lg border-2 bg-white">
-                    {/* Week Navigation */}
-                    <div className="border-punch-dark bg-punch-light flex items-center justify-between border-b-2 px-2 py-2 sm:px-3">
-                      <Button
-                        disabled={!canGoBack}
-                        className="text-2xs rounded-sm bg-black font-bold text-white disabled:opacity-50 sm:px-2"
-                      >
-                        <Link href={`?weekOffset=${weekOffset - 1}`}>
-                          ← Précédente
-                        </Link>
-                      </Button>
-
-                      <div className="text-xs font-bold text-black sm:text-sm">
-                        {weekTitle}
-                      </div>
-
-                      <div className="flex gap-0.5 sm:gap-2">
-                        <FreezeForm
-                          employeeId={employeeId}
-                          weekStart={weekStart}
-                          weekTotal={weekly}
-                          objective={objective}
-                          weekFrozen={weekFrozen}
-                        />
-                        <Button
-                          disabled={!canGoForward}
-                          className="text-2xs rounded-sm bg-black font-bold text-white disabled:opacity-50 sm:px-2"
-                        >
-                          <Link href={`?weekOffset=${weekOffset + 1}`}>
-                            Suivante →
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Frozen Banner */}
-                    {weekFrozen && (
-                      <div className="bg-punch-accent-hover text-2xs px-2 py-2 text-center font-bold text-white sm:px-3">
-                        Semaine gelée (Lecture seule) : Demander à un
-                        gestionnaire pour dégeler
-                      </div>
-                    )}
-
-                    {/* Week Grid */}
-                    <div className="flex flex-col">
-                      {/* Day Headers */}
-                      <div className="bg-punch-dark grid grid-cols-7 gap-px border-b">
-                        {dayNames.map((name, i) => (
-                          <div
-                            key={name}
-                            className="bg-black px-0.5 py-1 text-center sm:px-1"
-                          >
-                            <div className="text-xs font-bold text-white">
-                              {name}
-                            </div>
-                            {daysData[i] && (
-                              <div className="text-xs font-bold text-white">
-                                {daysData[i].date
-                                  .getDate()
-                                  .toString()
-                                  .padStart(2, "0")}
-                                /
-                                {(daysData[i].date.getMonth() + 1)
-                                  .toString()
-                                  .padStart(2, "0")}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Day Content */}
-                      <div className="bg-punch-light grid grid-cols-7 gap-px p-px">
-                        {daysData.map((day) => {
-                          const isToday =
-                            new Date(day.dateStr).toDateString() ===
-                            new Date().toDateString();
+                        {day.entries.map((entry) => {
                           return (
-                            <div
-                              key={day.dateStr}
-                              className={`min-h-48 overflow-y-auto p-0.5 sm:min-h-64 sm:p-1 ${
-                                isToday ? "bg-punch-today" : "bg-white"
-                              }`}
-                            >
-                              {day.entries.map((entry) => {
-                                return (
-                                  <EditTimeEntryForm
-                                    key={entry.id}
-                                    entry={entry}
-                                    disabled={disabledReason}
-                                  />
-                                );
-                              })}
-                            </div>
+                            <EditTimeEntryForm
+                              key={entry.id}
+                              entry={entry}
+                              disabled={disabledReason}
+                            />
                           );
                         })}
                       </div>
-
-                      {/* Day Totals */}
-                      <div className="border-punch-dark bg-punch-dark grid grid-cols-7 gap-px border-t-2">
-                        {daysData.map((day) => (
-                          <div
-                            key={`total-${day.dateStr}`}
-                            className="bg-black px-0.5 py-1 text-center text-xs font-bold text-white sm:px-1 sm:text-sm"
-                          >
-                            {formatTimeDisplay(day.total)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
 
-                <ObjectivesAndKilometrageForm
-                  employeeId={employeeId}
-                  weekStart={weekStart}
-                  currentObjective={objective}
-                  currentKilometrage={weeklyKilometrage?.kilometrage ?? 0}
-                  disabled={disabledReason}
-                />
+                {/* Day Totals */}
+                <div className="border-punch-dark bg-punch-dark grid grid-cols-7 gap-px border-t-2">
+                  {daysData.map((day) => (
+                    <div
+                      key={`total-${day.dateStr}`}
+                      className="bg-black px-0.5 py-1 text-center text-xs font-bold text-white sm:px-1 sm:text-sm"
+                    >
+                      {formatTimeDisplay(day.total)}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
-                <MultiPunchForm
-                  employeeId={employeeId}
-                  activePunch={activePunch}
-                  disabled={disabledReason}
-                />
-                <ManualTimeForm
-                  employeeId={employeeId}
-                  dateOptions={dateOptions}
-                  defaultDate={defaultDate}
-                  disabled={disabledReason}
-                />
-                <FillDayForm
-                  employeeId={employeeId}
-                  dateOptions={dateOptions}
-                  defaultDate={defaultDate}
-                  dailyHours={dailyHours}
-                  disabled={disabledReason}
-                />
-              </div>
-            </main>
+            </div>
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+
+          <ObjectivesAndKilometrageForm
+            employeeId={employeeId}
+            weekStart={weekStart}
+            currentObjective={objective}
+            currentKilometrage={weeklyKilometrage?.kilometrage ?? 0}
+            disabled={disabledReason}
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
+          <MultiPunchForm
+            employeeId={employeeId}
+            activePunch={activePunch}
+            disabled={disabledReason}
+          />
+          <ManualTimeForm
+            employeeId={employeeId}
+            dateOptions={dateOptions}
+            defaultDate={defaultDate}
+            disabled={disabledReason}
+          />
+          <FillDayForm
+            employeeId={employeeId}
+            dateOptions={dateOptions}
+            defaultDate={defaultDate}
+            dailyHours={dailyHours}
+            disabled={disabledReason}
+          />
+        </div>
+      </main>
     </PageContextProvider>
   );
 }

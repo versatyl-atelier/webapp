@@ -44,3 +44,19 @@ export const getProjectsEffect = Effect.fn("getProjects")(function* (
   };
   return yield* prisma.project.findMany(args);
 });
+
+export const getAllProjectsEffect = Effect.fn("getAllProjects")(function* (
+  prisma: PrismaService,
+) {
+  const args: ProjectFindManyArgs = {
+    select: {
+      id: true,
+      name: true,
+      isDeleted: true,
+    },
+    orderBy: {
+      name: SortOrder.asc,
+    },
+  };
+  return yield* prisma.project.findMany(args);
+});

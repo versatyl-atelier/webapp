@@ -27,6 +27,10 @@ export function employeePath(employeeId: number): string {
   return `/punch/employe/${employeeId}`;
 }
 
+export function projectPath(projectId: string): string {
+  return `/projets/${projectId}`;
+}
+
 export function changePasswordPath(redirectTo?: string): string {
   return withRedirectTo(CHANGE_PASSWORD_PATH, redirectTo);
 }

@@ -6,9 +6,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuAction,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 
 type ToolSidebarProps = {
   title: string;
@@ -23,24 +21,28 @@ export function ToolSidebar({
   return (
     <Sidebar
       variant="sidebar"
-      className="border-r-muted mt-10 h-[calc(100svh-40px)]"
+      className="border-r-muted mt-12 h-[calc(100svh-40px)]"
     >
-      <SidebarHeader className="px-0 py-2">
+      <SidebarHeader className="border-b-muted border-b">
         <SidebarMenu>
-          <SidebarMenuItem className="text-punch-dark inline-block h-full py-2 pl-10">
-            <SidebarMenuAction
-              asChild
-              className="text-muted-foreground top-0 right-auto left-0 size-10 text-base"
+          <SidebarMenuItem className="text-punch-dark">
+            <Link
+              href="/"
+              title="Accueuil"
+              className="hover:text-punch-accent size-10 px-4 text-base"
             >
-              <Link href="/">←</Link>
-            </SidebarMenuAction>
-            <Link href={href} className="text-sm font-bold">
+              ←
+            </Link>
+            <Link
+              href={href}
+              title={title}
+              className="hover:text-punch-accent text-sm font-bold"
+            >
               {title}
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <Separator />
       {children}
     </Sidebar>
   );
