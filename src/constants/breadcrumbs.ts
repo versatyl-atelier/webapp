@@ -11,8 +11,6 @@ export const STATIC_CRUMB_LABELS: Record<string, string> = {
   "/login": "Connexion",
   "/punch": "Punch",
   "/punch/advanced-reports": "Rapports avancés",
-  "/punch/calendar": "Calendrier",
-  "/punch/calendar-config": "Configuration du calendrier",
   "/punch/gestionnaire": "Interface gestionnaire",
   "/punch/guide-pointage": "Guide de pointage",
   "/punch/reports": "Rapports",
