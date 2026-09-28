@@ -84,7 +84,7 @@ export function FreezeForm({
       <Button
         type="submit"
         disabled={pending}
-        className={`text-2xs bg-punch-accent hover:bg-punch-accent-hover rounded-sm font-bold text-white disabled:opacity-50 sm:px-2`}
+        className="text-2xs rounded-sm font-bold sm:px-2"
       >
         {weekFrozen ? "Dégeler" : "Geler"}
       </Button>

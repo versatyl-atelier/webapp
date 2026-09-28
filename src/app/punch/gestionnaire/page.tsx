@@ -13,12 +13,12 @@ export default async function Page() {
       <h2 className="text-xl font-bold">Créer un compte</h2>
       <CreateUserForm
         employees={employees || []}
-        className="bg-background flex max-w-prose flex-col gap-4 rounded border-2 border-black p-2"
+        className="bg-background flex max-w-prose flex-col gap-4 rounded border-2 p-2"
       />
       <h2 className="text-xl font-bold">Comptes existants</h2>
       <UserList
         users={users}
-        className="bg-background mb-4 w-full max-w-prose rounded border-2 border-black"
+        className="bg-background mb-4 w-full max-w-prose rounded border-2"
       />
     </main>
   );

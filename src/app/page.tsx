@@ -76,7 +76,7 @@ export default async function Home() {
                       <Badge
                         asChild
                         key={tag}
-                        className="text-2xs rounded-sm bg-indigo-50 text-blue-600"
+                        className="text-2xs rounded-sm"
                         variant="secondary"
                       >
                         <li>{tag}</li>

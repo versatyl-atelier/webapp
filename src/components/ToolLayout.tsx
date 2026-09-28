@@ -21,7 +21,7 @@ export async function ToolLayout({
   return (
     <SidebarProvider defaultOpen={isSidebarOpen}>
       {sidebar}
-      <SidebarInset className="bg-punch-light">
+      <SidebarInset className="bg-muted">
         <div className="flex min-h-screen w-full min-w-md flex-col">
           <div className="bg-sidebar border-sidebar-accent fixed z-10 flex w-full items-center gap-2 border">
             <SidebarTrigger size="icon-lg" />

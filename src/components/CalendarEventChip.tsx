@@ -17,7 +17,7 @@ type CalendarEventChipProps = {
 
 const HIGHLIGHT_CLASSES: Record<ChipHighlight, string> = {
   none: "",
-  match: "ring-punch-accent ring-2",
+  match: "ring-primary ring-2",
   dim: "opacity-20",
 };
 

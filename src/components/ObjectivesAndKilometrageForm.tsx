@@ -43,10 +43,10 @@ export function ObjectivesAndKilometrageForm({
   }, [state]);
 
   return (
-    <div className="border-punch-dark w-full rounded-lg border-2 bg-white p-2.5">
+    <div className="bg-card w-full rounded-lg border-2 p-2.5">
       <form
         action={action}
-        className="bg-punch-light space-y-3 rounded-sm border-2 border-dashed p-2"
+        className="bg-muted space-y-3 rounded-sm border-2 border-dashed p-2"
       >
         <Input type="hidden" name="employeeId" value={employeeId} />
         <Input type="hidden" name="weekStart" value={weekStart.toString()} />
@@ -64,7 +64,7 @@ export function ObjectivesAndKilometrageForm({
               defaultValue={formatTimeDisplay(currentObjective)}
               placeholder="Ex: 36.75 ou 36h 45m"
               disabled={pending || !!disabled}
-              className="rounded-sm border-2 border-black bg-white text-center text-xs"
+              className="rounded-sm border-2 text-center text-xs"
             />
           </div>
 
@@ -80,7 +80,7 @@ export function ObjectivesAndKilometrageForm({
               step="1"
               placeholder="Kilomètres"
               disabled={pending || !!disabled}
-              className="rounded-sm border-2 border-black bg-white text-center text-xs"
+              className="rounded-sm border-2 text-center text-xs"
             />
           </div>
         </div>
@@ -88,7 +88,7 @@ export function ObjectivesAndKilometrageForm({
         <Button
           type="submit"
           disabled={pending || !!disabled}
-          className="hover:bg-punch-accent w-full rounded-sm bg-black font-bold text-white uppercase disabled:opacity-50"
+          className="w-full rounded-sm font-bold uppercase"
         >
           Sauver
         </Button>

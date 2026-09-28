@@ -27,18 +27,18 @@ export function ToolSidebar({
     >
       <SidebarHeader className="border-b-muted border-b">
         <SidebarMenu>
-          <SidebarMenuItem className="text-punch-dark">
+          <SidebarMenuItem className="text-muted-foreground">
             <Link
               href="/"
               title="Accueuil"
-              className="hover:text-punch-accent fixed size-10 px-4 text-base"
+              className="hover:text-primary fixed size-10 px-4 text-base"
             >
               ←
             </Link>
             <Link
               href={href}
               title={title}
-              className="hover:text-punch-accent inline-block w-full text-center text-sm font-bold"
+              className="hover:text-primary inline-block w-full text-center text-sm font-bold"
             >
               <span className="mr-2">{glyph}</span>
               {title}

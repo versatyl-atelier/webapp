@@ -14,29 +14,17 @@ export type FormValidationErrors = {
 
 type DismissibleAlertProps = {
   message: string;
-  alertClassName?: string;
-  iconClassName?: string;
-  descriptionClassName?: string;
 };
 
-function DismissibleAlert({
-  message,
-  alertClassName,
-  iconClassName,
-  descriptionClassName,
-}: DismissibleAlertProps) {
-  const [dismissedMessage, setDismissedMessage] = useState<string | null>(
-    null,
-  );
+function DismissibleAlert({ message }: DismissibleAlertProps) {
+  const [dismissedMessage, setDismissedMessage] = useState<string | null>(null);
   if (dismissedMessage === message) return null;
 
   return (
     <FieldError>
-      <Alert className={alertClassName}>
-        <TriangleAlert className={iconClassName} />
-        <AlertDescription className={descriptionClassName}>
-          {message}
-        </AlertDescription>
+      <Alert variant="destructive">
+        <TriangleAlert />
+        <AlertDescription>{message}</AlertDescription>
         <AlertAction className="top-1">
           <Button onClick={() => setDismissedMessage(message)}>x</Button>
         </AlertAction>
@@ -59,19 +47,10 @@ export function FormValidationAlerts({
   return (
     <FieldGroup className={className}>
       {errors.schemaValidation && (
-        <DismissibleAlert
-          message={errors.schemaValidation}
-          iconClassName="text-amber-500"
-          descriptionClassName="bg-black text-white"
-        />
+        <DismissibleAlert message={errors.schemaValidation} />
       )}
       {errors.dataValidation && (
-        <DismissibleAlert
-          message={errors.dataValidation}
-          alertClassName="border-punch-accent rounded-sm border-2 bg-black text-white"
-          iconClassName="fill-amber-400 stroke-black"
-          descriptionClassName="font-bold"
-        />
+        <DismissibleAlert message={errors.dataValidation} />
       )}
     </FieldGroup>
   );

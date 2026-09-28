@@ -67,7 +67,7 @@ export function EmployeeSelect({
         defaultOpen
       >
         <ComboboxInput
-          className="border-punch-dark hover:border-punch-accent focus-visible:border-punch-accent active:border-punch-accent border-2 py-2"
+          className="hover:border-primary focus-visible:border-primary active:border-primary border-2 py-2"
           placeholder="-- Choisir employé --"
           autoFocus
           showClear
@@ -81,7 +81,7 @@ export function EmployeeSelect({
                 value={employee}
                 className={cn(
                   employee.id === currentEmployeeId &&
-                    "bg-punch-accent/15 font-bold",
+                    "bg-primary/15 font-bold",
                 )}
               >
                 {employee.name}

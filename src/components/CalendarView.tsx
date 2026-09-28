@@ -152,7 +152,7 @@ export function CalendarView({
                   toggleFilter(current, category, EVENT_CATEGORIES),
                 )
               }
-              className="text-muted-foreground aria-pressed:border-punch-accent aria-pressed:bg-punch-accent/10 aria-pressed:text-punch-accent"
+              className="text-muted-foreground aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-primary"
             >
               <EventCategoryIcon category={category} />
               {EVENT_CATEGORY_LABELS[category]}
@@ -248,7 +248,7 @@ function CalendarDayCell({
             "flex h-5 min-w-5 shrink-0 items-center justify-center self-end rounded-full px-1.5 text-xs font-medium whitespace-nowrap tabular-nums",
             day.isWeekend && "text-2xs self-center",
             day.isToday
-              ? "bg-punch-accent font-semibold text-white"
+              ? "bg-primary text-primary-foreground font-semibold"
               : "text-muted-foreground",
           )}
         >

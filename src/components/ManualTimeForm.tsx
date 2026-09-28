@@ -49,8 +49,8 @@ export default function ManualTimeForm({
   }, [state, router]);
 
   return (
-    <div className="border-punch-dark rounded-lg border-2 bg-white p-2.5">
-      <div className="border-punch-accent mb-2 border-b-2 pb-1 text-center text-xs font-bold">
+    <div className="bg-card rounded-lg border-2 p-2.5">
+      <div className="border-primary mb-2 border-b-2 pb-1 text-center text-xs font-bold">
         Ajout Manuel
       </div>
       <form action={action} className="space-y-2.5">
@@ -61,7 +61,7 @@ export default function ManualTimeForm({
           <FieldError key={error}>- {error}</FieldError>
         ))}
         <Field>
-          <FieldLabel className="mb-1 block text-xs font-semibold text-black uppercase">
+          <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
             Heures
           </FieldLabel>
           <Input
@@ -69,7 +69,7 @@ export default function ManualTimeForm({
             type="text"
             defaultValue={DEFAULT_MANUAL_HOURS}
             placeholder="ex: 1.5, 1h30, 30m"
-            className="w-full rounded border-2 border-black px-1.5 py-1 text-xs text-black"
+            className="w-full rounded border-2 px-1.5 py-1 text-xs"
             disabled={pending || !!disabled}
           />
           {state?.errors?.hours?.map((error: string) => (
@@ -77,7 +77,7 @@ export default function ManualTimeForm({
           ))}
         </Field>
         <Field>
-          <FieldLabel className="mb-1 block text-xs font-semibold text-black uppercase">
+          <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
             Date
           </FieldLabel>
           <Select
@@ -85,7 +85,7 @@ export default function ManualTimeForm({
             defaultValue={defaultDate}
             disabled={pending || !!disabled}
           >
-            <SelectTrigger className="w-full rounded border-2 border-black px-1.5 py-1 text-xs text-black">
+            <SelectTrigger className="w-full rounded border-2 px-1.5 py-1 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -104,9 +104,8 @@ export default function ManualTimeForm({
           type="submit"
           name="command"
           value="add"
-          variant="secondary"
           disabled={pending || !!disabled}
-          className="hover:bg-punch-accent w-full rounded-sm bg-black py-2 text-xs font-semibold text-white uppercase disabled:opacity-50"
+          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
         >
           Ajouter
         </Button>
@@ -114,8 +113,9 @@ export default function ManualTimeForm({
           type="submit"
           name="command"
           value="lunch"
+          variant="secondary"
           disabled={pending || !!disabled}
-          className="bg-punch-secondary-bg border-punch-secondary-border hover:bg-initial w-full rounded-sm border-2 py-2 text-xs font-semibold text-white uppercase disabled:opacity-50"
+          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
         >
           {LUNCH_HOURS_LABEL}
         </Button>

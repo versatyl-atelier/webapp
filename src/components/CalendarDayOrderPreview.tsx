@@ -64,7 +64,7 @@ export function CalendarDayOrderPreview({
               className={cn(
                 "flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs",
                 item.isNew
-                  ? "border-punch-accent bg-punch-accent/10 border border-dashed"
+                  ? "border-primary bg-primary/10 border border-dashed"
                   : "bg-muted",
               )}
             >
@@ -80,7 +80,7 @@ export function CalendarDayOrderPreview({
               </span>
               <span className="min-w-0 flex-1 truncate">{item.title}</span>
               {item.isNew && (
-                <span className="text-punch-accent text-2xs shrink-0 font-bold tracking-wide uppercase">
+                <span className="text-primary text-2xs shrink-0 font-bold tracking-wide uppercase">
                   {PREVIEW_NEW_BADGE}
                 </span>
               )}

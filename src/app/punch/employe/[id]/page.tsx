@@ -171,14 +171,14 @@ export default async function EmployeePage({
     >
       <main className="flex flex-1 flex-col gap-2.5 p-1.5">
         <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[180px_1fr_180px]">
-          <aside className="border-punch-dark w-full rounded-lg border-2 bg-white p-2.5">
-            <h2 className="border-punch-accent mb-2 border-b-2 pb-1 text-center text-sm font-bold">
+          <aside className="bg-card w-full rounded-lg border-2 p-2.5">
+            <h2 className="border-primary mb-2 border-b-2 pb-1 text-center text-sm font-bold">
               Résumé
             </h2>
 
             <div className="space-y-1.5">
               {/* Weekly Hours */}
-              <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
+              <div className="border-primary bg-muted rounded border-l-4 p-2">
                 <div className="text-lg font-bold">
                   {formatTimeDisplay(weekly)}
                 </div>
@@ -186,7 +186,7 @@ export default async function EmployeePage({
               </div>
 
               {/* Daily Hours */}
-              <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
+              <div className="border-primary bg-muted rounded border-l-4 p-2">
                 <div className="text-lg font-bold">
                   {formatTimeDisplay(daily)}
                 </div>
@@ -194,43 +194,41 @@ export default async function EmployeePage({
               </div>
 
               {/* Difference */}
-              <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
+              <div className="border-primary bg-muted rounded border-l-4 p-2">
                 <div
                   className={`text-lg font-bold ${isDifferencePosive ? "text-punch-pos-diff" : "text-punch-neg-diff"}`}
                 >
                   {isDifferencePosive ? "+" : ""}
                   {formatTimeDisplay(Math.abs(hoursDifference))}
                 </div>
-                <div className="text-punch-dark text-xs uppercase">
+                <div className="text-muted-foreground text-xs uppercase">
                   Différence
                 </div>
               </div>
 
               {/* Employee Name */}
-              <div className="border-punch-accent bg-punch-light rounded border-l-4 p-2">
-                <div className="text-lg font-bold text-black">
-                  {employee.name}
+              <div className="border-primary bg-muted rounded border-l-4 p-2">
+                <div className="text-lg font-bold">{employee.name}</div>
+                <div className="text-muted-foreground text-xs uppercase">
+                  Employé
                 </div>
-                <div className="text-punch-dark text-xs uppercase">Employé</div>
               </div>
             </div>
           </aside>
           <div>
-            <div className="border-punch-dark flex h-full flex-col rounded-lg border-2 bg-white">
+            <div className="bg-card flex h-full flex-col rounded-lg border-2">
               {/* Week Navigation */}
-              <div className="border-punch-dark bg-punch-light flex items-center justify-between border-b-2 px-2 py-2 sm:px-3">
+              <div className="bg-muted flex items-center justify-between border-b-2 px-2 py-2 sm:px-3">
                 <Button
                   disabled={!canGoBack}
-                  className="text-2xs rounded-sm bg-black font-bold text-white disabled:opacity-50 sm:px-2"
+                  className="text-2xs rounded-sm font-bold sm:px-2"
                 >
                   <Link href={`?weekOffset=${weekOffset - 1}`}>
                     ← Précédente
                   </Link>
                 </Button>
 
-                <div className="text-xs font-bold text-black sm:text-sm">
-                  {weekTitle}
-                </div>
+                <div className="text-xs font-bold sm:text-sm">{weekTitle}</div>
 
                 <div className="flex gap-0.5 sm:gap-2">
                   <FreezeForm
@@ -242,7 +240,7 @@ export default async function EmployeePage({
                   />
                   <Button
                     disabled={!canGoForward}
-                    className="text-2xs rounded-sm bg-black font-bold text-white disabled:opacity-50 sm:px-2"
+                    className="text-2xs rounded-sm font-bold sm:px-2"
                   >
                     <Link href={`?weekOffset=${weekOffset + 1}`}>
                       Suivante →
@@ -253,7 +251,7 @@ export default async function EmployeePage({
 
               {/* Frozen Banner */}
               {weekFrozen && (
-                <div className="bg-punch-accent-hover text-2xs px-2 py-2 text-center font-bold text-white sm:px-3">
+                <div className="bg-primary text-primary-foreground text-2xs px-2 py-2 text-center font-bold sm:px-3">
                   Semaine gelée (Lecture seule) : Demander à un gestionnaire
                   pour dégeler
                 </div>
@@ -262,15 +260,15 @@ export default async function EmployeePage({
               {/* Week Grid */}
               <div className="flex flex-col">
                 {/* Day Headers */}
-                <div className="bg-punch-dark grid grid-cols-7 gap-px border-b">
+                <div className="bg-border grid grid-cols-7 gap-px border-b">
                   {dayNames.map((name, i) => (
                     <div
                       key={name}
-                      className="bg-black px-0.5 py-1 text-center sm:px-1"
+                      className="bg-primary text-primary-foreground px-0.5 py-1 text-center sm:px-1"
                     >
-                      <div className="text-xs font-bold text-white">{name}</div>
+                      <div className="text-xs font-bold">{name}</div>
                       {daysData[i] && (
-                        <div className="text-xs font-bold text-white">
+                        <div className="text-xs font-bold">
                           {daysData[i].date
                             .getDate()
                             .toString()
@@ -286,7 +284,7 @@ export default async function EmployeePage({
                 </div>
 
                 {/* Day Content */}
-                <div className="bg-punch-light grid grid-cols-7 gap-px p-px">
+                <div className="bg-muted grid grid-cols-7 gap-px p-px">
                   {daysData.map((day) => {
                     const isToday =
                       new Date(day.dateStr).toDateString() ===
@@ -295,7 +293,7 @@ export default async function EmployeePage({
                       <div
                         key={day.dateStr}
                         className={`min-h-48 overflow-y-auto p-0.5 sm:min-h-64 sm:p-1 ${
-                          isToday ? "bg-punch-today" : "bg-white"
+                          isToday ? "bg-punch-today" : "bg-card"
                         }`}
                       >
                         {day.entries.map((entry) => {
@@ -313,11 +311,11 @@ export default async function EmployeePage({
                 </div>
 
                 {/* Day Totals */}
-                <div className="border-punch-dark bg-punch-dark grid grid-cols-7 gap-px border-t-2">
+                <div className="bg-border grid grid-cols-7 gap-px border-t-2">
                   {daysData.map((day) => (
                     <div
                       key={`total-${day.dateStr}`}
-                      className="bg-black px-0.5 py-1 text-center text-xs font-bold text-white sm:px-1 sm:text-sm"
+                      className="bg-primary text-primary-foreground px-0.5 py-1 text-center text-xs font-bold sm:px-1 sm:text-sm"
                     >
                       {formatTimeDisplay(day.total)}
                     </div>

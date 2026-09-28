@@ -335,7 +335,7 @@ export function CalendarEventForm({
               <ToggleGroupItem
                 key={eventType}
                 value={eventType}
-                className="data-[state=on]:border-punch-accent data-[state=on]:bg-punch-accent/10 data-[state=on]:text-punch-accent rounded-full px-3"
+                className="data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary rounded-full px-3"
               >
                 <EventCategoryIcon category={eventType} />
                 {EVENT_CATEGORY_LABELS[eventType]}
@@ -468,7 +468,7 @@ export function CalendarEventForm({
                 aria-label={EVENT_COLOR_LABELS[eventColor]}
                 title={EVENT_COLOR_LABELS[eventColor]}
                 className={cn(
-                  "data-[state=checked]:ring-foreground size-7 border-0 text-white data-[state=checked]:ring-2 data-[state=checked]:ring-offset-2",
+                  "data-[state=checked]:ring-foreground data-[state=checked]:ring-offset-background size-7 border-0 text-white data-[state=checked]:ring-2 data-[state=checked]:ring-offset-2",
                   eventColorClass(eventColor),
                 )}
               />
@@ -554,7 +554,7 @@ export function CalendarEventForm({
                     <ToggleGroupItem
                       key={day}
                       value={String(day)}
-                      className="bg-background data-[state=on]:bg-punch-accent w-10 data-[state=on]:text-white"
+                      className="bg-background data-[state=on]:bg-primary data-[state=on]:text-primary-foreground w-10"
                     >
                       {WEEKDAY_LABELS[index]}
                     </ToggleGroupItem>

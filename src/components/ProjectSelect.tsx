@@ -120,7 +120,7 @@ export default function ProjectSelect({
 
   return (
     <Field className={className}>
-      <FieldLabel className="mb-1 block text-xs font-semibold text-black uppercase">
+      <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
         {label}
       </FieldLabel>
       <Suspense
@@ -128,7 +128,7 @@ export default function ProjectSelect({
           <Input
             type="text"
             disabled
-            className="w-full rounded border-2 border-black bg-gray-100 px-2.5 py-2 text-xs text-gray-600"
+            className="bg-muted text-muted-foreground w-full rounded border-2 px-2.5 py-2 text-xs"
           />
         }
       >
@@ -144,18 +144,17 @@ export default function ProjectSelect({
         >
           <div className="relative">
             {multiple ? (
-              <ComboboxChips className="border-punch-accent rounded-xs border-2 bg-white">
+              <ComboboxChips className="rounded-xs border-2">
                 {selected.map((option) => (
                   <ComboboxChip key={option.key}>{option.name}</ComboboxChip>
                 ))}
                 <ComboboxChipsInput
                   placeholder={`Rechercher jusqu\`à ${maxSelections} projets...`}
-                  className="border-punch-accent placeholder:text-punch-dark/70"
                 />
               </ComboboxChips>
             ) : (
               <ComboboxInput
-                className="border-punch-accent bg-punch-light/40 rounded-xs border-2 [&>div>button]:rounded-full [&>div>button]:text-white [&>div>button]:hover:text-white"
+                className="rounded-xs border-2 [&>div>button]:rounded-full"
                 placeholder="Rechercher un projet..."
                 showClear
               />
@@ -164,14 +163,14 @@ export default function ProjectSelect({
           <ComboboxContent
             side="top"
             sideOffset={8}
-            className="max-h-75 rounded border-2 border-black bg-white shadow-lg"
+            className="max-h-75 rounded border-2 shadow-lg"
           >
             <ComboboxEmpty>Aucun projet ou tâche trouvé</ComboboxEmpty>
             <ComboboxList>
               {(group: OptionGroup, index: number) => (
                 <ComboboxGroup key={group.label} items={group.items}>
                   {index > 0 && <ComboboxSeparator />}
-                  <ComboboxLabel className="bg-black py-2 font-bold text-white uppercase">
+                  <ComboboxLabel className="bg-primary text-primary-foreground py-2 font-bold uppercase">
                     {group.label}
                   </ComboboxLabel>
                   <ComboboxCollection>
@@ -181,8 +180,8 @@ export default function ProjectSelect({
                         value={option}
                         className={
                           group.type === ProjectType.task
-                            ? "text-punch-dark text-md border-l-punch-accent-hover border-y-punch-light hover:bg-punch-accent-hover data-highlighted:bg-punch-accent-hover cursor-pointer rounded-none border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:text-white"
-                            : "text-punch-dark text-md border-l-punch-accent border-y-punch-light hover:bg-punch-accent data-highlighted:bg-punch-accent border-r-punch-light cursor-pointer rounded-none border-r-4 border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:border-r-0 hover:text-white"
+                            ? "text-md border-l-primary cursor-pointer rounded-none border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1"
+                            : "text-md border-l-primary cursor-pointer rounded-none border-r-4 border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:border-r-0"
                         }
                       >
                         {option.name}

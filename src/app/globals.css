@@ -27,7 +27,7 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(95.458% 0.00255 107.098);
+  --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -35,16 +35,9 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  /* Punch system colors */
-  --punch-dark: #372d2b;
-  --punch-light: #c3dee5;
-  --punch-accent: #d85024;
-  --punch-accent-hover: #f9a015;
-  --punch-today: #fef5e9;
-  --punch-pos-diff: #27ae60;
-  --punch-neg-diff: #e74c3c;
-  --punch-secondary-bg: #9b59b6;
-  --punch-secondary-border: #8e44ad;
+  --punch-today: oklch(0.962 0.059 95.617);
+  --punch-pos-diff: oklch(0.527 0.154 150.069);
+  --punch-neg-diff: oklch(0.505 0.213 27.518);
 }
 
 .dark {
@@ -79,16 +72,9 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  /* Punch system colors */
-  --punch-dark: #372d2b;
-  --punch-light: #c3dee5;
-  --punch-accent: #d85024;
-  --punch-accent-hover: #f9a015;
-  --punch-today: #fef5e9;
-  --punch-pos-diff: #27ae60;
-  --punch-neg-diff: #e74c3c;
-  --punch-secondary-bg: #9b59b6;
-  --punch-secondary-border: #8e44ad;
+  --punch-today: oklch(0.279 0.077 45.635);
+  --punch-pos-diff: oklch(0.792 0.209 151.711);
+  --punch-neg-diff: oklch(0.704 0.191 22.216);
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -128,15 +114,9 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --color-punch-dark: var(--punch-dark);
-  --color-punch-light: var(--punch-light);
-  --color-punch-accent: var(--punch-accent);
-  --color-punch-accent-hover: var(--punch-accent-hover);
   --color-punch-today: var(--punch-today);
   --color-punch-pos-diff: var(--punch-pos-diff);
   --color-punch-neg-diff: var(--punch-neg-diff);
-  --color-punch-secondary-bg: var(--punch-secondary-bg);
-  --color-punch-secondary-border: var(--punch-secondary-border);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -163,26 +143,6 @@
 }
 
 @layer utilities {
-  .punch-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: var(--punch-dark) var(--punch-light);
-  }
-  .punch-scrollbar::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-  }
-  .punch-scrollbar::-webkit-scrollbar-track {
-    background: var(--punch-light);
-  }
-  .punch-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--punch-dark);
-    border-radius: 6px;
-    border: 2px solid var(--punch-light);
-  }
-  .punch-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--punch-accent);
-  }
-
   .counter-reset-step {
     counter-reset: step-counter;
   }
@@ -197,6 +157,10 @@
 }
 
 @layer base {
+  * {
+    border-color: var(--color-border);
+    outline-color: color-mix(in oklab, var(--color-ring) 50%, transparent);
+  }
   body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }

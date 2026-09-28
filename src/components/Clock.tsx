@@ -28,8 +28,10 @@ export default function Clock({ className }: ClockProps) {
   return (
     <div
       className={cn(
-        "rounded-sm bg-black px-2 py-1 font-mono transition-colors",
-        timeString === defaultTimeString ? "text-transparent" : "text-white",
+        "bg-primary rounded-sm px-2 py-1 font-mono transition-colors",
+        timeString === defaultTimeString
+          ? "text-transparent"
+          : "text-primary-foreground",
         className,
       )}
     >

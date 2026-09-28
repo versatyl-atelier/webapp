@@ -71,7 +71,7 @@ export default function EditTimeEntryForm({
       <DialogTrigger>
         <div
           key={entry.id}
-          className="hover:shadow-punch-accent-hover/50 mb-0.5 cursor-pointer rounded p-0.5 text-center text-white transition-all hover:scale-110 hover:shadow-lg sm:mb-1 sm:p-1"
+          className="hover:shadow-primary/50 mb-0.5 cursor-pointer rounded p-0.5 text-center text-white transition-all hover:scale-110 hover:shadow-lg sm:mb-1 sm:p-1"
           style={{
             backgroundColor: getProjectColor(projectName),
           }}
@@ -84,9 +84,9 @@ export default function EditTimeEntryForm({
           <div className="text-xs">{formatTimeDisplay(calculateHours())}</div>
         </div>
       </DialogTrigger>
-      <DialogContent className="border-2 border-black">
-        <DialogHeader className="border-punch-accent mb-4 border-b-4 pb-2.5 text-center">
-          <DialogTitle className="text-lg font-bold text-black" asChild>
+      <DialogContent className="border-2">
+        <DialogHeader className="border-primary mb-4 border-b-4 pb-2.5 text-center">
+          <DialogTitle className="text-lg font-bold" asChild>
             <h2>{"Modifier l'entrée de temps"}</h2>
           </DialogTitle>
         </DialogHeader>
@@ -129,7 +129,7 @@ export default function EditTimeEntryForm({
             <Field>
               <FieldLabel
                 htmlFor="hours"
-                className="mb-1 block text-xs font-semibold text-black uppercase"
+                className="mb-1 block text-xs font-semibold uppercase"
               >
                 Heures
               </FieldLabel>
@@ -138,7 +138,7 @@ export default function EditTimeEntryForm({
                 name="hours"
                 type="text"
                 defaultValue={formatTimeDisplay(calculateHours())}
-                className="w-full rounded border-2 border-black px-1.5 py-1 text-xs text-black"
+                className="w-full rounded border-2 px-1.5 py-1 text-xs"
                 placeholder="Ex: 8.75 ou 8h45"
                 disabled={pending || !!disabled}
               />
@@ -147,15 +147,14 @@ export default function EditTimeEntryForm({
               ))}
             </Field>
           </FieldGroup>
-          <DialogFooter className="mt-5 flex justify-center gap-2.5 border-t-0 bg-white">
+          <DialogFooter className="mt-5 flex justify-center gap-2.5 border-t-0 bg-transparent">
             <Button
               type="submit"
               disabled={pending || !!disabled}
               id="saveTimeEntry"
               name="command"
               value="save"
-              variant="ghost"
-              className="bg-punch-accent hover:bg-punch-accent-hover rounded-sm px-5 py-2.5 text-xs font-bold text-white hover:text-white"
+              className="rounded-sm px-5 py-2.5 text-xs font-bold"
             >
               Sauvegarder
             </Button>
@@ -165,16 +164,16 @@ export default function EditTimeEntryForm({
               id="deleteTimeEntry"
               name="command"
               value="delete"
-              variant="ghost"
-              className="hover:bg-punch-accent rounded-sm bg-black px-5 py-2.5 text-xs font-bold text-white hover:text-white"
+              variant="destructive"
+              className="rounded-sm px-5 py-2.5 text-xs font-bold"
             >
               Supprimer
             </Button>
             <DialogClose asChild>
               <Button
                 disabled={pending}
-                variant="ghost"
-                className="bg-punch-light rounded-sm px-5 py-2.5 text-xs font-bold text-black hover:bg-black hover:text-white"
+                variant="outline"
+                className="rounded-sm px-5 py-2.5 text-xs font-bold"
               >
                 Annuler
               </Button>
