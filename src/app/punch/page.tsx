@@ -13,7 +13,7 @@ export default async function Page() {
       employees={pinEmployeeFirst(employees || [], session.employeeId)}
       currentEmployeeId={session.employeeId}
       canAccessAll={session.role === Role.manager}
-      className="w-md pl-8"
+      className="w-md self-center"
     />
   );
 }

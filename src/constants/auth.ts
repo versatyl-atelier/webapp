@@ -13,7 +13,12 @@ export const LOGIN_PATH = "/login";
 export const CHANGE_PASSWORD_PATH = "/change-password";
 export const REDIRECT_TO_PARAM = "redirectTo";
 export const EMAIL_PARAM = "email";
-export const PROTECTED_PATH_PREFIXES = ["/punch", CHANGE_PASSWORD_PATH];
+export const PROTECTED_PATH_PREFIXES = [
+  "/punch",
+  "/calendrier",
+  "/projets",
+  CHANGE_PASSWORD_PATH,
+];
 
 export const SESSION_NOT_FOUND_ERROR = "SessionNotFound";
 export const PASSWORD_CHANGE_REQUIRED_ERROR = "PasswordChangeRequired";

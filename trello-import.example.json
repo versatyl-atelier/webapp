@@ -1,0 +1,18 @@
+{
+  "boards": [
+    {
+      "name": "Échéancier",
+      "boardId": "TRELLO_BOARD_ID",
+      "apiKey": "TRELLO_API_KEY",
+      "apiToken": "TRELLO_API_TOKEN",
+      "type": "livraison",
+      "color": "blue",
+      "detail": "",
+      "labelColors": {
+        "green": "lime",
+        "red": "pink",
+        "purple": "purple"
+      }
+    }
+  ]
+}

@@ -338,16 +338,59 @@ model TrelloImport {
   @@map("trelloImports")
 }
 
-model CalendarSource {
-  id        Int      @id @default(autoincrement())
-  boardName String
-  boardId   String
-  apiKey    String
-  apiToken  String
-  enabled   Boolean  @default(true)
-  createdAt DateTime @default(now())
+enum CalendarEventType {
+  livraison
+  installation
+  manuel
+}
 
-  @@map("calendarSources")
+enum CalendarEventColor {
+  blue
+  teal
+  purple
+  orange
+  pink
+  indigo
+  lime
+  amber
+}
+
+enum RecurrenceFrequency {
+  daily
+  weekly
+  monthly
+  yearly
+}
+
+enum RecurrenceEnd {
+  never
+  date
+  count
+}
+
+model CalendarEvent {
+  id     Int                @id @default(autoincrement())
+  type   CalendarEventType
+  title  String
+  detail String             @default("")
+  date   DateTime           @db.Date
+  hour   Int
+  color  CalendarEventColor
+
+  frequency RecurrenceFrequency?
+  interval  Int                  @default(1)
+  weekdays  Int[]
+  endType   RecurrenceEnd        @default(never)
+  endDate   DateTime?            @db.Date
+  endCount  Int?
+
+  trelloCardId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@map("calendarEvents")
 }
 
 model ChronoGroup {

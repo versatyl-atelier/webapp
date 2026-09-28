@@ -9,11 +9,13 @@ import {
 } from "@/components/ui/sidebar";
 
 type ToolSidebarProps = {
+  glyph: string;
   title: string;
   href: string;
 };
 
 export function ToolSidebar({
+  glyph,
   title,
   href,
   children,
@@ -29,15 +31,16 @@ export function ToolSidebar({
             <Link
               href="/"
               title="Accueuil"
-              className="hover:text-punch-accent size-10 px-4 text-base"
+              className="hover:text-punch-accent fixed size-10 px-4 text-base"
             >
               ←
             </Link>
             <Link
               href={href}
               title={title}
-              className="hover:text-punch-accent text-sm font-bold"
+              className="hover:text-punch-accent inline-block w-full text-center text-sm font-bold"
             >
+              <span className="mr-2">{glyph}</span>
               {title}
             </Link>
           </SidebarMenuItem>

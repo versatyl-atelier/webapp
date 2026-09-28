@@ -37,7 +37,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <AuthEventsProvider>
           <Header />
-          <div className="pt-11">{children}</div>
+          <div className="pt-12">{children}</div>
           <footer className="fixed bottom-0 mt-4 mb-2 w-full text-center text-[10px] text-gray-500 print:mt-4">
             Version {pkg.version} - Atelier Versatyl © 2025
           </footer>

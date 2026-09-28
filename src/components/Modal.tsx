@@ -10,9 +10,15 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { PropsWithChildren, useState } from "react";
 
-type ModalProps = { path: string };
+import { cn } from "@/lib/utils";
 
-export function Modal({ children, path }: PropsWithChildren<ModalProps>) {
+type ModalProps = { path: string; className?: string };
+
+export function Modal({
+  children,
+  path,
+  className,
+}: PropsWithChildren<ModalProps>) {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(true);
@@ -34,8 +40,8 @@ export function Modal({ children, path }: PropsWithChildren<ModalProps>) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogOverlay className="border-2 border-red-500">
-        <DialogContent className="max-h-96 border-2 border-amber-600">
+      <DialogOverlay>
+        <DialogContent className={cn("max-h-96", className)}>
           {children}
         </DialogContent>
       </DialogOverlay>

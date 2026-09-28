@@ -26,7 +26,7 @@ export async function ProjetsSidebar() {
   const projects = await loadProjects();
 
   return (
-    <ToolSidebar title="Projets" href="/projets">
+    <ToolSidebar glyph="📁" title="Projets" href="/projets">
       <SidebarContent>
         <ProjectsFilter
           projects={projects.map(({ id, name, isDeleted }) => ({

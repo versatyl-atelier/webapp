@@ -18,7 +18,7 @@ export async function PunchSidebar() {
   const session = await getSession();
   const isManager = session?.role === Role.manager;
   return (
-    <ToolSidebar title="Punch" href="/punch">
+    <ToolSidebar glyph="⏱" title="Punch" href="/punch">
       <SidebarContent>
         <SidebarMenu>
           {isManager && (

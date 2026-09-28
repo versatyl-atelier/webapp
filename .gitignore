@@ -43,3 +43,5 @@ next-env.d.ts
 
 /src/generated/*
 TODO.local.md
+
+/trello-import.json

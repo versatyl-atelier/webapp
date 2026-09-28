@@ -41,8 +41,7 @@ const apps: AppCard[] = [
     href: "calendrier",
     icon: "🗓",
     title: "Calendrier",
-    description: "Phase 2",
-    disabled: true,
+    description: "Échéances et événements",
   },
   {
     href: "notes",

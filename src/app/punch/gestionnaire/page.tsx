@@ -1,39 +1,25 @@
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-
 import { CreateUserForm } from "@/components/CreateUserForm";
 import { UserList } from "@/components/UserList";
-import { VersatylSidebarTrigger } from "@/components/VersatylSidebarTrigger";
 
 import { getEmployeesWithoutAccount } from "@/actions/employees";
 import { getUsers } from "@/actions/users";
-import { isOpen } from "@/lib/sidebar";
-import { PunchSidebar } from "../PunchSidebar";
 
 export default async function Page() {
   const employees = await getEmployeesWithoutAccount();
   const users = await getUsers();
-  const isSidebarOpen = await isOpen();
   return (
-    <SidebarProvider defaultOpen={isSidebarOpen}>
-      <PunchSidebar />
-      <SidebarInset>
-        <div className="bg-punch-light flex min-h-screen w-full min-w-md flex-col">
-          <VersatylSidebarTrigger />
-          <main className="flex flex-col gap-4 px-8">
-            <h1 className="ml-2 text-2xl">Admin</h1>
-            <h2 className="text-xl font-bold">Créer un compte</h2>
-            <CreateUserForm
-              employees={employees || []}
-              className="bg-background flex max-w-prose flex-col gap-4 rounded border-2 border-black p-2"
-            />
-            <h2 className="text-xl font-bold">Comptes existants</h2>
-            <UserList
-              users={users}
-              className="bg-background mb-4 w-full max-w-prose rounded border-2 border-black"
-            />
-          </main>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <main className="flex flex-col gap-4 px-8">
+      <h1 className="ml-2 text-2xl">Admin</h1>
+      <h2 className="text-xl font-bold">Créer un compte</h2>
+      <CreateUserForm
+        employees={employees || []}
+        className="bg-background flex max-w-prose flex-col gap-4 rounded border-2 border-black p-2"
+      />
+      <h2 className="text-xl font-bold">Comptes existants</h2>
+      <UserList
+        users={users}
+        className="bg-background mb-4 w-full max-w-prose rounded border-2 border-black"
+      />
+    </main>
   );
 }
