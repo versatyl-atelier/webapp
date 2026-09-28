@@ -21,7 +21,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { usePageContext } from "@/app/punch/employe/[id]/context-provider";
 
 import { ProjectType } from "@/generated/prisma/enums";
-import { parseItemKey, stringifyItemKey } from "@/lib/itemKey";
+import { stringifyItemKey } from "@/lib/itemKey";
 
 export type ProjectOrTask = {
   id: string | number;
@@ -36,6 +36,29 @@ type ProjectSelectProps = {
   disabled?: boolean;
 };
 
+type Option = {
+  key: string;
+  type: ProjectType;
+  name: string;
+};
+type OptionGroup = {
+  label: string;
+  type: ProjectType;
+  items: Option[];
+};
+
+const emptySingleKey = stringifyItemKey({ type: ProjectType.trello, id: "" });
+
+function isSameOption(a: Option, b: Option) {
+  return a.key === b.key;
+}
+function optionLabel(option: Option) {
+  return option.name;
+}
+function optionKey(option: Option) {
+  return option.key;
+}
+
 export default function ProjectSelect({
   title = null,
   multiple = false,
@@ -47,43 +70,45 @@ export default function ProjectSelect({
   const { projectsPromise, tasksPromise } = usePageContext();
   const projects = use(projectsPromise) || [];
   const tasks = use(tasksPromise) || [];
-  const defaultValue = multiple ? [] : { type: ProjectType.trello, id: "" };
-  const [selected, setSelected] = useState(
-    multiple
-      ? defaultSelected || defaultValue
-      : defaultSelected || defaultValue,
-  );
 
-  function getProjectOrTask({ id, type }: ProjectOrTask) {
-    return (type === ProjectType.task ? tasks : projects).find(
-      ({ id: foundId }) => foundId.toString() === id,
-    );
-  }
+  const toOption =
+    (type: ProjectType) =>
+    ({ id, name }: { id: string | number; name: string }): Option => ({
+      key: stringifyItemKey({ type, id }),
+      type,
+      name,
+    });
+  const groups: OptionGroup[] = [
+    {
+      label: "Tâches",
+      type: ProjectType.task,
+      items: tasks.map(toOption(ProjectType.task)),
+    },
+    {
+      label: "Projets Trello",
+      type: ProjectType.trello,
+      items: projects.map(toOption(ProjectType.trello)),
+    },
+  ];
 
-  function getProjectName(value: string) {
-    const item = parseItemKey(value);
-    const { id } = item;
-    if (id === "") {
-      return "";
+  const [selected, setSelected] = useState<Option[]>(() => {
+    const defaults = defaultSelected
+      ? Array.isArray(defaultSelected)
+        ? defaultSelected
+        : [defaultSelected]
+      : [];
+    const keys = defaults.map(stringifyItemKey);
+    return groups
+      .flatMap(({ items }) => items)
+      .filter(({ key }) => keys.includes(key));
+  });
+
+  function handleValueChange(value: Option | Option[] | null) {
+    const next = Array.isArray(value) ? value : value ? [value] : [];
+    if (typeof maxSelections === "number" && next.length > maxSelections) {
+      return;
     }
-    return getProjectOrTask(item)?.name || value;
-  }
-
-  const value = Array.isArray(selected)
-    ? selected.map(stringifyItemKey)
-    : stringifyItemKey(selected);
-
-  function handleValuesChange(values?: string[]) {
-    if (!values) {
-      return setSelected(defaultValue);
-    }
-    return typeof maxSelections === "undefined" ||
-      values.length <= maxSelections
-      ? setSelected(values.map((value) => parseItemKey(value)))
-      : null;
-  }
-  function handleValueChange(value?: string) {
-    setSelected(value ? parseItemKey(value) : defaultValue);
+    setSelected(next);
   }
 
   const label =
@@ -108,42 +133,30 @@ export default function ProjectSelect({
         }
       >
         <Combobox
+          items={groups}
           multiple={multiple}
-          limit={maxSelections}
-          value={value}
-          onValueChange={(val) => {
-            return val
-              ? Array.isArray(val)
-                ? handleValuesChange(val)
-                : handleValueChange(val)
-              : setSelected(defaultValue);
-          }}
-          name={multiple ? "projectIds" : "projectId"}
+          value={multiple ? selected : (selected[0] ?? null)}
+          onValueChange={handleValueChange}
+          isItemEqualToValue={isSameOption}
+          itemToStringLabel={optionLabel}
+          itemToStringValue={optionKey}
           disabled={disabled}
         >
           <div className="relative">
             {multiple ? (
               <ComboboxChips className="border-punch-accent rounded-xs border-2 bg-white">
-                {Array.isArray(selected) &&
-                  selected.map((item) => {
-                    const key = stringifyItemKey(item);
-                    return (
-                      <ComboboxChip key={key}>
-                        {getProjectName(key)}
-                      </ComboboxChip>
-                    );
-                  })}
+                {selected.map((option) => (
+                  <ComboboxChip key={option.key}>{option.name}</ComboboxChip>
+                ))}
                 <ComboboxChipsInput
                   placeholder={`Rechercher jusqu\`à ${maxSelections} projets...`}
                   className="border-punch-accent placeholder:text-punch-dark/70"
-                  value={undefined}
                 />
               </ComboboxChips>
             ) : (
               <ComboboxInput
-                className="border-punch-accent bg-punch-light/40 [&>div>button]:bg-punch-accent [&>div>button]:hover:bg-punch-accent-hover rounded-xs border-2 [&>div>button]:rounded-full [&>div>button]:text-white [&>div>button]:hover:text-white [&>div>button>svg]:size-0.5"
+                className="border-punch-accent bg-punch-light/40 rounded-xs border-2 [&>div>button]:rounded-full [&>div>button]:text-white [&>div>button]:hover:text-white"
                 placeholder="Rechercher un projet..."
-                value={getProjectName(value as string)}
                 showClear
               />
             )}
@@ -153,66 +166,48 @@ export default function ProjectSelect({
             sideOffset={8}
             className="max-h-75 rounded border-2 border-black bg-white shadow-lg"
           >
+            <ComboboxEmpty>Aucun projet ou tâche trouvé</ComboboxEmpty>
             <ComboboxList>
-              <ComboboxGroup key="tasks" items={tasks}>
-                <ComboboxLabel className="bg-black py-2 font-bold text-white uppercase">
-                  Tâches
-                </ComboboxLabel>
-                {tasks.length === 0 && (
-                  <ComboboxEmpty>Aucune tâche trouvée</ComboboxEmpty>
-                )}
-                <ComboboxCollection>
-                  {(task) => (
-                    <ComboboxItem
-                      key={task.id}
-                      value={stringifyItemKey({
-                        type: ProjectType.task,
-                        id: task.id,
-                      })}
-                      className="text-punch-dark text-md border-l-punch-accent-hover border-y-punch-light hover:bg-punch-accent-hover data-highlighted:bg-punch-accent-hover cursor-pointer rounded-none border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:text-white"
-                    >
-                      {task.name}
-                    </ComboboxItem>
-                  )}
-                </ComboboxCollection>
-              </ComboboxGroup>
-              <ComboboxSeparator />
-              <ComboboxGroup key="projets" items={projects}>
-                <ComboboxLabel className="bg-black py-2 font-bold text-white uppercase">
-                  Projets Trello
-                </ComboboxLabel>
-                {projects.length === 0 && (
-                  <ComboboxEmpty>Aucun projet trouvé</ComboboxEmpty>
-                )}
-                <ComboboxCollection>
-                  {(project) => (
-                    <ComboboxItem
-                      key={project.id}
-                      value={stringifyItemKey({
-                        type: ProjectType.trello,
-                        id: project.id,
-                      })}
-                      className="text-punch-dark text-md border-l-punch-accent border-y-punch-light hover:bg-punch-accent data-highlighted:bg-punch-accent border-r-punch-light cursor-pointer rounded-none border-r-4 border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:border-r-0 hover:text-white"
-                    >
-                      {project.name}
-                    </ComboboxItem>
-                  )}
-                </ComboboxCollection>
-              </ComboboxGroup>
+              {(group: OptionGroup, index: number) => (
+                <ComboboxGroup key={group.label} items={group.items}>
+                  {index > 0 && <ComboboxSeparator />}
+                  <ComboboxLabel className="bg-black py-2 font-bold text-white uppercase">
+                    {group.label}
+                  </ComboboxLabel>
+                  <ComboboxCollection>
+                    {(option: Option) => (
+                      <ComboboxItem
+                        key={option.key}
+                        value={option}
+                        className={
+                          group.type === ProjectType.task
+                            ? "text-punch-dark text-md border-l-punch-accent-hover border-y-punch-light hover:bg-punch-accent-hover data-highlighted:bg-punch-accent-hover cursor-pointer rounded-none border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:text-white"
+                            : "text-punch-dark text-md border-l-punch-accent border-y-punch-light hover:bg-punch-accent data-highlighted:bg-punch-accent border-r-punch-light cursor-pointer rounded-none border-r-4 border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:border-r-0 hover:text-white"
+                        }
+                      >
+                        {option.name}
+                      </ComboboxItem>
+                    )}
+                  </ComboboxCollection>
+                </ComboboxGroup>
+              )}
             </ComboboxList>
           </ComboboxContent>
         </Combobox>
-        {multiple && Array.isArray(selected) && (
+        {multiple ? (
           <input
             type="hidden"
             name="projectIds"
-            value={JSON.stringify(selected.map(stringifyItemKey))}
+            value={JSON.stringify(selected.map(optionKey))}
+          />
+        ) : (
+          <input
+            type="hidden"
+            name="projectId"
+            value={selected[0]?.key ?? emptySingleKey}
           />
         )}
-        {multiple &&
-        Array.isArray(selected) &&
-        maxSelections &&
-        selected.length > 0
+        {multiple && maxSelections && selected.length > 0
           ? `${selected.length}/${maxSelections}`
           : ""}
       </Suspense>
