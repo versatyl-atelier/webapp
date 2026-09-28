@@ -4,6 +4,18 @@ CREATE TYPE "ProjectType" AS ENUM ('trello', 'task');
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('employee', 'manager');
 
+-- CreateEnum
+CREATE TYPE "CalendarEventType" AS ENUM ('livraison', 'installation', 'manuel');
+
+-- CreateEnum
+CREATE TYPE "CalendarEventColor" AS ENUM ('blue', 'teal', 'purple', 'orange', 'pink', 'indigo', 'lime', 'amber');
+
+-- CreateEnum
+CREATE TYPE "RecurrenceFrequency" AS ENUM ('daily', 'weekly', 'monthly', 'yearly');
+
+-- CreateEnum
+CREATE TYPE "RecurrenceEnd" AS ENUM ('never', 'date', 'count');
+
 -- CreateTable
 CREATE TABLE "statuts" (
     "id" TEXT NOT NULL,
@@ -38,6 +50,71 @@ CREATE TABLE "employees" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "employees_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "users" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "image" TEXT,
+    "role" TEXT,
+    "banned" BOOLEAN DEFAULT false,
+    "banReason" TEXT,
+    "banExpires" TIMESTAMP(3),
+    "employeeId" INTEGER,
+    "mustChangePassword" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "sessions" (
+    "id" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "token" TEXT NOT NULL,
+    "ipAddress" TEXT,
+    "userAgent" TEXT,
+    "impersonatedBy" TEXT,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "accounts" (
+    "id" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+    "providerId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "accessToken" TEXT,
+    "refreshToken" TEXT,
+    "idToken" TEXT,
+    "accessTokenExpiresAt" TIMESTAMP(3),
+    "refreshTokenExpiresAt" TIMESTAMP(3),
+    "scope" TEXT,
+    "password" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "verifications" (
+    "id" TEXT NOT NULL,
+    "identifier" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "verifications_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -198,16 +275,25 @@ CREATE TABLE "trelloImports" (
 );
 
 -- CreateTable
-CREATE TABLE "calendarSources" (
+CREATE TABLE "calendarEvents" (
     "id" SERIAL NOT NULL,
-    "boardName" TEXT NOT NULL,
-    "boardId" TEXT NOT NULL,
-    "apiKey" TEXT NOT NULL,
-    "apiToken" TEXT NOT NULL,
-    "enabled" BOOLEAN NOT NULL DEFAULT true,
+    "type" "CalendarEventType" NOT NULL,
+    "title" TEXT NOT NULL,
+    "detail" TEXT NOT NULL DEFAULT '',
+    "date" DATE NOT NULL,
+    "hour" INTEGER NOT NULL,
+    "color" "CalendarEventColor" NOT NULL,
+    "frequency" "RecurrenceFrequency",
+    "interval" INTEGER NOT NULL DEFAULT 1,
+    "weekdays" INTEGER[],
+    "endType" "RecurrenceEnd" NOT NULL DEFAULT 'never',
+    "endDate" DATE,
+    "endCount" INTEGER,
+    "trelloCardId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "calendarSources_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "calendarEvents_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -388,6 +474,24 @@ CREATE TABLE "settings" (
 CREATE INDEX "statutSourcePermissions_sourceId_idx" ON "statutSourcePermissions"("sourceId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_employeeId_key" ON "users"("employeeId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "sessions_token_key" ON "sessions"("token");
+
+-- CreateIndex
+CREATE INDEX "sessions_userId_idx" ON "sessions"("userId");
+
+-- CreateIndex
+CREATE INDEX "accounts_userId_idx" ON "accounts"("userId");
+
+-- CreateIndex
+CREATE INDEX "verifications_identifier_idx" ON "verifications"("identifier");
+
+-- CreateIndex
 CREATE INDEX "timeEntryProjects_projectId_idx" ON "timeEntryProjects"("projectId");
 
 -- CreateIndex
@@ -405,6 +509,12 @@ CREATE INDEX "timeEntries_start_idx" ON "timeEntries"("start");
 -- CreateIndex
 CREATE INDEX "projects_sourceId_idx" ON "projects"("sourceId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "calendarEvents_trelloCardId_key" ON "calendarEvents"("trelloCardId");
+
+-- CreateIndex
+CREATE INDEX "calendarEvents_date_idx" ON "calendarEvents"("date");
+
 -- AddForeignKey
 ALTER TABLE "statutSourcePermissions" ADD CONSTRAINT "statutSourcePermissions_statutId_fkey" FOREIGN KEY ("statutId") REFERENCES "statuts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -413,6 +523,15 @@ ALTER TABLE "statutSourcePermissions" ADD CONSTRAINT "statutSourcePermissions_so
 
 -- AddForeignKey
 ALTER TABLE "employees" ADD CONSTRAINT "employees_statutId_fkey" FOREIGN KEY ("statutId") REFERENCES "statuts"("id") ON DELETE SET DEFAULT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "employees"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "timeEntryProjects" ADD CONSTRAINT "timeEntryProjects_timeEntryId_fkey" FOREIGN KEY ("timeEntryId") REFERENCES "timeEntries"("id") ON DELETE CASCADE ON UPDATE CASCADE;
