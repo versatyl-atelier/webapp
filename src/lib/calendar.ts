@@ -17,6 +17,7 @@ import {
   NOON_HOUR,
   NOON_LABEL,
   RECURRENT_CATEGORY,
+  WEEK_LABEL_PREFIX,
   WORK_DAYS_PER_WEEK,
   type EventCategory,
 } from "@/constants/calendar";
@@ -104,6 +105,12 @@ const monthLabelFormatter = new Intl.DateTimeFormat(CALENDAR_LOCALE, {
   timeZone: "UTC",
   month: "long",
   year: "numeric",
+});
+
+const weekLabelFormatter = new Intl.DateTimeFormat(CALENDAR_LOCALE, {
+  timeZone: "UTC",
+  day: "numeric",
+  month: "long",
 });
 
 const shortMonthFormatter = new Intl.DateTimeFormat(CALENDAR_LOCALE, {
@@ -387,6 +394,18 @@ export function formatWeekMonthLabel(weekStart: DateKey): string {
   return monthLabelFormatter.format(
     fromDateKey(addDays(weekStart, THURSDAY_INDEX)),
   );
+}
+
+export function formatWeekLabel(weekStart: DateKey): string {
+  return `${WEEK_LABEL_PREFIX} ${weekLabelFormatter.format(fromDateKey(weekStart))}`;
+}
+
+export function monthStartWeek(weekStart: DateKey): DateKey {
+  const thursday = fromDateKey(addDays(weekStart, THURSDAY_INDEX));
+  const firstOfMonth = toDateKey(
+    new Date(Date.UTC(thursday.getUTCFullYear(), thursday.getUTCMonth(), 1)),
+  );
+  return mondayOf(addDays(firstOfMonth, THURSDAY_INDEX));
 }
 
 export function formatDayNumber(date: DateKey): string {

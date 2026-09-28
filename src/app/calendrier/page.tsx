@@ -8,7 +8,6 @@ import {
 import { Role } from "@/generated/prisma/enums";
 import {
   buildWeeks,
-  mondayOf,
   parseWeekParam,
   toLocalDateKey,
   weekRangeEnd,
@@ -35,7 +34,6 @@ export default async function Page({ searchParams }: CalendarPageProps) {
   return (
     <CalendarView
       weeks={buildWeeks(weekStart, MAX_VISIBLE_WEEKS, today, occurrences)}
-      todayWeekStart={mondayOf(today)}
       canEdit={hasRole(session.role, Role.manager)}
     />
   );

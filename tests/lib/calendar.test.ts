@@ -22,12 +22,14 @@ import {
   formatDayLabel,
   formatDayNumber,
   formatHour,
+  formatWeekLabel,
   formatWeekMonthLabel,
   isDateKey,
   isFilterVisible,
   isOneOf,
   matchesSearch,
   mondayOf,
+  monthStartWeek,
   newCalendarEventPath,
   occurrenceDates,
   occurrenceSubtitle,
@@ -268,10 +270,18 @@ describe("formatting", () => {
   it("formats labels in Québec French", () => {
     expect(formatDayLabel("2026-07-14")).toBe("mardi 14 juillet 2026");
     expect(formatWeekMonthLabel("2026-06-29")).toBe("juillet 2026");
+    expect(formatWeekLabel("2026-09-28")).toBe("Semaine du 28 septembre");
     expect(formatDayNumber("2026-07-14")).toBe("14");
     expect(formatDayNumber("2026-07-01")).toMatch(/^1 juil/);
     expect(ordinal(1)).toBe("1er");
     expect(ordinal(3)).toBe("3e");
+  });
+
+  it("finds the first week of the displayed month", () => {
+    expect(monthStartWeek("2026-07-20")).toBe("2026-06-29");
+    expect(monthStartWeek("2026-06-29")).toBe("2026-06-29");
+    expect(monthStartWeek("2026-10-26")).toBe("2026-09-28");
+    expect(monthStartWeek("2026-09-21")).toBe("2026-08-31");
   });
 
   it("pluralizes event counts", () => {

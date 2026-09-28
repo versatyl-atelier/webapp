@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
 
 import {
@@ -14,14 +14,18 @@ import { CRUMB_ROUTES } from "@/lib/breadcrumb-routes";
 
 type AppBreadcrumbProps = {
   segments: string[];
+  children?: ReactNode;
 };
 
-export async function AppBreadcrumb({ segments }: AppBreadcrumbProps) {
+export async function AppBreadcrumb({
+  segments,
+  children,
+}: AppBreadcrumbProps) {
   const crumbs = await resolveCrumbs(CRUMB_ROUTES, segments);
   if (crumbs.length === 0) {
     return null;
   }
-  const lastIndex = crumbs.length - 1;
+  const lastIndex = children ? crumbs.length : crumbs.length - 1;
 
   return (
     <Breadcrumb>
@@ -40,6 +44,12 @@ export async function AppBreadcrumb({ segments }: AppBreadcrumbProps) {
             </BreadcrumbItem>
           </Fragment>
         ))}
+        {children && (
+          <>
+            <BreadcrumbSeparator />
+            {children}
+          </>
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import { CalendarEventChip } from "@/components/CalendarEventChip";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
@@ -15,44 +15,34 @@ import {
 import {
   CALENDAR_COLUMNS_CLASS,
   CATEGORY_FILTER_LABEL,
-  DAYS_PER_WEEK,
   DEFAULT_VISIBLE_WEEKS,
   EVENT_CATEGORIES,
   EVENT_CATEGORY_LABELS,
   MIN_WEEK_ROW_HEIGHT_PX,
   NEW_EVENT_LABEL,
-  NEXT_WEEK_LABEL,
-  PREVIOUS_WEEK_LABEL,
   SEARCH_LABEL,
   SEARCH_PLACEHOLDER,
-  TODAY_LABEL,
-  WEEK_NAV_LABEL,
   WEEKDAY_LABELS,
   WORK_DAYS_PER_WEEK,
   type EventCategory,
 } from "@/constants/calendar";
 import {
-  addDays,
   calendarDayPath,
-  calendarWeekPath,
   eventCountLabel,
   fittingWeekCount,
   formatDayLabel,
   formatDayNumber,
-  formatWeekMonthLabel,
   isFilterVisible,
   matchesSearch,
   newCalendarEventPath,
   toggleFilter,
   type CalendarDay,
   type CalendarWeek,
-  type DateKey,
 } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 
 type CalendarViewProps = {
   weeks: CalendarWeek[];
-  todayWeekStart: DateKey;
   canEdit: boolean;
 };
 
@@ -81,48 +71,17 @@ function useFittingWeekCount(maxWeeks: number) {
   return { containerRef, weekCount };
 }
 
-export function CalendarView({
-  weeks,
-  todayWeekStart,
-  canEdit,
-}: CalendarViewProps) {
+export function CalendarView({ weeks, canEdit }: CalendarViewProps) {
   const [query, setQuery] = useState("");
   const [activeCategories, setActiveCategories] = useState<
     ReadonlySet<EventCategory>
   >(() => new Set());
   const { containerRef, weekCount } = useFittingWeekCount(weeks.length);
   const visibleWeeks = weeks.slice(0, weekCount);
-  const firstWeekStart = weeks[0].start;
 
   return (
     <div className="bg-background flex min-h-0 flex-1 flex-col">
       <div className="bg-card flex shrink-0 flex-wrap items-center gap-3.5 border-b px-6 py-3">
-        <nav className="flex items-center gap-1" aria-label={WEEK_NAV_LABEL}>
-          <Button asChild variant="outline" size="icon-sm">
-            <Link
-              href={calendarWeekPath(addDays(firstWeekStart, -DAYS_PER_WEEK))}
-              aria-label={PREVIOUS_WEEK_LABEL}
-              title={PREVIOUS_WEEK_LABEL}
-            >
-              <ChevronLeft />
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="icon-sm">
-            <Link
-              href={calendarWeekPath(addDays(firstWeekStart, DAYS_PER_WEEK))}
-              aria-label={NEXT_WEEK_LABEL}
-              title={NEXT_WEEK_LABEL}
-            >
-              <ChevronRight />
-            </Link>
-          </Button>
-        </nav>
-        <h1 className="min-w-36 text-base font-semibold tracking-tight capitalize">
-          {formatWeekMonthLabel(firstWeekStart)}
-        </h1>
-        <Button asChild variant="outline" size="sm">
-          <Link href={calendarWeekPath(todayWeekStart)}>{TODAY_LABEL}</Link>
-        </Button>
         <InputGroup className="bg-muted h-8 max-w-60 min-w-44">
           <InputGroupAddon>
             <Search />
