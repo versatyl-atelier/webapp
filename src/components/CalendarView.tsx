@@ -2,30 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Search } from "lucide-react";
 
 import { CalendarEventChip } from "@/components/CalendarEventChip";
-import { EventCategoryIcon } from "@/components/EventCategoryIcon";
-import { Button } from "@/components/ui/button";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import {
   CALENDAR_COLUMNS_CLASS,
-  CATEGORY_FILTER_LABEL,
   DEFAULT_VISIBLE_WEEKS,
-  EVENT_CATEGORIES,
-  EVENT_CATEGORY_LABELS,
   MIN_WEEK_ROW_HEIGHT_PX,
-  NEW_EVENT_LABEL,
-  SEARCH_LABEL,
-  SEARCH_PLACEHOLDER,
   WEEKDAY_LABELS,
   WORK_DAYS_PER_WEEK,
   type EventCategory,
 } from "@/constants/calendar";
+import { useCalendarFilters } from "@/contexts/calendar-filters-provider";
 import {
   calendarDayPath,
   eventCountLabel,
@@ -34,8 +21,6 @@ import {
   formatDayNumber,
   isFilterVisible,
   matchesSearch,
-  newCalendarEventPath,
-  toggleFilter,
   type CalendarDay,
   type CalendarWeek,
 } from "@/lib/calendar";
@@ -43,7 +28,6 @@ import { cn } from "@/lib/utils";
 
 type CalendarViewProps = {
   weeks: CalendarWeek[];
-  canEdit: boolean;
 };
 
 function useFittingWeekCount(maxWeeks: number) {
@@ -71,63 +55,13 @@ function useFittingWeekCount(maxWeeks: number) {
   return { containerRef, weekCount };
 }
 
-export function CalendarView({ weeks, canEdit }: CalendarViewProps) {
-  const [query, setQuery] = useState("");
-  const [activeCategories, setActiveCategories] = useState<
-    ReadonlySet<EventCategory>
-  >(() => new Set());
+export function CalendarView({ weeks }: CalendarViewProps) {
+  const { query, activeCategories } = useCalendarFilters();
   const { containerRef, weekCount } = useFittingWeekCount(weeks.length);
   const visibleWeeks = weeks.slice(0, weekCount);
 
   return (
     <div className="bg-background flex min-h-0 flex-1 flex-col">
-      <div className="bg-card flex shrink-0 flex-wrap items-center gap-3.5 border-b px-6 py-3">
-        <InputGroup className="bg-muted h-8 max-w-60 min-w-44">
-          <InputGroupAddon>
-            <Search />
-          </InputGroupAddon>
-          <InputGroupInput
-            type="search"
-            aria-label={SEARCH_LABEL}
-            placeholder={SEARCH_PLACEHOLDER}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </InputGroup>
-        <div
-          role="group"
-          aria-label={CATEGORY_FILTER_LABEL}
-          className="ml-auto flex flex-wrap items-center gap-1"
-        >
-          {EVENT_CATEGORIES.map((category) => (
-            <Button
-              key={category}
-              type="button"
-              variant="ghost"
-              size="xs"
-              aria-pressed={activeCategories.has(category)}
-              onClick={() =>
-                setActiveCategories((current) =>
-                  toggleFilter(current, category, EVENT_CATEGORIES),
-                )
-              }
-              className="text-muted-foreground aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-primary"
-            >
-              <EventCategoryIcon category={category} />
-              {EVENT_CATEGORY_LABELS[category]}
-            </Button>
-          ))}
-        </div>
-        {canEdit && (
-          <Button asChild size="sm">
-            <Link href={newCalendarEventPath()}>
-              <Plus />
-              {NEW_EVENT_LABEL}
-            </Link>
-          </Button>
-        )}
-      </div>
-
       <div
         aria-hidden
         className={cn(

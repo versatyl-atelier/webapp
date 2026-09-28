@@ -22,14 +22,12 @@ export async function ToolLayout({
     <SidebarProvider defaultOpen={isSidebarOpen}>
       {sidebar}
       <SidebarInset className="bg-muted">
-        <div className="flex min-h-screen w-full min-w-md flex-col">
-          <div className="bg-sidebar border-sidebar-accent fixed z-10 flex w-full items-center gap-2 border">
+        <div className="flex h-[calc(100svh-20*var(--spacing))] w-full min-w-md flex-col">
+          <div className="bg-sidebar border-sidebar-accent sticky top-12 z-10 flex shrink-0 items-center gap-2 border">
             <SidebarTrigger size="icon-lg" />
             {breadcrumb}
           </div>
-          <main className="flex max-h-[calc(100svh-20*var(--spacing))] min-h-0 flex-1 flex-col pt-9">
-            {children}
-          </main>
+          <main className="flex min-h-0 flex-1 flex-col">{children}</main>
         </div>
       </SidebarInset>
     </SidebarProvider>

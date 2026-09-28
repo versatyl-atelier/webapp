@@ -1,4 +1,5 @@
 import { ToolLayout, ToolLayoutSlots } from "@/components/ToolLayout";
+import { CalendarFiltersProvider } from "@/contexts/calendar-filters-provider";
 import { CalendrierSidebar } from "./CalendrierSidebar";
 
 export default function CalendrierLayout({
@@ -6,8 +7,10 @@ export default function CalendrierLayout({
   breadcrumb,
 }: ToolLayoutSlots) {
   return (
-    <ToolLayout sidebar={<CalendrierSidebar />} breadcrumb={breadcrumb}>
-      {children}
-    </ToolLayout>
+    <CalendarFiltersProvider>
+      <ToolLayout sidebar={<CalendrierSidebar />} breadcrumb={breadcrumb}>
+        {children}
+      </ToolLayout>
+    </CalendarFiltersProvider>
   );
 }
