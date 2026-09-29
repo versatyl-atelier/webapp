@@ -9,7 +9,7 @@ export type ToolLayoutSlots = PropsWithChildren<{
   breadcrumb: ReactNode;
 }>;
 
-type ToolLayoutProps = ToolLayoutSlots & {
+export type ToolLayoutProps = ToolLayoutSlots & {
   sidebar: ReactNode;
 };
 

@@ -2,13 +2,11 @@ import { WEEK_FROZEN_MESSAGE } from "@/schemas/frozenWeeks.schemas";
 import { getWeeklyKilometrage } from "@/actions/weeklyKilometrage";
 
 import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
-import MultiPunchForm from "@/components/MultiPunchForm";
 import ManualTimeForm from "@/components/ManualTimeForm";
 import FillDayForm from "@/components/FillDayForm";
 
 import { notFound } from "next/navigation";
 import { getEmployee } from "@/actions/employees";
-import { getActivePunch } from "@/actions/multiPunch";
 import { getProjects } from "@/actions/projects";
 import { getTasks } from "@/actions/tasks";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
@@ -127,8 +125,6 @@ export default async function EmployeePage({
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
 
   const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
-
-  const activePunch = await getActivePunch(employeeId);
 
   return (
     <PageContextProvider
@@ -267,12 +263,7 @@ export default async function EmployeePage({
             disabled={disabledReason}
           />
         </div>
-        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
-          <MultiPunchForm
-            employeeId={employeeId}
-            activePunch={activePunch}
-            disabled={disabledReason}
-          />
+        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
           <ManualTimeForm
             employeeId={employeeId}
             dateOptions={dateOptions}
