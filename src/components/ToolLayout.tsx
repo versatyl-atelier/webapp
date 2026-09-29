@@ -1,7 +1,5 @@
 import { PropsWithChildren, ReactNode } from "react";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { isOpen } from "@/lib/sidebar";
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 
 export type ToolLayoutSlots = PropsWithChildren<{
   breadcrumb: ReactNode;
@@ -11,18 +9,9 @@ type ToolLayoutProps = ToolLayoutSlots & {
   sidebar: ReactNode;
 };
 
-export async function ToolLayout({
-  sidebar,
-  breadcrumb,
-  children,
-}: ToolLayoutProps) {
-  const isSidebarOpen = await isOpen();
-
+export function ToolLayout({ sidebar, breadcrumb, children }: ToolLayoutProps) {
   return (
-    <SidebarProvider
-      defaultOpen={isSidebarOpen}
-      className="min-h-[calc(100svh-12*var(--spacing))]"
-    >
+    <div className="flex w-full flex-1">
       {sidebar}
       <SidebarInset className="bg-muted">
         <div className="flex h-[calc(100svh-20*var(--spacing))] w-full min-w-md flex-col">
@@ -33,6 +22,6 @@ export async function ToolLayout({
           <main className="flex min-h-0 flex-1 flex-col">{children}</main>
         </div>
       </SidebarInset>
-    </SidebarProvider>
+    </div>
   );
 }

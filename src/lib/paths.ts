@@ -35,8 +35,12 @@ export function changePasswordPath(redirectTo?: string): string {
   return withRedirectTo(CHANGE_PASSWORD_PATH, redirectTo);
 }
 
+export function isWithinPath(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
 export function isProtectedPath(pathname: string): boolean {
-  return PROTECTED_PATH_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  return PROTECTED_PATH_PREFIXES.some((prefix) =>
+    isWithinPath(pathname, prefix),
   );
 }

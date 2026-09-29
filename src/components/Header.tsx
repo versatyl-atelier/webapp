@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LoginButton } from "@/components/Login";
 import { LogoutForm } from "@/components/Logout";
 import { getSession } from "@/lib/session";
+import { APP_NAME, HOME_PATH } from "@/constants/tools";
 import {
   InputGroup,
   InputGroupAddon,
@@ -11,21 +12,10 @@ import {
 export async function Header() {
   const session = await getSession();
   return (
-    <header className="bg-background fixed z-30 flex w-full justify-between px-4 py-2 shadow-sm">
+    <header className="bg-background sticky top-0 z-30 flex h-12 w-full justify-between px-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <Link
-          href="/"
-          className="bg-primary text-primary-foreground rounded-sm p-1"
-        >
-          <svg viewBox="0 0 12 12" className="size-5" fill="currentColor">
-            <rect x="1" y="1" width="4" height="4" rx="1" />
-            <rect x="7" y="1" width="4" height="4" rx="1" />
-            <rect x="1" y="7" width="4" height="4" rx="1" />
-            <rect x="7" y="7" width="4" height="4" rx="1" />
-          </svg>
-        </Link>
         <h1 className="inline-block font-bold">
-          <Link href="/">Versatyl</Link>
+          <Link href={HOME_PATH}>{APP_NAME}</Link>
         </h1>
         <InputGroup>
           <InputGroupInput placeholder="Rechercher" />

@@ -11,42 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Role } from "@/generated/prisma/enums";
 import { getSession } from "@/lib/session";
+import { TOOLS } from "@/constants/tools";
 
-type AppCard = {
-  href: string;
-  icon: string;
-  title: string;
-  description: string;
-  tags?: string[];
-  disabled?: boolean;
-};
-const apps: AppCard[] = [
-  {
-    href: "projets",
-    icon: "📁",
-    title: "Projets",
-    description: "Phases, pièces et listes",
-    tags: ["Nouveau"],
-  },
-  {
-    href: "punch",
-    icon: "⏱",
-    title: "Punch",
-    description: "Timesheet atelier",
-  },
-  {
-    href: "lanceur-de-dates",
-    icon: "📅",
-    title: "Lanceur",
-    description: "Planification production",
-  },
-  {
-    href: "calendrier",
-    icon: "🗓",
-    title: "Calendrier",
-    description: "Échéances et événements",
-  },
-];
 export default async function Home() {
   const session = await getSession();
   const isManager = session?.role === Role.manager;
@@ -56,36 +22,38 @@ export default async function Home() {
         Applications
       </h2>
       <ul className="flex flex-wrap gap-3">
-        {apps.map(({ href, icon, title, description, tags = [], disabled }) => (
-          <li key={href}>
-            <Link href={href}>
-              <Card
-                className={cn(
-                  "h-36 w-44 shadow-sm transition-shadow hover:shadow-lg",
-                  disabled ? "opacity-35" : "",
-                )}
-              >
-                <CardHeader className="text-xl">{icon}</CardHeader>
-                <CardContent>
-                  <CardTitle>{title}</CardTitle>
-                  <CardDescription>{description}</CardDescription>
-                  <ul className="mt-2 flex gap-2">
-                    {tags.map((tag?: string) => (
-                      <Badge
-                        asChild
-                        key={tag}
-                        className="text-2xs rounded-sm"
-                        variant="secondary"
-                      >
-                        <li>{tag}</li>
-                      </Badge>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </Link>
-          </li>
-        ))}
+        {TOOLS.map(
+          ({ href, icon, title, description, tags = [], disabled }) => (
+            <li key={href}>
+              <Link href={href}>
+                <Card
+                  className={cn(
+                    "h-36 w-44 shadow-sm transition-shadow hover:shadow-lg",
+                    disabled ? "opacity-35" : "",
+                  )}
+                >
+                  <CardHeader className="text-xl">{icon}</CardHeader>
+                  <CardContent>
+                    <CardTitle>{title}</CardTitle>
+                    <CardDescription>{description}</CardDescription>
+                    <ul className="mt-2 flex gap-2">
+                      {tags.map((tag?: string) => (
+                        <Badge
+                          asChild
+                          key={tag}
+                          className="text-2xs rounded-sm"
+                          variant="secondary"
+                        >
+                          <li>{tag}</li>
+                        </Badge>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </Link>
+            </li>
+          ),
+        )}
       </ul>
 
       {isManager && (
