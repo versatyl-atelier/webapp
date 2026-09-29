@@ -54,7 +54,7 @@ export function AppSidebar() {
                     asChild
                     isActive={isWithinPath(pathname, href)}
                     tooltip={{ children: title, hidden: false }}
-                    className="justify-center text-2xl"
+                    className="justify-center p-3 text-xl"
                   >
                     <Link href={href}>
                       <span aria-hidden>{icon}</span>
