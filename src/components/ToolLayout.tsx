@@ -19,11 +19,14 @@ export async function ToolLayout({
   const isSidebarOpen = await isOpen();
 
   return (
-    <SidebarProvider defaultOpen={isSidebarOpen}>
+    <SidebarProvider
+      defaultOpen={isSidebarOpen}
+      className="min-h-[calc(100svh-12*var(--spacing))]"
+    >
       {sidebar}
       <SidebarInset className="bg-muted">
         <div className="flex h-[calc(100svh-20*var(--spacing))] w-full min-w-md flex-col">
-          <div className="bg-sidebar border-sidebar-accent sticky top-12 z-10 flex shrink-0 items-center gap-2 border">
+          <div className="bg-sidebar border-sidebar-accent h-toolbar sticky top-12 z-10 flex shrink-0 items-center gap-2 border-b">
             <SidebarTrigger size="icon-lg" />
             {breadcrumb}
           </div>

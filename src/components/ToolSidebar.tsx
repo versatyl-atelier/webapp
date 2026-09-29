@@ -23,15 +23,15 @@ export function ToolSidebar({
   return (
     <Sidebar
       variant="sidebar"
-      className="border-r-muted mt-12 h-[calc(100svh-40px)]"
+      className="border-r-muted mt-12 h-[calc(100svh-12*var(--spacing))]"
     >
-      <SidebarHeader className="border-b-muted border-b">
+      <SidebarHeader className="border-b-muted h-toolbar justify-center border-b">
         <SidebarMenu>
-          <SidebarMenuItem className="text-muted-foreground">
+          <SidebarMenuItem className="text-muted-foreground relative">
             <Link
               href="/"
               title="Accueuil"
-              className="hover:text-primary fixed size-10 px-4 text-base"
+              className="hover:text-primary absolute inset-y-0 flex items-center px-4 text-base"
             >
               ←
             </Link>
