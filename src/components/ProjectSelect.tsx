@@ -15,6 +15,7 @@ import {
   ComboboxChip,
   ComboboxChipsInput,
   ComboboxInput,
+  useComboboxAnchor,
 } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -70,6 +71,7 @@ export default function ProjectSelect({
   const { projectsPromise, tasksPromise } = usePageContext();
   const projects = use(projectsPromise) || [];
   const tasks = use(tasksPromise) || [];
+  const chipsAnchor = useComboboxAnchor();
 
   const toOption =
     (type: ProjectType) =>
@@ -144,7 +146,7 @@ export default function ProjectSelect({
         >
           <div className="relative">
             {multiple ? (
-              <ComboboxChips className="rounded-xs border-2">
+              <ComboboxChips ref={chipsAnchor} className="rounded-xs border-2">
                 {selected.map((option) => (
                   <ComboboxChip key={option.key}>{option.name}</ComboboxChip>
                 ))}
@@ -163,6 +165,7 @@ export default function ProjectSelect({
           <ComboboxContent
             side="top"
             sideOffset={8}
+            anchor={multiple ? chipsAnchor : undefined}
             className="max-h-75 rounded border-2 shadow-lg"
           >
             <ComboboxEmpty>Aucun projet ou tâche trouvé</ComboboxEmpty>
