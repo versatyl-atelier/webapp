@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wrench } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -8,6 +9,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Role } from "@/generated/prisma/enums";
+import { getSession } from "@/lib/session";
 
 type AppCard = {
   href: string;
@@ -43,15 +46,10 @@ const apps: AppCard[] = [
     title: "Calendrier",
     description: "Échéances et événements",
   },
-  {
-    href: "notes",
-    icon: "📝",
-    title: "Notes",
-    description: "Phase 2",
-    disabled: true,
-  },
 ];
 export default async function Home() {
+  const session = await getSession();
+  const isManager = session?.role === Role.manager;
   return (
     <main className="px-4">
       <h2 className="text-muted-foreground my-4 text-xs font-bold uppercase">
@@ -89,6 +87,24 @@ export default async function Home() {
           </li>
         ))}
       </ul>
+
+      {isManager && (
+        <ul className="mt-3 flex flex-wrap gap-3">
+          <li>
+            <Link href="/punch/gestionnaire">
+              <Card className="h-36 w-44 shadow-sm transition-shadow hover:shadow-lg">
+                <CardHeader className="text-xl">
+                  <Wrench />
+                </CardHeader>
+                <CardContent>
+                  <CardTitle>Interface Gestionnaire</CardTitle>
+                  <CardDescription>Comptes, config, etc.</CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+          </li>
+        </ul>
+      )}
     </main>
   );
 }
