@@ -284,6 +284,8 @@ model Project {
   calendarOrder Int     @default(0)
   isLocked      Boolean @default(false)
 
+  address String @default("")
+
   productionDurationDays Int?
   planningDurationDays   Int?
 
@@ -300,9 +302,69 @@ model Project {
 
   source            TrelloSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
   timeEntryProjects TimeEntryProject[]
+  contacts          ProjectContact[]
+  phases            ProjectPhase[]
+  pieces            ProjectPiece[]
 
   @@index([sourceId])
   @@map("projects")
+}
+
+model ProjectContact {
+  id        Int      @id @default(autoincrement())
+  projectId String
+  role      String   @default("")
+  name      String   @default("")
+  company   String   @default("")
+  phone     String   @default("")
+  email     String   @default("")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("projectContacts")
+}
+
+model ProjectPhase {
+  id        Int      @id @default(autoincrement())
+  projectId String
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pieces  ProjectPiece[]
+
+  @@index([projectId])
+  @@map("projectPhases")
+}
+
+model ProjectPiece {
+  id              Int      @id @default(autoincrement())
+  projectId       String
+  phaseId         Int?
+  type            String   @default("")
+  caissonMaterial String   @default("")
+  cladding        String   @default("")
+  doors           String   @default("")
+  drawers         String   @default("")
+  hardware        String   @default("")
+  finish          String   @default("")
+  cabinetCount    Int?
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase   ProjectPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([phaseId])
+  @@map("projectPieces")
 }
 
 model TrelloSource {

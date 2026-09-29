@@ -100,6 +100,7 @@ export class PasswordChangeRequired extends Data.TaggedError(
 export class Forbidden extends Data.TaggedError("Forbidden")<{
   readonly roles?: readonly Role[];
   readonly employeeId?: number | null;
+  readonly projectId?: string;
 }> {
   public toString() {
     return "Forbidden";

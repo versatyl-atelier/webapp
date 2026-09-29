@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { loadDayOccurrences, saveCalendarEvent } from "@/actions/calendar";
 import { CalendarDayOrderPreview } from "@/components/CalendarDayOrderPreview";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
+import { FieldErrors } from "@/components/FieldErrors";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import {
   AlertDialog,
@@ -38,7 +39,6 @@ import {
 import {
   Field,
   FieldDescription,
-  FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
@@ -145,16 +145,6 @@ const FREQUENCIES = Object.values(RecurrenceFrequency);
 const RECURRENCE_ENDS = Object.values(RecurrenceEnd);
 const HOURS = Array.from({ length: HOURS_PER_DAY }, (_, hour) => hour);
 const DRAFT_KEY = "draft";
-
-function FieldErrors({ errors }: { errors?: string[] }) {
-  return (
-    <FieldError>
-      {errors?.map((error) => (
-        <p key={error}>- {error}</p>
-      ))}
-    </FieldError>
-  );
-}
 
 export function CalendarEventForm({
   event,
