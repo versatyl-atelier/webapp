@@ -68,7 +68,7 @@ export default function EditTimeEntryForm({
       open={isOpen}
       onOpenChange={handleOpenChange}
     >
-      <DialogTrigger>
+      <DialogTrigger className="block w-full">
         <div
           key={entry.id}
           className="hover:shadow-primary/50 mb-0.5 cursor-pointer rounded p-0.5 text-center text-white transition-all hover:scale-110 hover:shadow-lg sm:mb-1 sm:p-1"
@@ -77,9 +77,11 @@ export default function EditTimeEntryForm({
           }}
           title={`${projectName} - ${formatTimeDisplay(calculateHours())}`}
         >
-          <div className="truncate text-xs font-bold">{projectName}</div>
+          <div className="text-xs font-bold wrap-anywhere">{projectName}</div>
           {entry.subtaskId && entry.subtaskId !== "1default" && (
-            <div className="truncate text-xs opacity-90">{entry.subtaskId}</div>
+            <div className="text-xs wrap-anywhere opacity-90">
+              {entry.subtaskId}
+            </div>
           )}
           <div className="text-xs">{formatTimeDisplay(calculateHours())}</div>
         </div>

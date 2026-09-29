@@ -226,7 +226,7 @@ export default async function EmployeePage({
                     return (
                       <div
                         key={day.dateStr}
-                        className={`min-h-48 overflow-y-auto p-0.5 sm:min-h-64 sm:p-1 ${
+                        className={`min-h-48 min-w-0 p-0.5 sm:min-h-64 sm:p-1 ${
                           isToday ? "bg-punch-today" : "bg-card"
                         }`}
                       >
