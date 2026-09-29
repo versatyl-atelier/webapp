@@ -5,6 +5,8 @@ import {
   PROTECTED_PATH_PREFIXES,
   REDIRECT_TO_PARAM,
 } from "@/constants/auth";
+import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
+import type { DateKey } from "@/lib/calendar";
 
 function withRedirectTo(path: string, redirectTo?: string): string {
   if (!redirectTo) {
@@ -25,6 +27,14 @@ export function loginPath(redirectTo?: string, email?: string): string {
 
 export function employeePath(employeeId: number): string {
   return `/punch/employe/${employeeId}`;
+}
+
+export function employeeWeekPath(
+  employeeId: number,
+  weekStart: DateKey,
+): string {
+  const params = new URLSearchParams({ [CALENDAR_WEEK_PARAM]: weekStart });
+  return `${employeePath(employeeId)}?${params.toString()}`;
 }
 
 export function projectPath(projectId: string): string {

@@ -5,11 +5,12 @@ import {
   hoursToSeconds,
   secondsToHours,
   formatTimeDisplay,
-  getThisWeek,
+  getWeek,
   getMonday,
   getMondayOfDate,
   isSameDay,
   isSameUTCDate,
+  localDateFromKey,
   toUTCDate,
 } from "@/lib/time";
 
@@ -100,7 +101,7 @@ describe("getMondayOfDate", () => {
   });
 });
 
-describe("getMonday / getThisWeek", () => {
+describe("getMonday / getWeek", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -121,15 +122,23 @@ describe("getMonday / getThisWeek", () => {
     expect(getMonday(-1).getDate()).toBe(1);
   });
 
-  it("getThisWeek returns Monday 00:00 through Sunday 23:59:59.999", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(2024, 0, 10));
-    const { startDate, endDate } = getThisWeek();
+  it("getWeek returns Monday 00:00 through Sunday 23:59:59.999", () => {
+    const { startDate, endDate } = getWeek(new Date(2024, 0, 8));
     expect(startDate.getDate()).toBe(8);
     expect(startDate.getHours()).toBe(0);
     expect(endDate.getDate()).toBe(14);
     expect(endDate.getHours()).toBe(23);
     expect(endDate.getMinutes()).toBe(59);
+  });
+});
+
+describe("localDateFromKey", () => {
+  it("returns local midnight of the given date key", () => {
+    const result = localDateFromKey("2024-01-08");
+    expect(result.getFullYear()).toBe(2024);
+    expect(result.getMonth()).toBe(0);
+    expect(result.getDate()).toBe(8);
+    expect(result.getHours()).toBe(0);
   });
 });
 

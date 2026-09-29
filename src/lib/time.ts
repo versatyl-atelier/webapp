@@ -75,16 +75,19 @@ export function formatTimeDisplay(decimal: number): string {
 
   return `${hours}h ${minutes}m`;
 }
-export function getThisWeek(weekOffset: number = 0) {
-  const currentMonday = getMonday(weekOffset);
-  const sunday = new Date(currentMonday);
-  sunday.setDate(currentMonday.getDate() + 6);
+export function getWeek(monday: Date) {
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
   sunday.setHours(23, 59, 59, 999);
 
   return {
-    startDate: currentMonday,
+    startDate: monday,
     endDate: sunday,
   };
+}
+export function localDateFromKey(dateKey: string): Date {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 export function getMonday(weekOffset: number = 0): Date {
   const today = new Date();

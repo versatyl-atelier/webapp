@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { PASSWORD_CHANGE_REQUIRED_ERROR } from "@/constants/auth";
 import { useResubmitOnAuth } from "@/hooks/auth";
 import { changePasswordPath, loginPath } from "@/lib/paths";
+import { cn } from "@/lib/utils";
 
 export type FreezeFormProps = {
   employeeId: number;
@@ -20,6 +21,7 @@ export type FreezeFormProps = {
   weekTotal: number;
   objective: number;
   weekFrozen: boolean;
+  className?: string;
 };
 
 export function FreezeForm({
@@ -28,6 +30,7 @@ export function FreezeForm({
   weekTotal,
   objective,
   weekFrozen,
+  className,
 }: FreezeFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -70,7 +73,7 @@ export function FreezeForm({
   }, [state]);
 
   return (
-    <form ref={formRef} action={action}>
+    <form ref={formRef} action={action} className={cn("flex", className)}>
       <Input type="hidden" name="employeeId" value={employeeId} />
       <Input type="hidden" name="weekStart" value={weekStart.toString()} />
       <Input type="hidden" name="weekTotal" value={weekTotal} />
@@ -81,11 +84,7 @@ export function FreezeForm({
         className="absolute top-16 left-4 w-5/6"
       />
 
-      <Button
-        type="submit"
-        disabled={pending}
-        className="text-2xs rounded-sm font-bold sm:px-2"
-      >
+      <Button type="submit" size="xs" disabled={pending}>
         {weekFrozen ? "Dégeler" : "Geler"}
       </Button>
     </form>

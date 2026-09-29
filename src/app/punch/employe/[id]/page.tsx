@@ -1,32 +1,27 @@
-import Link from "next/link";
-import { getFrozenWeeks } from "@/actions/frozenWeeks";
 import { WEEK_FROZEN_MESSAGE } from "@/schemas/frozenWeeks.schemas";
 import { getWeeklyKilometrage } from "@/actions/weeklyKilometrage";
 
-import { FreezeForm } from "@/components/FreezeForm";
 import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
 import MultiPunchForm from "@/components/MultiPunchForm";
 import ManualTimeForm from "@/components/ManualTimeForm";
 import FillDayForm from "@/components/FillDayForm";
-import { Button } from "@/components/ui/button";
 
 import { notFound } from "next/navigation";
 import { getEmployee } from "@/actions/employees";
-import { getTimeEntries } from "@/actions/timeEntries";
 import { getActivePunch } from "@/actions/multiPunch";
 import { getProjects } from "@/actions/projects";
 import { getTasks } from "@/actions/tasks";
+import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
+import { mondayOf, parseWeekParam, toLocalDateKey } from "@/lib/calendar";
 import {
-  formatTimeDisplay,
-  getThisWeek,
-  isSameDay,
-  isSameUTCDate,
-} from "@/lib/time";
+  calculateHours,
+  DEFAULT_WEEKLY_TARGET,
+  getEmployeeWeek,
+} from "@/lib/employee-week";
+import { formatTimeDisplay, isSameDay } from "@/lib/time";
 import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
 import { PageContextProvider } from "./context-provider";
-
-const defaultWeeklyTarget = 40; // TODO Find better place for this magic value
 
 const dayNames = [
   "Lundi",
@@ -38,23 +33,11 @@ const dayNames = [
   "Dimanche",
 ];
 
-const weekTitles = [
-  "Semaine courante",
-  "Semaine dernière",
-  "Il y a 2 semaines",
-  "Il y a 3 semaines",
-];
-
 interface DayData {
   date: Date;
   dateStr: string;
   entries: TimeEntryWithRelations[];
   total: number;
-}
-
-function calculateHours(entry: TimeEntryWithRelations): number {
-  if (!entry.start || !entry.end) return 0;
-  return (entry.end.getTime() - entry.start.getTime()) / 3600000;
 }
 
 export type EmployeePageParams = {
@@ -76,31 +59,20 @@ export default async function EmployeePage({
     return notFound();
   }
 
-  const query = await searchParams;
-  const { weekOffset: offset } = query;
-  const weekOffset = parseInt(
-    Array.isArray(offset) ? offset[0] : offset || "0",
-    10,
+  const todayKey = toLocalDateKey(new Date());
+  const weekStartKey = parseWeekParam(
+    (await searchParams)[CALENDAR_WEEK_PARAM],
+    todayKey,
   );
-  const weekTitle =
-    weekTitles[Math.abs(weekOffset)] ||
-    `Il y a ${Math.abs(weekOffset)} semaines`;
-
-  const canGoBack = weekOffset > -3;
-  const canGoForward = weekOffset < 0;
-
-  const thisWeek = getThisWeek(weekOffset);
-  const weeklyObjectives = employee.weeklyObjectives;
-  const objective =
-    weeklyObjectives.find(({ weekStart }: { weekStart: Date }) => {
-      return isSameUTCDate(weekStart, thisWeek.startDate);
-    })?.objective ?? defaultWeeklyTarget;
-  const timeEntries = (await getTimeEntries(employee.id, thisWeek)) || [];
-
-  const weekly = timeEntries.reduce(
-    (sum, entry) => sum + calculateHours(entry),
-    0,
-  );
+  const isCurrentWeek = weekStartKey === mondayOf(todayKey);
+  const {
+    week: thisWeek,
+    weekStart,
+    objective,
+    timeEntries,
+    weekly,
+    weekFrozen,
+  } = await getEmployeeWeek(employee, weekStartKey);
 
   const today = new Date();
   const todayStr = today.toString().split("T")[0];
@@ -114,7 +86,7 @@ export default async function EmployeePage({
   );
 
   const hoursDifference =
-    weekly - (employee.weeklyTarget || defaultWeeklyTarget);
+    weekly - (employee.weeklyTarget || DEFAULT_WEEKLY_TARGET);
   const isDifferencePosive = hoursDifference >= 0;
 
   const daysData: DayData[] = [];
@@ -144,7 +116,7 @@ export default async function EmployeePage({
       )}/${(day.date.getMonth() + 1).toString().padStart(2, "0")}`,
   }));
   const todayIso = today.toISOString().split("T")[0];
-  const defaultDate = weekOffset === 0 ? todayIso : dateOptions[0]?.value;
+  const defaultDate = isCurrentWeek ? todayIso : dateOptions[0]?.value;
   const dailyHours = Object.fromEntries(
     daysData.map((day, i) => [dateOptions[i].value, day.total]),
   );
@@ -152,12 +124,6 @@ export default async function EmployeePage({
   const projectsPromise = getProjects(employeeId);
   const tasksPromise = getTasks();
 
-  const frozenWeeks = await getFrozenWeeks(employeeId);
-
-  const weekStart = new Date(thisWeek.startDate);
-  const weekFrozen = !!frozenWeeks?.find((entry) =>
-    isSameUTCDate(entry.weekStart, weekStart),
-  );
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
 
   const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
@@ -217,38 +183,6 @@ export default async function EmployeePage({
           </aside>
           <div>
             <div className="bg-card flex h-full flex-col rounded-lg border-2">
-              {/* Week Navigation */}
-              <div className="bg-muted flex items-center justify-between border-b-2 px-2 py-2 sm:px-3">
-                <Button
-                  disabled={!canGoBack}
-                  className="text-2xs rounded-sm font-bold sm:px-2"
-                >
-                  <Link href={`?weekOffset=${weekOffset - 1}`}>
-                    ← Précédente
-                  </Link>
-                </Button>
-
-                <div className="text-xs font-bold sm:text-sm">{weekTitle}</div>
-
-                <div className="flex gap-0.5 sm:gap-2">
-                  <FreezeForm
-                    employeeId={employeeId}
-                    weekStart={weekStart}
-                    weekTotal={weekly}
-                    objective={objective}
-                    weekFrozen={weekFrozen}
-                  />
-                  <Button
-                    disabled={!canGoForward}
-                    className="text-2xs rounded-sm font-bold sm:px-2"
-                  >
-                    <Link href={`?weekOffset=${weekOffset + 1}`}>
-                      Suivante →
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-
               {/* Frozen Banner */}
               {weekFrozen && (
                 <div className="bg-primary text-primary-foreground text-2xs px-2 py-2 text-center font-bold sm:px-3">
