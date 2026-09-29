@@ -8,7 +8,7 @@ export default async function Page() {
   const employees = await getEmployeesWithoutAccount();
   const users = await getUsers();
   return (
-    <main className="flex flex-col gap-4 px-8">
+    <div className="flex flex-col gap-4 px-8">
       <h1 className="ml-2 text-2xl">Admin</h1>
       <h2 className="text-xl font-bold">Créer un compte</h2>
       <CreateUserForm
@@ -20,6 +20,6 @@ export default async function Page() {
         users={users}
         className="bg-background mb-4 w-full max-w-prose rounded border-2"
       />
-    </main>
+    </div>
   );
 }

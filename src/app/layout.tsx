@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-import pkg from "@/../package.json";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { OutsideTools } from "@/components/OutsideTools";
 import { AuthEventsProvider } from "@/contexts/auth-events-provider";
 import { ThemeProvider } from "@/contexts/theme-provider";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -42,21 +43,23 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full font-sans antialiased`}
     >
-      <body className="bg-background text-foreground flex min-h-full flex-col">
+      <body className="bg-background text-foreground flex h-full flex-col overflow-hidden">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthEventsProvider>
             <TooltipProvider>
-              <SidebarProvider defaultOpen={isSidebarOpen}>
+              <SidebarProvider defaultOpen={isSidebarOpen} className="h-full">
                 <AppSidebar />
-                <SidebarInset>
+                <SidebarInset className="min-h-0">
                   <Header />
-                  {children}
+                  <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                    {children}
+                    <OutsideTools>
+                      <Footer />
+                    </OutsideTools>
+                  </div>
                 </SidebarInset>
               </SidebarProvider>
             </TooltipProvider>
-            <footer className="text-muted-foreground fixed bottom-0 mt-4 mb-2 w-full text-center text-[10px] print:mt-4">
-              Version {pkg.version} - Atelier Versatyl © 2025
-            </footer>
             {modals}
           </AuthEventsProvider>
           <Toaster

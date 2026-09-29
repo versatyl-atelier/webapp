@@ -131,7 +131,10 @@ export default async function EmployeePage({
       projectsPromise={projectsPromise}
       tasksPromise={tasksPromise}
     >
-      <main className="flex flex-1 flex-col gap-2.5 p-1.5">
+      <div className="flex flex-1 flex-col gap-2.5 p-1.5">
+        <h1 className="ml-1 text-2xl font-bold tracking-tight">
+          {employee.name}
+        </h1>
         <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[180px_1fr_180px]">
           <aside className="bg-card w-full rounded-lg border-2 p-2.5">
             <h2 className="border-primary mb-2 border-b-2 pb-1 text-center text-sm font-bold">
@@ -165,14 +168,6 @@ export default async function EmployeePage({
                 </div>
                 <div className="text-muted-foreground text-xs uppercase">
                   Différence
-                </div>
-              </div>
-
-              {/* Employee Name */}
-              <div className="border-primary bg-muted rounded border-l-4 p-2">
-                <div className="text-lg font-bold">{employee.name}</div>
-                <div className="text-muted-foreground text-xs uppercase">
-                  Employé
                 </div>
               </div>
             </div>
@@ -278,7 +273,7 @@ export default async function EmployeePage({
             disabled={disabledReason}
           />
         </div>
-      </main>
+      </div>
     </PageContextProvider>
   );
 }

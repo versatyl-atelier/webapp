@@ -23,7 +23,7 @@ export function ToolSidebar({
   return (
     <Sidebar
       variant="sidebar"
-      className="border-r-muted mt-12 h-[calc(100svh-12*var(--spacing))] data-[side=left]:left-(--sidebar-width-icon)"
+      className="border-r-muted shadow-background mt-12 h-[calc(100svh-12*var(--spacing))] shadow-md data-[side=left]:left-(--sidebar-width-icon)"
     >
       <SidebarHeader className="border-b-muted h-toolbar justify-center border-b">
         <SidebarMenu>

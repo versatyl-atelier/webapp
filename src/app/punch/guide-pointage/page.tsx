@@ -1,6 +1,6 @@
 export default function Page() {
   return (
-    <main className="bg-card mx-auto max-w-200 p-5 print:p-[15mm] print:text-[11pt]">
+    <div className="bg-card mx-auto max-w-200 p-5 print:p-[15mm] print:text-[11pt]">
       {/* Header */}
       <header className="bg-primary text-primary-foreground mb-0 rounded-t-md border-0 px-5 py-3.75 text-center print:rounded-none">
         <h1 className="mb-1 text-2xl font-bold">🕐 Guide de Pointage Rapide</h1>
@@ -144,6 +144,6 @@ export default function Page() {
           Contactez votre chef d'équipe ou le gestionnaire
         </div>
       </section>
-    </main>
+    </div>
   );
 }

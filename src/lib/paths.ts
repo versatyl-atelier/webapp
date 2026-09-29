@@ -6,6 +6,7 @@ import {
   REDIRECT_TO_PARAM,
 } from "@/constants/auth";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
+import { TOOLS } from "@/constants/tools";
 import type { DateKey } from "@/lib/calendar";
 
 function withRedirectTo(path: string, redirectTo?: string): string {
@@ -53,4 +54,8 @@ export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PATH_PREFIXES.some((prefix) =>
     isWithinPath(pathname, prefix),
   );
+}
+
+export function isToolPath(pathname: string): boolean {
+  return TOOLS.some(({ href }) => isWithinPath(pathname, href));
 }
