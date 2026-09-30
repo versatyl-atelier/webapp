@@ -36,7 +36,7 @@ export default async function EmployeBreadcrumb({
     employeeWeekPath(employee.id, weekStart);
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1 py-1 pr-2 md:flex-row md:items-center">
+    <div className="flex min-w-0 flex-1 items-center gap-1 py-1 pr-2">
       <AppBreadcrumb segments={["punch", "employe", id]}>
         <WeekCrumbs
           weekStart={weekStartKey}

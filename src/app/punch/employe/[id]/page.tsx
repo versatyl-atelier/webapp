@@ -26,16 +26,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FreezeForm } from "@/components/FreezeForm";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
 import { PageContextProvider } from "./context-provider";
+import { cn } from "@/lib/utils";
 
-const dayNames = [
-  "Lundi",
-  "Mardi",
-  "Mercredi",
-  "Jeudi",
-  "Vendredi",
-  "Samedi",
-  "Dimanche",
-];
+const dayNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 interface DayData {
   date: Date;
@@ -122,6 +115,8 @@ export default async function EmployeePage({
 
   const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
 
+  const colsTemplate = "grid-cols-[repeat(5,16.8%)_repeat(2,8%)]";
+
   return (
     <PageContextProvider
       projectsPromise={projectsPromise}
@@ -152,7 +147,9 @@ export default async function EmployeePage({
               {/* Week Grid */}
               <div className="flex flex-col">
                 {/* Day Headers */}
-                <div className="bg-border grid grid-cols-7 gap-px border-b">
+                <div
+                  className={cn("bg-border grid gap-px border-b", colsTemplate)}
+                >
                   {dayNames.map((name, i) => (
                     <div
                       key={name}
@@ -176,7 +173,7 @@ export default async function EmployeePage({
                 </div>
 
                 {/* Day Content */}
-                <div className="bg-muted grid grid-cols-7 gap-px p-px">
+                <div className={cn("bg-muted grid gap-px p-px", colsTemplate)}>
                   {daysData.map((day) => {
                     const isToday =
                       new Date(day.dateStr).toDateString() ===
@@ -203,15 +200,23 @@ export default async function EmployeePage({
                 </div>
 
                 {/* Day Totals */}
-                <div className="bg-border grid grid-cols-7 gap-px border-t-2">
-                  {daysData.map((day) => (
-                    <div
-                      key={`total-${day.dateStr}`}
-                      className="bg-primary text-primary-foreground px-0.5 py-1 text-center text-xs font-bold sm:px-1 sm:text-sm"
-                    >
-                      {formatTimeDisplay(day.total)}
-                    </div>
-                  ))}
+                <div
+                  className={cn(
+                    "bg-border grid gap-px border-t-2",
+                    colsTemplate,
+                  )}
+                >
+                  {daysData.map(
+                    (day, idx) =>
+                      idx < 5 && (
+                        <div
+                          key={`total-${day.dateStr}`}
+                          className="bg-primary text-primary-foreground px-0.5 py-1 text-center text-xs font-bold sm:px-1 sm:text-sm"
+                        >
+                          {formatTimeDisplay(day.total)}
+                        </div>
+                      ),
+                  )}
                 </div>
               </div>
             </div>
