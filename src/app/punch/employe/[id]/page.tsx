@@ -1,4 +1,7 @@
-import { WEEK_FROZEN_MESSAGE } from "@/schemas/frozenWeeks.schemas";
+import {
+  WEEK_FROZEN_MESSAGE,
+  WEEK_FROZEN_NOTICE,
+} from "@/schemas/frozenWeeks.schemas";
 import { getWeeklyKilometrage } from "@/actions/weeklyKilometrage";
 
 import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
@@ -18,6 +21,8 @@ import {
 } from "@/lib/employee-week";
 import { formatTimeDisplay, isSameDay } from "@/lib/time";
 import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
+import { Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FreezeForm } from "@/components/FreezeForm";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
 import { PageContextProvider } from "./context-provider";
@@ -137,6 +142,12 @@ export default async function EmployeePage({
           <h1 className="ml-1 text-2xl font-bold tracking-tight">
             {employee.name}
           </h1>
+          {weekFrozen && (
+            <Alert variant="warning" role="status" className="w-auto flex-1">
+              <Info />
+              <AlertDescription>{WEEK_FROZEN_NOTICE}</AlertDescription>
+            </Alert>
+          )}
           <FreezeForm
             employeeId={employee.id}
             weekStart={weekStart}
@@ -184,14 +195,6 @@ export default async function EmployeePage({
           </aside>
           <div>
             <div className="bg-card flex h-full flex-col rounded-lg border-2">
-              {/* Frozen Banner */}
-              {weekFrozen && (
-                <div className="bg-primary text-primary-foreground text-2xs px-2 py-2 text-center font-bold sm:px-3">
-                  Semaine gelée (Lecture seule) : Demander à un gestionnaire
-                  pour dégeler
-                </div>
-              )}
-
               {/* Week Grid */}
               <div className="flex flex-col">
                 {/* Day Headers */}
@@ -228,7 +231,7 @@ export default async function EmployeePage({
                       <div
                         key={day.dateStr}
                         className={`min-h-48 min-w-0 p-0.5 sm:min-h-64 sm:p-1 ${
-                          isToday ? "bg-punch-today" : "bg-card"
+                          isToday ? "bg-warning" : "bg-card"
                         }`}
                       >
                         {day.entries.map((entry) => {

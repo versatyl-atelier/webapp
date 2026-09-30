@@ -5,6 +5,9 @@ import { Data } from "effect";
 export const WEEK_FROZEN_MESSAGE =
   "Cette semaine est gelée. Un gestionnaire doit la dégeler pour permettre des modifications.";
 
+export const WEEK_FROZEN_NOTICE =
+  "Semaine gelée (Lecture seule) : Demander à un gestionnaire pour dégeler";
+
 export class WeekFrozenError extends Data.TaggedError("WeekFrozenError")<{
   readonly employeeId: number;
   readonly weekStart: Date;
