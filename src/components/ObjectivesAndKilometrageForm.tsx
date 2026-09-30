@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { updateObjectivesAndKilometrage } from "@/actions/objectivesAndKilometrage";
 import { Button } from "@/components/ui/button";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatTimeDisplay } from "@/lib/time";
 import { useRouter } from "next/navigation";
@@ -48,72 +49,87 @@ export function ObjectivesAndKilometrageForm({
   }, [state]);
 
   return (
-    <form
-      action={action}
-      className="bg-card grid h-fit w-full grid-cols-[1fr_auto] items-center gap-x-2 gap-y-1.5 rounded-lg border-2 p-2.5"
-    >
-      <Input type="hidden" name="employeeId" value={employeeId} />
-      <Input type="hidden" name="weekStart" value={weekStart.toString()} />
-
-      <h2 className="text-lg font-bold">Objectifs</h2>
-      <Input
-        id="objective"
-        type="text"
-        name="objective"
-        aria-label="Objectif"
-        defaultValue={formatTimeDisplay(currentObjective)}
-        placeholder="Ex: 36.75 ou 36h 45m"
-        disabled={pending || !!disabled}
-        className="w-24 rounded-sm border-2 text-end text-xs"
-      />
-
-      <div className="col-span-2">
-        <FormValidationAlerts errors={state?.errors} />
+    <div className="bg-card rounded-lg border-2 p-2.5">
+      <div className="border-primary mb-2 border-b-2 pb-1 text-center text-xs font-bold">
+        Objectifs
       </div>
-
-      <span className="text-muted-foreground text-xs">semaine</span>
-      <span className="px-3 text-right text-xs font-bold">
-        {formatTimeDisplay(weekly)}
-      </span>
-
-      <span className="text-muted-foreground text-xs">différence</span>
-      <span
-        className={`px-3 text-right text-xs font-bold ${isDifferencePositive ? "text-punch-pos-diff" : "text-punch-neg-diff"}`}
-      >
-        {isDifferencePositive ? "+" : ""}
-        {formatTimeDisplay(Math.abs(hoursDifference))}
-      </span>
-
-      <label htmlFor="kilometrage" className="text-xs">
-        Kilométrage
-      </label>
-      <Input
-        id="kilometrage"
-        type="number"
-        name="kilometrage"
-        defaultValue={currentKilometrage}
-        min="0"
-        step="1"
-        placeholder="Kilomètres"
-        disabled={pending || !!disabled}
-        className="w-24 rounded-sm border-2 text-end text-xs"
-      />
-
-      <Button
-        type="reset"
-        variant="link"
-        size="sm"
-        disabled={pending || !!disabled}
-      >
-        Annuler
-      </Button>
-      <Button
-        type="submit"
-        disabled={pending || !!disabled}
-        className="rounded-sm font-bold uppercase"
-      >
-        Sauver
-      </Button>
-    </form>
+      <form action={action} className="space-y-2.5">
+        <input type="hidden" name="employeeId" value={employeeId} />
+        <input type="hidden" name="weekStart" value={weekStart.toString()} />
+        <FormValidationAlerts errors={state?.errors} />
+        <Field>
+          <FieldLabel
+            htmlFor="objective"
+            className="mb-1 block text-xs font-semibold uppercase"
+          >
+            Objectif
+          </FieldLabel>
+          <Input
+            id="objective"
+            type="text"
+            name="objective"
+            defaultValue={formatTimeDisplay(currentObjective)}
+            placeholder="Ex: 36.75 ou 36h 45m"
+            disabled={pending || !!disabled}
+            className="w-full rounded border-2 px-1.5 py-1 text-xs"
+          />
+        </Field>
+        <div className="border-primary bg-muted space-y-1 rounded border-l-4 p-2">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground text-xs uppercase">
+              Semaine
+            </span>
+            <span className="text-sm font-bold">
+              {formatTimeDisplay(weekly)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground text-xs uppercase">
+              Différence
+            </span>
+            <span
+              className={`text-sm font-bold ${isDifferencePositive ? "text-punch-pos-diff" : "text-punch-neg-diff"}`}
+            >
+              {isDifferencePositive ? "+" : ""}
+              {formatTimeDisplay(Math.abs(hoursDifference))}
+            </span>
+          </div>
+        </div>
+        <Field>
+          <FieldLabel
+            htmlFor="kilometrage"
+            className="mb-1 block text-xs font-semibold uppercase"
+          >
+            Kilométrage
+          </FieldLabel>
+          <Input
+            id="kilometrage"
+            type="number"
+            name="kilometrage"
+            defaultValue={currentKilometrage}
+            min="0"
+            step="1"
+            placeholder="Kilomètres"
+            disabled={pending || !!disabled}
+            className="w-full rounded border-2 px-1.5 py-1 text-xs"
+          />
+        </Field>
+        <Button
+          type="submit"
+          disabled={pending || !!disabled}
+          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
+        >
+          Sauver
+        </Button>
+        <Button
+          type="reset"
+          variant="secondary"
+          disabled={pending || !!disabled}
+          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
+        >
+          Annuler
+        </Button>
+      </form>
+    </div>
   );
 }

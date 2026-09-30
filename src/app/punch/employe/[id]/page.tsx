@@ -141,7 +141,7 @@ export default async function EmployeePage({
             weekFrozen={weekFrozen}
           />
         </div>
-        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[3fr_1fr]">
+        <div className="grid grid-cols-1 gap-2.5">
           <div>
             <div className="bg-card flex h-full flex-col rounded-lg border-2">
               {/* Week Grid */}
@@ -221,7 +221,8 @@ export default async function EmployeePage({
               </div>
             </div>
           </div>
-
+        </div>
+        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
           <ObjectivesAndKilometrageForm
             employeeId={employeeId}
             weekStart={weekStart}
@@ -231,8 +232,6 @@ export default async function EmployeePage({
             hoursDifference={hoursDifference}
             disabled={disabledReason}
           />
-        </div>
-        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
           <ManualTimeForm
             employeeId={employeeId}
             dateOptions={dateOptions}
