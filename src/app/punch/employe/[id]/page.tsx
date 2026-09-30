@@ -18,6 +18,7 @@ import {
 } from "@/lib/employee-week";
 import { formatTimeDisplay, isSameDay } from "@/lib/time";
 import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
+import { FreezeForm } from "@/components/FreezeForm";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
 import { PageContextProvider } from "./context-provider";
 
@@ -131,10 +132,19 @@ export default async function EmployeePage({
       projectsPromise={projectsPromise}
       tasksPromise={tasksPromise}
     >
-      <div className="flex flex-1 flex-col gap-2.5 p-1.5">
-        <h1 className="ml-1 text-2xl font-bold tracking-tight">
-          {employee.name}
-        </h1>
+      <div className="relative flex flex-1 flex-col gap-2.5 p-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="ml-1 text-2xl font-bold tracking-tight">
+            {employee.name}
+          </h1>
+          <FreezeForm
+            employeeId={employee.id}
+            weekStart={weekStart}
+            weekTotal={weekly}
+            objective={objective}
+            weekFrozen={weekFrozen}
+          />
+        </div>
         <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[180px_1fr_180px]">
           <aside className="bg-card w-full rounded-lg border-2 p-2.5">
             <h2 className="border-primary mb-2 border-b-2 pb-1 text-center text-sm font-bold">

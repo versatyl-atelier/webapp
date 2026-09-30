@@ -9,8 +9,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { CollapsedCrumbs } from "@/components/CollapsedCrumbs";
 import { resolveCrumbs } from "@/lib/breadcrumbs";
 import { CRUMB_ROUTES } from "@/lib/breadcrumb-routes";
+
+const ITEM_CLASS = "min-w-0";
+const COLLAPSIBLE_ITEM_CLASS = "hidden @3xl/toolbar:inline-flex min-w-0";
+const COLLAPSIBLE_SEPARATOR_CLASS = "hidden @3xl/toolbar:block";
 
 type AppBreadcrumbProps = {
   segments: string[];
@@ -26,24 +31,42 @@ export async function AppBreadcrumb({
     return null;
   }
   const lastIndex = children ? crumbs.length : crumbs.length - 1;
+  const collapsedCrumbs = crumbs.slice(0, -1);
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList className="text-foreground">
-        {crumbs.map(({ href, label }, index) => (
-          <Fragment key={href}>
-            {index !== 0 && <BreadcrumbSeparator />}
-            <BreadcrumbItem>
-              {index === lastIndex ? (
-                <BreadcrumbPage className="font-bold">{label}</BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink asChild>
-                  <Link href={href}>{label}</Link>
-                </BreadcrumbLink>
+    <Breadcrumb className="min-w-0">
+      <BreadcrumbList className="text-foreground flex-nowrap">
+        {collapsedCrumbs.length > 0 && (
+          <>
+            <CollapsedCrumbs crumbs={collapsedCrumbs} />
+            <BreadcrumbSeparator className="@3xl/toolbar:hidden" />
+          </>
+        )}
+        {crumbs.map(({ href, label }, index) => {
+          const collapsible = index < crumbs.length - 1;
+          return (
+            <Fragment key={href}>
+              {index !== 0 && (
+                <BreadcrumbSeparator className={COLLAPSIBLE_SEPARATOR_CLASS} />
               )}
-            </BreadcrumbItem>
-          </Fragment>
-        ))}
+              <BreadcrumbItem
+                className={collapsible ? COLLAPSIBLE_ITEM_CLASS : ITEM_CLASS}
+              >
+                {index === lastIndex ? (
+                  <BreadcrumbPage className="truncate font-bold" title={label}>
+                    {label}
+                  </BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild className="truncate">
+                    <Link href={href} title={label}>
+                      {label}
+                    </Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
+          );
+        })}
         {children && (
           <>
             <BreadcrumbSeparator />

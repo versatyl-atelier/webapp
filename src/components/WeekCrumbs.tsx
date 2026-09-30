@@ -15,7 +15,7 @@ import { addDays, formatWeekLabel, type DateKey } from "@/lib/calendar";
 
 type WeekCrumbsProps = {
   weekStart: DateKey;
-  todayWeekStart: DateKey;
+  todayWeekStart?: DateKey;
   weekPath: (weekStart: DateKey) => string;
   minWeekStart?: DateKey;
   maxWeekStart?: DateKey;
@@ -36,16 +36,34 @@ function WeekNavButton({
 }: WeekNavButtonProps) {
   if (disabled) {
     return (
-      <Button variant="ghost" size="icon-xs" disabled aria-label={label}>
+      <Button variant="secondary" size="icon-xs" disabled aria-label={label}>
         {children}
       </Button>
     );
   }
   return (
-    <Button asChild variant="ghost" size="icon-xs">
+    <Button asChild variant="secondary" size="icon-xs">
       <Link href={href} aria-label={label} title={label}>
         {children}
       </Link>
+    </Button>
+  );
+}
+
+type TodayWeekButtonProps = {
+  todayWeekStart: DateKey;
+  weekPath: (weekStart: DateKey) => string;
+  className?: string;
+};
+
+export function TodayWeekButton({
+  todayWeekStart,
+  weekPath,
+  className,
+}: TodayWeekButtonProps) {
+  return (
+    <Button asChild variant="outline" size="xs" className={className}>
+      <Link href={weekPath(todayWeekStart)}>{TODAY_LABEL}</Link>
     </Button>
   );
 }
@@ -62,7 +80,11 @@ export function WeekCrumbs({
 
   return (
     <>
-      <BreadcrumbItem role="group" aria-label={WEEK_NAV_LABEL}>
+      <BreadcrumbItem
+        role="group"
+        aria-label={WEEK_NAV_LABEL}
+        className="shrink-0"
+      >
         <BreadcrumbPage className="font-bold">
           {formatWeekLabel(weekStart)}
         </BreadcrumbPage>
@@ -80,9 +102,12 @@ export function WeekCrumbs({
         >
           <ChevronRight />
         </WeekNavButton>
-        <Button asChild variant="outline" size="xs">
-          <Link href={weekPath(todayWeekStart)}>{TODAY_LABEL}</Link>
-        </Button>
+        {todayWeekStart && (
+          <TodayWeekButton
+            todayWeekStart={todayWeekStart}
+            weekPath={weekPath}
+          />
+        )}
       </BreadcrumbItem>
     </>
   );

@@ -20,11 +20,11 @@ export function ToolLayout({ sidebar, breadcrumb, children }: ToolLayoutProps) {
       {sidebar}
       <SidebarInset className="bg-muted min-h-0">
         <div className="flex min-h-0 w-full min-w-md flex-1 flex-col">
-          <div className="bg-sidebar border-sidebar-accent h-toolbar shadow-background/50 relative z-10 flex shrink-0 flex-row items-center gap-2 border-b shadow-sm">
+          <div className="bg-sidebar border-sidebar-accent h-toolbar shadow-background/50 @container/toolbar relative z-10 flex shrink-0 flex-row items-center gap-2 border-b shadow-sm">
             <SidebarTrigger size="icon-lg" />
             <SidebarSeparator
               orientation="vertical"
-              className="mt-3 data-[orientation=vertical]:h-4"
+              className="mt-3 hidden data-[orientation=vertical]:h-4 @3xl/toolbar:block"
             />
             {breadcrumb}
           </div>

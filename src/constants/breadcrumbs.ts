@@ -11,6 +11,8 @@ export const CALENDAR_DATE_PARAM = "date";
 export const CALENDAR_EVENT_CRUMB_PATTERN = "/calendrier/evenements/[id]";
 export const CALENDAR_EVENT_ID_PARAM = "id";
 
+export const COLLAPSED_CRUMBS_LABEL = "Afficher les niveaux précédents";
+
 export const STATIC_CRUMB_LABELS: Record<string, string> = {
   "/calendrier": "Calendrier",
   "/calendrier/evenements": "Événements",

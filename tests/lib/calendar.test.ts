@@ -270,7 +270,8 @@ describe("formatting", () => {
   it("formats labels in Québec French", () => {
     expect(formatDayLabel("2026-07-14")).toBe("mardi 14 juillet 2026");
     expect(formatWeekMonthLabel("2026-06-29")).toBe("juillet 2026");
-    expect(formatWeekLabel("2026-09-28")).toBe("Semaine du 28 septembre");
+    expect(formatWeekLabel("2026-09-28")).toMatch(/^28 sept\.?-4 oct\.?$/);
+    expect(formatWeekLabel("2026-09-14")).toMatch(/^14-20 sept\.?$/);
     expect(formatDayNumber("2026-07-14")).toBe("14");
     expect(formatDayNumber("2026-07-01")).toMatch(/^1 juil/);
     expect(ordinal(1)).toBe("1er");
