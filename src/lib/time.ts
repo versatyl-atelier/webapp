@@ -73,7 +73,7 @@ export function formatTimeDisplay(decimal: number): string {
     minutes = 0;
   }
 
-  return `${hours}h ${minutes}m`;
+  return `${hours.toString().padStart(2, "0")}h ${minutes.toString().padStart(2, "0")}m`;
 }
 export function getWeek(monday: Date) {
   const sunday = new Date(monday);

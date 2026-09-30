@@ -79,19 +79,9 @@ export default async function EmployeePage({
   } = await getEmployeeWeek(employee, weekStartKey);
 
   const today = new Date();
-  const todayStr = today.toString().split("T")[0];
-  const todayEntries = timeEntries.filter(
-    (timeEntry) =>
-      new Date(timeEntry.start).toString().split("T")[0] === todayStr,
-  );
-  const daily = todayEntries.reduce(
-    (sum: number, entry) => sum + calculateHours(entry),
-    0,
-  );
 
   const hoursDifference =
     weekly - (employee.weeklyTarget || DEFAULT_WEEKLY_TARGET);
-  const isDifferencePosive = hoursDifference >= 0;
 
   const daysData: DayData[] = [];
   for (let i = 0; i < 7; i++) {
@@ -156,43 +146,7 @@ export default async function EmployeePage({
             weekFrozen={weekFrozen}
           />
         </div>
-        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[180px_1fr_180px]">
-          <aside className="bg-card w-full rounded-lg border-2 p-2.5">
-            <h2 className="border-primary mb-2 border-b-2 pb-1 text-center text-sm font-bold">
-              Résumé
-            </h2>
-
-            <div className="space-y-1.5">
-              {/* Weekly Hours */}
-              <div className="border-primary bg-muted rounded border-l-4 p-2">
-                <div className="text-lg font-bold">
-                  {formatTimeDisplay(weekly)}
-                </div>
-                <div className="text-xs uppercase">Heures Semaine</div>
-              </div>
-
-              {/* Daily Hours */}
-              <div className="border-primary bg-muted rounded border-l-4 p-2">
-                <div className="text-lg font-bold">
-                  {formatTimeDisplay(daily)}
-                </div>
-                <div className="text-xs uppercase">Heures Aujourd'hui</div>
-              </div>
-
-              {/* Difference */}
-              <div className="border-primary bg-muted rounded border-l-4 p-2">
-                <div
-                  className={`text-lg font-bold ${isDifferencePosive ? "text-punch-pos-diff" : "text-punch-neg-diff"}`}
-                >
-                  {isDifferencePosive ? "+" : ""}
-                  {formatTimeDisplay(Math.abs(hoursDifference))}
-                </div>
-                <div className="text-muted-foreground text-xs uppercase">
-                  Différence
-                </div>
-              </div>
-            </div>
-          </aside>
+        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[3fr_1fr]">
           <div>
             <div className="bg-card flex h-full flex-col rounded-lg border-2">
               {/* Week Grid */}
@@ -268,6 +222,8 @@ export default async function EmployeePage({
             weekStart={weekStart}
             currentObjective={objective}
             currentKilometrage={weeklyKilometrage?.kilometrage ?? 0}
+            weekly={weekly}
+            hoursDifference={hoursDifference}
             disabled={disabledReason}
           />
         </div>

@@ -15,6 +15,8 @@ export type ObjectivesAndKilometrageFormProps = {
   weekStart: Date;
   currentObjective: number;
   currentKilometrage?: number;
+  weekly: number;
+  hoursDifference: number;
   disabled?: string;
 };
 
@@ -23,6 +25,8 @@ export function ObjectivesAndKilometrageForm({
   weekStart,
   currentObjective,
   currentKilometrage = 0,
+  weekly,
+  hoursDifference,
   disabled,
 }: ObjectivesAndKilometrageFormProps) {
   const router = useRouter();
@@ -30,6 +34,7 @@ export function ObjectivesAndKilometrageForm({
     updateObjectivesAndKilometrage,
     undefined,
   );
+  const isDifferencePositive = hoursDifference >= 0;
 
   useEffect(() => {
     if (state?.message === "Objectif et kilométrage sauvegardés!") {
@@ -43,56 +48,72 @@ export function ObjectivesAndKilometrageForm({
   }, [state]);
 
   return (
-    <div className="bg-card w-full rounded-lg border-2 p-2.5">
-      <form
-        action={action}
-        className="bg-muted space-y-3 rounded-sm border-2 border-dashed p-2"
-      >
-        <Input type="hidden" name="employeeId" value={employeeId} />
-        <Input type="hidden" name="weekStart" value={weekStart.toString()} />
+    <form
+      action={action}
+      className="bg-card grid h-fit w-full grid-cols-[1fr_auto] items-center gap-x-2 gap-y-1.5 rounded-lg border-2 p-2.5"
+    >
+      <Input type="hidden" name="employeeId" value={employeeId} />
+      <Input type="hidden" name="weekStart" value={weekStart.toString()} />
 
+      <h2 className="text-lg font-bold">Objectifs</h2>
+      <Input
+        id="objective"
+        type="text"
+        name="objective"
+        aria-label="Objectif"
+        defaultValue={formatTimeDisplay(currentObjective)}
+        placeholder="Ex: 36.75 ou 36h 45m"
+        disabled={pending || !!disabled}
+        className="w-24 rounded-sm border-2 text-end text-xs"
+      />
+
+      <div className="col-span-2">
         <FormValidationAlerts errors={state?.errors} />
+      </div>
 
-        <div className="space-y-2">
-          <div>
-            <label className="mb-3 block text-center text-xs font-bold">
-              Objectif
-            </label>
-            <Input
-              type="text"
-              name="objective"
-              defaultValue={formatTimeDisplay(currentObjective)}
-              placeholder="Ex: 36.75 ou 36h 45m"
-              disabled={pending || !!disabled}
-              className="rounded-sm border-2 text-center text-xs"
-            />
-          </div>
+      <span className="text-muted-foreground text-xs">semaine</span>
+      <span className="px-3 text-right text-xs font-bold">
+        {formatTimeDisplay(weekly)}
+      </span>
 
-          <div>
-            <label className="mb-3 block text-center text-xs font-bold">
-              Kilométrage
-            </label>
-            <Input
-              type="number"
-              name="kilometrage"
-              defaultValue={currentKilometrage}
-              min="0"
-              step="1"
-              placeholder="Kilomètres"
-              disabled={pending || !!disabled}
-              className="rounded-sm border-2 text-center text-xs"
-            />
-          </div>
-        </div>
+      <span className="text-muted-foreground text-xs">différence</span>
+      <span
+        className={`px-3 text-right text-xs font-bold ${isDifferencePositive ? "text-punch-pos-diff" : "text-punch-neg-diff"}`}
+      >
+        {isDifferencePositive ? "+" : ""}
+        {formatTimeDisplay(Math.abs(hoursDifference))}
+      </span>
 
-        <Button
-          type="submit"
-          disabled={pending || !!disabled}
-          className="w-full rounded-sm font-bold uppercase"
-        >
-          Sauver
-        </Button>
-      </form>
-    </div>
+      <label htmlFor="kilometrage" className="text-xs">
+        Kilométrage
+      </label>
+      <Input
+        id="kilometrage"
+        type="number"
+        name="kilometrage"
+        defaultValue={currentKilometrage}
+        min="0"
+        step="1"
+        placeholder="Kilomètres"
+        disabled={pending || !!disabled}
+        className="w-24 rounded-sm border-2 text-end text-xs"
+      />
+
+      <Button
+        type="reset"
+        variant="link"
+        size="sm"
+        disabled={pending || !!disabled}
+      >
+        Annuler
+      </Button>
+      <Button
+        type="submit"
+        disabled={pending || !!disabled}
+        className="rounded-sm font-bold uppercase"
+      >
+        Sauver
+      </Button>
+    </form>
   );
 }
