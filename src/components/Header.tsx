@@ -1,8 +1,17 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { SearchShortcutHint } from "@/components/SearchShortcutHint";
+import { SearchShortcut } from "@/components/SearchShortcut";
 import { LoginButton } from "@/components/Login";
 import { LogoutForm } from "@/components/Logout";
 import { getSession } from "@/lib/session";
-import { APP_NAME, HOME_PATH } from "@/constants/tools";
+import { Search } from "lucide-react";
+import {
+  APP_NAME,
+  HEADER_SEARCH_LABEL,
+  HOME_PATH,
+  SEARCH_PATH,
+} from "@/constants/tools";
 import {
   InputGroup,
   InputGroupAddon,
@@ -17,11 +26,30 @@ export async function Header() {
         <h1 className="inline-block font-bold">
           <Link href={HOME_PATH}>{APP_NAME}</Link>
         </h1>
-        <InputGroup>
-          <InputGroupInput placeholder="Rechercher" />
-          <InputGroupAddon align="inline-end">Ctrl K</InputGroupAddon>
-        </InputGroup>
+        <Button asChild variant="ghost" size="icon" className="sm:hidden">
+          <Link href={SEARCH_PATH} aria-label={HEADER_SEARCH_LABEL}>
+            <Search />
+          </Link>
+        </Button>
+        <Link
+          href={SEARCH_PATH}
+          aria-label={HEADER_SEARCH_LABEL}
+          className="hidden sm:block"
+        >
+          <InputGroup>
+            <InputGroupInput
+              readOnly
+              tabIndex={-1}
+              placeholder={HEADER_SEARCH_LABEL}
+              className="cursor-pointer"
+            />
+            <InputGroupAddon align="inline-end">
+              <SearchShortcutHint />
+            </InputGroupAddon>
+          </InputGroup>
+        </Link>
       </div>
+      <SearchShortcut />
       <div className="my-auto flex items-center gap-2">
         {session ? <LogoutForm name={session.name} /> : <LoginButton />}
       </div>

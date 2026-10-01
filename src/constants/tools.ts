@@ -10,6 +10,13 @@ export type Tool = {
 export const HOME_PATH = "/";
 export const HOME_LABEL = "Accueil";
 export const APP_NAME = "Versatyl";
+export const HEADER_SEARCH_LABEL = "Rechercher";
+export const SEARCH_PATH = "/recherche";
+export const SEARCH_SHORTCUT_KEY = "k";
+export const SEARCH_SHORTCUT_HINT_DEFAULT = "Ctrl K";
+export const SEARCH_SHORTCUT_HINT_APPLE = "⌘ K";
+export const APPLE_PLATFORM_PATTERN = /mac|iphone|ipad|ipod/i;
+export const SEARCH_COMING_SOON = "Fonction à venir";
 
 export const TOOLS: Tool[] = [
   {

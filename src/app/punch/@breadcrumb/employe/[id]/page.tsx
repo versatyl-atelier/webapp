@@ -49,6 +49,7 @@ export default async function EmployeBreadcrumb({
         />
       </AppBreadcrumb>
       <TodayWeekButton
+        weekStart={weekStartKey}
         todayWeekStart={todayWeekStart}
         weekPath={weekPath}
         className="md:ml-auto"

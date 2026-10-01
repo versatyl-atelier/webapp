@@ -12,6 +12,7 @@ import {
   WEEK_NAV_LABEL,
 } from "@/constants/calendar";
 import { addDays, formatWeekLabel, type DateKey } from "@/lib/calendar";
+import { cn } from "@/lib/utils";
 
 type WeekCrumbsProps = {
   weekStart: DateKey;
@@ -51,19 +52,33 @@ function WeekNavButton({
 }
 
 type TodayWeekButtonProps = {
+  weekStart: DateKey;
   todayWeekStart: DateKey;
   weekPath: (weekStart: DateKey) => string;
   className?: string;
 };
 
 export function TodayWeekButton({
+  weekStart,
   todayWeekStart,
   weekPath,
   className,
 }: TodayWeekButtonProps) {
+  const isCurrentWeek = weekStart === todayWeekStart;
   return (
-    <Button asChild variant="outline" size="xs" className={className}>
-      <Link href={weekPath(todayWeekStart)}>{TODAY_LABEL}</Link>
+    <Button
+      asChild
+      variant="outline"
+      size="xs"
+      className={cn(
+        "transition-opacity",
+        className,
+        isCurrentWeek ? "pointer-events-none opacity-0" : null,
+      )}
+    >
+      <Link href={weekPath(todayWeekStart)} inert={isCurrentWeek}>
+        {TODAY_LABEL}
+      </Link>
     </Button>
   );
 }
@@ -104,6 +119,7 @@ export function WeekCrumbs({
         </WeekNavButton>
         {todayWeekStart && (
           <TodayWeekButton
+            weekStart={weekStart}
             todayWeekStart={todayWeekStart}
             weekPath={weekPath}
           />
