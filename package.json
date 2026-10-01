@@ -22,7 +22,7 @@
     "db:import-trello-events": "tsx --conditions=react-server prisma/importTrelloEvents.ts",
     "db:studio": "prisma studio",
     "db:re-port-from-scratch": "npm run db:validate && npm run db:format && npm run db:generate && npm run db:deleteMigrations && npm run db:reset -- --force && npm run db:migrate -- --name initial",
-    "build": "next build",
+    "build": "npm run db:deploy && next build",
     "start": "next start",
     "with-remote-db": "cross-env NODE_OPTIONS=\"-r dotenv/config\" DOTENV_CONFIG_PATH=.env.remote",
     "db:reset:remote": "npm run with-remote-db -- npm run db:reset",
