@@ -38,6 +38,7 @@ export const CalendarEventFormSchema = Schema.Struct({
     }),
   ),
   color: Schema.Enums(CalendarEventColor),
+  projectId: Schema.String,
   repeats: Schema.optional(Schema.Literal(REPEATS_VALUE)),
   frequency: Schema.Enums(RecurrenceFrequency),
   interval: IntFromFormSchema.pipe(
@@ -62,6 +63,7 @@ export type CalendarEventFormErrors = {
   date?: string[];
   hour?: string[];
   color?: string[];
+  projectId?: string[];
   repeats?: string[];
   frequency?: string[];
   interval?: string[];

@@ -16,8 +16,10 @@ import {
   deletePieceEffect,
   getAllProjectsEffect,
   getFicheSuggestionsEffect,
+  getPipelineProjectsEffect,
   getProjectEffect,
   getProjectsEffect,
+  getUpcomingDeliveriesEffect,
   movePieceEffect,
   renamePhaseEffect,
   saveProjectContactsEffect,
@@ -45,6 +47,14 @@ export const getAllProjects = cachedGetter(getAllProjectsEffect, [
 export const getProject = cachedGetter(getProjectEffect, [Role.employee]);
 
 export const getFicheSuggestions = cachedGetter(getFicheSuggestionsEffect, [
+  Role.employee,
+]);
+
+export const getPipelineProjects = cachedGetter(getPipelineProjectsEffect, [
+  Role.employee,
+]);
+
+export const getUpcomingDeliveries = cachedGetter(getUpcomingDeliveriesEffect, [
   Role.employee,
 ]);
 

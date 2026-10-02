@@ -8,6 +8,7 @@ export type Tool = {
 };
 
 export const HOME_PATH = "/";
+export const LANCEUR_PATH = "/lanceur-de-dates";
 export const HOME_LABEL = "Accueil";
 export const APP_NAME = "Versatyl";
 export const HEADER_SEARCH_LABEL = "Rechercher";
@@ -33,7 +34,7 @@ export const TOOLS: Tool[] = [
     description: "Timesheet atelier",
   },
   {
-    href: "/lanceur-de-dates",
+    href: LANCEUR_PATH,
     icon: "📅",
     title: "Lanceur",
     description: "Planification production",

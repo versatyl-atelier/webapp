@@ -44,6 +44,7 @@ export type CalendarEventRecord = {
   endType: RecurrenceEnd;
   endDate: DateKey | null;
   endCount: number | null;
+  projectId: string | null;
 };
 
 export type CalendarOccurrence = {
@@ -69,6 +70,8 @@ export type CalendarWeek = {
   start: DateKey;
   days: CalendarDay[];
 };
+
+export type LinkableProject = { id: string; name: string; color: string };
 
 export type EventTemplate = Pick<
   CalendarEventRecord,
@@ -110,6 +113,12 @@ const monthLabelFormatter = new Intl.DateTimeFormat(CALENDAR_LOCALE, {
 const shortMonthFormatter = new Intl.DateTimeFormat(CALENDAR_LOCALE, {
   timeZone: "UTC",
   month: "short",
+});
+
+const dayMonthFormatter = new Intl.DateTimeFormat(CALENDAR_LOCALE, {
+  timeZone: "UTC",
+  day: "numeric",
+  month: "long",
 });
 
 function fromDateKey(date: DateKey): Date {
@@ -384,6 +393,10 @@ export function formatDayLabel(date: DateKey): string {
   return dayLabelFormatter.format(fromDateKey(date));
 }
 
+export function formatDayMonth(date: DateKey): string {
+  return dayMonthFormatter.format(fromDateKey(date));
+}
+
 export function formatWeekMonthLabel(weekStart: DateKey): string {
   return monthLabelFormatter.format(
     fromDateKey(addDays(weekStart, THURSDAY_INDEX)),
@@ -507,4 +520,13 @@ export function isOneOf<T extends string>(
   value: string,
 ): value is T {
   return (values as readonly string[]).includes(value);
+}
+
+export function linkableProjects(
+  projects: readonly (LinkableProject & { isDeleted: boolean })[],
+  linkedProjectId: string | null,
+): LinkableProject[] {
+  return projects.flatMap(({ id, name, color, isDeleted }) =>
+    !isDeleted || id === linkedProjectId ? [{ id, name, color }] : [],
+  );
 }

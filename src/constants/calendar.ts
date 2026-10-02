@@ -66,14 +66,18 @@ export const LANCEUR_EVENT_TYPES: readonly CalendarEventType[] = [
 ];
 
 export const EVENT_COLOR_BG_CLASSES: Record<CalendarEventColor, string> = {
-  blue: "bg-blue-700",
-  teal: "bg-teal-700",
-  purple: "bg-violet-700",
-  orange: "bg-orange-700",
-  pink: "bg-pink-700",
-  indigo: "bg-indigo-700",
-  lime: "bg-lime-700",
-  amber: "bg-amber-700",
+  blue: "bg-blue-700 dark:bg-blue-700 data-checked:bg-blue-700 dark:data-checked:bg-blue-700",
+  teal: "bg-teal-700 dark:bg-teal-700 data-checked:bg-teal-700 dark:data-checked:bg-teal-700",
+  purple:
+    "bg-violet-700 dark:bg-violet-700 data-checked:bg-violet-700 dark:data-checked:bg-violet-700",
+  orange:
+    "bg-orange-700 dark:bg-orange-700 data-checked:bg-orange-700 dark:data-checked:bg-orange-700",
+  pink: "bg-pink-700 dark:bg-pink-700 data-checked:bg-pink-700 dark:data-checked:bg-pink-700",
+  indigo:
+    "bg-indigo-700 dark:bg-indigo-700 data-checked:bg-indigo-700 dark:data-checked:bg-indigo-700",
+  lime: "bg-lime-700 dark:bg-lime-700 data-checked:bg-lime-700 dark:data-checked:bg-lime-700",
+  amber:
+    "bg-amber-700 dark:bg-amber-700 data-checked:bg-amber-700 dark:data-checked:bg-amber-700",
 };
 
 export const EVENT_COLOR_LABELS: Record<CalendarEventColor, string> = {
@@ -153,6 +157,10 @@ export const PROJECT_SEARCH_PLACEHOLDER =
 export const PROJECT_SEARCH_HINT =
   "Reprend le titre et la couleur d'un événement existant. Sinon, remplis les champs ci-dessous.";
 export const PROJECT_SEARCH_EMPTY = "Aucun projet trouvé";
+export const LINKED_PROJECT_LABEL = "Projet lié (optionnel)";
+export const LINKED_PROJECT_PLACEHOLDER = "Aucun projet";
+export const LINKED_PROJECT_HINT =
+  "Les employés voient sur l'accueil les événements des projets auxquels ils ont accès.";
 export const TYPE_LABEL = "Type";
 export const LANCEUR_NOTE =
   "Normalement généré automatiquement par le Lanceur — à utiliser seulement pour un cas particulier.";

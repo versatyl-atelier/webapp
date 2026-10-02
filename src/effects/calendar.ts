@@ -5,7 +5,10 @@ import {
   EVENT_NOT_FOUND_MESSAGE,
   EVENT_SAVED_MESSAGE,
 } from "@/constants/calendar";
+import { getActiveSession } from "@/effects/auth";
+import { accessibleProjectsWhere } from "@/effects/projects";
 import type { PrismaService } from "@/generated/effect-prisma";
+import { Role } from "@/generated/prisma/enums";
 import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
 import type { CalendarEventWhereInput } from "@/generated/prisma/models";
 import {
@@ -37,6 +40,37 @@ export const getCalendarOccurrencesEffect = Effect.fn("getCalendarOccurrences")(
   function* (prisma: PrismaService, from: DateKey, to: DateKey) {
     const events = yield* prisma.calendarEvent.findMany({
       where: eventsInRange(from, to),
+    });
+    yield* Effect.annotateLogsScoped({
+      calendarFrom: from,
+      calendarTo: to,
+      calendarEvents: events.length,
+    });
+    return expandOccurrences(events.map(eventRecordFromDb), from, to);
+  },
+);
+
+const accessibleEventsWhere = Effect.fn("accessibleEventsWhere")(function* (
+  prisma: PrismaService,
+) {
+  const session = yield* getActiveSession();
+  if (session.role === Role.manager) {
+    return {} satisfies CalendarEventWhereInput;
+  }
+  const project = yield* accessibleProjectsWhere(prisma);
+  return project
+    ? ({ project: { is: project } } satisfies CalendarEventWhereInput)
+    : null;
+});
+
+export const getProjectOccurrencesEffect = Effect.fn("getProjectOccurrences")(
+  function* (prisma: PrismaService, from: DateKey, to: DateKey) {
+    const accessible = yield* accessibleEventsWhere(prisma);
+    if (!accessible) {
+      return [];
+    }
+    const events = yield* prisma.calendarEvent.findMany({
+      where: { AND: [eventsInRange(from, to), accessible] },
     });
     yield* Effect.annotateLogsScoped({
       calendarFrom: from,

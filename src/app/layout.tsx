@@ -39,7 +39,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="en"
+      lang="fr"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full font-sans antialiased`}
     >
@@ -49,9 +49,9 @@ export default async function RootLayout({
             <TooltipProvider>
               <SidebarProvider defaultOpen={isSidebarOpen} className="h-full">
                 <AppSidebar />
-                <SidebarInset className="min-h-0">
+                <SidebarInset className="min-h-0 min-w-0">
                   <Header />
-                  <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
                     {children}
                     <OutsideTools>
                       <Footer />

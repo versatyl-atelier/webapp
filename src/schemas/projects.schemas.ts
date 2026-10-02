@@ -6,8 +6,10 @@ import {
   INVALID_COLOR_MESSAGE,
   INVALID_CABINET_COUNT_MESSAGE,
   INVALID_EMAIL_MESSAGE,
+  NO_PROJECT_STAGE_VALUE,
   PROJECT_NAME_REQUIRED_MESSAGE,
 } from "@/constants/projects";
+import { ProjectStage } from "@/generated/prisma/enums";
 import { FormState } from "@/schemas/forms.schemas";
 
 const IdFromFormSchema = Schema.NumberFromString.pipe(Schema.int());
@@ -23,6 +25,14 @@ const EmptyAsNullSchema = Schema.Literal("").pipe(
 const OptionalIdFromFormSchema = Schema.Union(
   EmptyAsNullSchema,
   IdFromFormSchema,
+);
+
+const NoStageAsNullSchema = Schema.Literal(NO_PROJECT_STAGE_VALUE).pipe(
+  Schema.transform(Schema.Null, {
+    strict: true,
+    decode: () => null,
+    encode: () => NO_PROJECT_STAGE_VALUE,
+  }),
 );
 
 const EmailSchema = Schema.Trim.pipe(
@@ -44,6 +54,7 @@ export const ProjectHeaderFormSchema = Schema.Struct({
   name: Schema.Trim.pipe(
     Schema.minLength(1, { message: () => PROJECT_NAME_REQUIRED_MESSAGE }),
   ),
+  stage: Schema.Union(NoStageAsNullSchema, Schema.Enums(ProjectStage)),
   color: Schema.String.pipe(
     Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
   ),
@@ -55,6 +66,7 @@ export type ProjectHeaderFormData = typeof ProjectHeaderFormSchema.Type;
 export type ProjectHeaderFormErrors = {
   projectId?: string[];
   name?: string[];
+  stage?: string[];
   color?: string[];
   address?: string[];
   dataValidation?: string;

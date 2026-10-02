@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { saveProjectHeader } from "@/actions/projects";
 import { FieldErrors } from "@/components/FieldErrors";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -16,11 +17,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   CANCEL_LABEL,
   EDIT_LABEL,
+  NO_PROJECT_STAGE_LABEL,
+  NO_PROJECT_STAGE_VALUE,
   PROJECT_ADDRESS_LABEL,
   PROJECT_ADDRESS_PLACEHOLDER,
   PROJECT_COLOR_LABEL,
+  PROJECT_STAGE_LABEL,
+  PROJECT_STAGE_LABELS,
+  PROJECT_STAGES,
   PROJECT_TITLE_LABEL,
   PROJECT_TITLE_PLACEHOLDER,
   SAVE_LABEL,
@@ -35,13 +48,16 @@ import {
 import type { ProjectHeaderFormState } from "@/schemas/projects.schemas";
 
 type ProjectHeaderProps = {
-  project: Pick<ProjectFiche, "id" | "name" | "color" | "address">;
+  project: Pick<ProjectFiche, "id" | "name" | "stage" | "color" | "address">;
 };
 
 export function ProjectHeader({ project }: ProjectHeaderProps) {
   const formId = useId();
   const [editing, setEditing] = useState(false);
   const [color, setColor] = useState(project.color);
+  const [stage, setStage] = useState<string>(
+    project.stage ?? NO_PROJECT_STAGE_VALUE,
+  );
   const [state, action, saving] = useActionState(
     async (formState: ProjectHeaderFormState, formData: FormData) => {
       const next = await saveProjectHeader(formState, formData);
@@ -57,6 +73,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
 
   const startEditing = () => {
     setColor(project.color);
+    setStage(project.stage ?? NO_PROJECT_STAGE_VALUE);
     setEditing(true);
   };
 
@@ -77,6 +94,12 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
             <span className="sr-only">
               {PROJECT_COLOR_LABEL} : {projectColorLabel(project.color)}
             </span>
+            {project.stage && (
+              <Badge variant="secondary">
+                <span className="sr-only">{PROJECT_STAGE_LABEL} : </span>
+                {PROJECT_STAGE_LABELS[project.stage]}
+              </Badge>
+            )}
           </div>
           {project.address && (
             <p className="text-muted-foreground mt-1 text-sm">
@@ -100,6 +123,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
       <FormValidationAlerts errors={errors} />
       <input type="hidden" name="projectId" value={project.id} />
       <input type="hidden" name="color" value={color} />
+      <input type="hidden" name="stage" value={stage} />
       <Field>
         <FieldLabel htmlFor={`${formId}-name`}>
           {PROJECT_TITLE_LABEL}
@@ -113,6 +137,31 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
           className="h-10 text-lg font-semibold md:text-lg"
         />
         <FieldErrors errors={errors?.name} />
+      </Field>
+      <Field className="max-w-xs">
+        <FieldLabel htmlFor={`${formId}-stage`}>
+          {PROJECT_STAGE_LABEL}
+        </FieldLabel>
+        <Select value={stage} onValueChange={setStage}>
+          <SelectTrigger
+            id={`${formId}-stage`}
+            aria-invalid={!!errors?.stage}
+            className="w-full"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NO_PROJECT_STAGE_VALUE}>
+              {NO_PROJECT_STAGE_LABEL}
+            </SelectItem>
+            {PROJECT_STAGES.map((value) => (
+              <SelectItem key={value} value={value}>
+                {PROJECT_STAGE_LABELS[value]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldErrors errors={errors?.stage} />
       </Field>
       <FieldSet>
         <FieldLegend variant="label">{PROJECT_COLOR_LABEL}</FieldLegend>

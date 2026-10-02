@@ -63,11 +63,11 @@ describe("hoursToSeconds / secondsToHours", () => {
 
 describe("formatTimeDisplay", () => {
   it("formats a decimal number of hours", () => {
-    expect(formatTimeDisplay(2.5)).toBe("2h 30m");
+    expect(formatTimeDisplay(2.5)).toBe("02h 30m");
   });
 
   it("carries minutes into hours when rounding hits 60", () => {
-    expect(formatTimeDisplay(2.999)).toBe("3h 0m");
+    expect(formatTimeDisplay(2.999)).toBe("03h 00m");
   });
 
   it("falls back to 0h 0m for 0 or NaN", () => {

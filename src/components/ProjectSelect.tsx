@@ -23,6 +23,7 @@ import { usePageContext } from "@/app/punch/employe/[id]/context-provider";
 
 import { ProjectType } from "@/generated/prisma/enums";
 import { stringifyItemKey } from "@/lib/itemKey";
+import { projectColorLabel, projectColorStyle } from "@/lib/projects";
 
 export type ProjectOrTask = {
   id: string | number;
@@ -41,6 +42,7 @@ type Option = {
   key: string;
   type: ProjectType;
   name: string;
+  color: string;
 };
 type OptionGroup = {
   label: string;
@@ -75,10 +77,19 @@ export default function ProjectSelect({
 
   const toOption =
     (type: ProjectType) =>
-    ({ id, name }: { id: string | number; name: string }): Option => ({
+    ({
+      id,
+      name,
+      color,
+    }: {
+      id: string | number;
+      name: string;
+      color: string;
+    }): Option => ({
       key: stringifyItemKey({ type, id }),
       type,
       name,
+      color,
     });
   const groups: OptionGroup[] = [
     {
@@ -148,7 +159,14 @@ export default function ProjectSelect({
             {multiple ? (
               <ComboboxChips ref={chipsAnchor} className="rounded-xs border-2">
                 {selected.map((option) => (
-                  <ComboboxChip key={option.key}>{option.name}</ComboboxChip>
+                  <ComboboxChip
+                    key={option.key}
+                    title={projectColorLabel(option.color)}
+                    style={projectColorStyle(option.color)}
+                    className="border-l-4 border-l-(--project-color)"
+                  >
+                    {option.name}
+                  </ComboboxChip>
                 ))}
                 <ComboboxChipsInput
                   placeholder={`Rechercher jusqu\`à ${maxSelections} projets...`}
@@ -181,10 +199,12 @@ export default function ProjectSelect({
                       <ComboboxItem
                         key={option.key}
                         value={option}
+                        title={projectColorLabel(option.color)}
+                        style={projectColorStyle(option.color)}
                         className={
                           group.type === ProjectType.task
-                            ? "text-md border-l-primary cursor-pointer rounded-none border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1"
-                            : "text-md border-l-primary cursor-pointer rounded-none border-r-4 border-b border-l-4 px-2.5 py-2.5 transition-all hover:translate-x-1 hover:border-r-0"
+                            ? "text-md cursor-pointer rounded-none border-b border-l-4 border-l-(--project-color) px-2.5 py-2.5 transition-all hover:translate-x-1"
+                            : "text-md cursor-pointer rounded-none border-r-4 border-b border-l-4 border-l-(--project-color) px-2.5 py-2.5 transition-all hover:translate-x-1 hover:border-r-0"
                         }
                       >
                         {option.name}

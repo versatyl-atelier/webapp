@@ -1,8 +1,10 @@
 import { getCalendarOccurrences, getEventTemplates } from "@/actions/calendar";
+import { getAllProjects } from "@/actions/projects";
 import { CalendarEventForm } from "@/components/CalendarEventForm";
 import { CALENDAR_DATE_PARAM, NEW_EVENT_LABEL } from "@/constants/calendar";
 import {
   calendarWeekPath,
+  linkableProjects,
   mondayOf,
   newCalendarEventPath,
   parseDateParam,
@@ -22,9 +24,10 @@ export default async function Page({
     toLocalDateKey(new Date()),
   );
   await requireActiveSession(newCalendarEventPath(date));
-  const [templates, dayOccurrences] = await Promise.all([
+  const [templates, dayOccurrences, projects] = await Promise.all([
     getEventTemplates(),
     getCalendarOccurrences(date, date),
+    getAllProjects(),
   ]);
 
   return (
@@ -36,6 +39,7 @@ export default async function Page({
         initialDate={date}
         initialDayOccurrences={dayOccurrences}
         templates={templates}
+        projects={linkableProjects(projects, null)}
         cancelHref={calendarWeekPath(mondayOf(date))}
       />
     </div>

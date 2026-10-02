@@ -9,6 +9,7 @@ import {
   getCalendarEventEffect,
   getCalendarOccurrencesEffect,
   getEventTemplatesEffect,
+  getProjectOccurrencesEffect,
   saveCalendarEventEffect,
 } from "@/effects/calendar";
 import {
@@ -21,6 +22,10 @@ export const getCalendarOccurrences = cachedGetter(
   getCalendarOccurrencesEffect,
   [Role.employee],
 );
+
+export const getProjectOccurrences = cachedGetter(getProjectOccurrencesEffect, [
+  Role.employee,
+]);
 
 export const getCalendarEvent = cachedGetter(getCalendarEventEffect, [
   Role.manager,

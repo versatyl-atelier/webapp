@@ -5,9 +5,15 @@ import {
   getCalendarOccurrences,
   getEventTemplates,
 } from "@/actions/calendar";
+import { getAllProjects } from "@/actions/projects";
 import { CalendarEventForm } from "@/components/CalendarEventForm";
 import { EDIT_EVENT_LABEL } from "@/constants/calendar";
-import { calendarEventPath, calendarWeekPath, mondayOf } from "@/lib/calendar";
+import {
+  calendarEventPath,
+  calendarWeekPath,
+  linkableProjects,
+  mondayOf,
+} from "@/lib/calendar";
 import { requireActiveSession } from "@/lib/session";
 
 type CalendarEventPageProps = {
@@ -24,9 +30,10 @@ export default async function Page({ params }: CalendarEventPageProps) {
   if (!event) {
     notFound();
   }
-  const [templates, dayOccurrences] = await Promise.all([
+  const [templates, dayOccurrences, projects] = await Promise.all([
     getEventTemplates(),
     getCalendarOccurrences(event.date, event.date),
+    getAllProjects(),
   ]);
 
   return (
@@ -39,6 +46,7 @@ export default async function Page({ params }: CalendarEventPageProps) {
         initialDate={event.date}
         initialDayOccurrences={dayOccurrences}
         templates={templates}
+        projects={linkableProjects(projects, event.projectId)}
         cancelHref={calendarWeekPath(mondayOf(event.date))}
       />
     </div>

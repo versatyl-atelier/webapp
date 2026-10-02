@@ -1,7 +1,7 @@
 import type { PrismaService } from "@/generated/effect-prisma";
 import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
 import {
-  StatutSourcePermissionFindManyArgs,
+  StatutStagePermissionFindManyArgs,
   ProjectFindManyArgs,
   ProjectWhereInput,
 } from "@/generated/prisma/models";
@@ -16,6 +16,7 @@ import {
   PROJECT_SAVED_MESSAGE,
   RECENT_SUGGESTION_ROWS,
 } from "@/constants/projects";
+import { toDbDate, type DateKey } from "@/lib/calendar";
 import {
   buildSuggestions,
   isEmptyContact,
@@ -36,11 +37,11 @@ import {
   type ProjectHeaderFormState,
 } from "@/schemas/projects.schemas";
 
-const getAllowedSourceIds = Effect.fn("getAllowedSourceIds")(function* (
+const getAllowedStages = Effect.fn("getAllowedStages")(function* (
   prisma: PrismaService,
   employeeId: number,
 ) {
-  const opts: StatutSourcePermissionFindManyArgs = {
+  const opts: StatutStagePermissionFindManyArgs = {
     where: {
       statut: {
         employees: {
@@ -51,11 +52,11 @@ const getAllowedSourceIds = Effect.fn("getAllowedSourceIds")(function* (
       },
     },
     select: {
-      sourceId: true,
+      stage: true,
     },
   };
-  return (yield* prisma.statutSourcePermission.findMany(opts)).map(
-    ({ sourceId }) => sourceId,
+  return (yield* prisma.statutStagePermission.findMany(opts)).map(
+    ({ stage }) => stage,
   );
 });
 
@@ -64,14 +65,14 @@ export const getProjectsEffect = Effect.fn("getProjects")(function* (
   employeeId: number,
 ) {
   yield* assertEmployeeAccess(employeeId);
-  const allowedSources = yield* getAllowedSourceIds(prisma, employeeId);
-  if (allowedSources.length === 0) {
+  const allowedStages = yield* getAllowedStages(prisma, employeeId);
+  if (allowedStages.length === 0) {
     return [];
   }
   const args: ProjectFindManyArgs = {
     where: {
-      sourceId: {
-        in: allowedSources,
+      stage: {
+        in: allowedStages,
       },
     },
     orderBy: {
@@ -89,6 +90,7 @@ export const getAllProjectsEffect = Effect.fn("getAllProjects")(function* (
       id: true,
       name: true,
       isDeleted: true,
+      color: true,
     },
     orderBy: {
       name: SortOrder.asc,
@@ -97,19 +99,19 @@ export const getAllProjectsEffect = Effect.fn("getAllProjects")(function* (
   return yield* prisma.project.findMany(args);
 });
 
-const accessibleProjectsWhere = Effect.fn("accessibleProjectsWhere")(function* (
-  prisma: PrismaService,
-) {
-  const session = yield* getActiveSession();
-  if (session.role === Role.manager) {
-    return {} satisfies ProjectWhereInput;
-  }
-  if (session.employeeId === null) {
-    return null;
-  }
-  const allowedSources = yield* getAllowedSourceIds(prisma, session.employeeId);
-  return { sourceId: { in: allowedSources } } satisfies ProjectWhereInput;
-});
+export const accessibleProjectsWhere = Effect.fn("accessibleProjectsWhere")(
+  function* (prisma: PrismaService) {
+    const session = yield* getActiveSession();
+    if (session.role === Role.manager) {
+      return {} satisfies ProjectWhereInput;
+    }
+    if (session.employeeId === null) {
+      return null;
+    }
+    const allowedStages = yield* getAllowedStages(prisma, session.employeeId);
+    return { stage: { in: allowedStages } } satisfies ProjectWhereInput;
+  },
+);
 
 const assertProjectAccess = Effect.fn("assertProjectAccess")(function* (
   prisma: PrismaService,
@@ -138,6 +140,7 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
     select: {
       id: true,
       name: true,
+      stage: true,
       color: true,
       address: true,
       contacts: {
@@ -173,6 +176,59 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
   });
   return project;
 });
+
+export const getPipelineProjectsEffect = Effect.fn("getPipelineProjects")(
+  function* (prisma: PrismaService) {
+    const where = yield* accessibleProjectsWhere(prisma);
+    if (!where) {
+      return [];
+    }
+    const projects = yield* prisma.project.findMany({
+      where: { AND: [where, { isDeleted: false, stage: { not: null } }] },
+      select: { id: true, name: true, stage: true, color: true },
+      orderBy: { name: SortOrder.asc },
+    });
+    yield* Effect.annotateLogsScoped({ pipelineProjects: projects.length });
+    return projects;
+  },
+);
+
+export const getUpcomingDeliveriesEffect = Effect.fn("getUpcomingDeliveries")(
+  function* (prisma: PrismaService, from: DateKey, to: DateKey) {
+    const where = yield* accessibleProjectsWhere(prisma);
+    if (!where) {
+      return [];
+    }
+    const range = { gte: toDbDate(from), lte: toDbDate(to) };
+    const projects = yield* prisma.project.findMany({
+      where: {
+        AND: [
+          where,
+          {
+            isDeleted: false,
+            OR: [
+              { manualDeliveryDate: range },
+              { manualDeliveryDate: null, calculatedDeliveryDate: range },
+            ],
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        color: true,
+        manualDeliveryDate: true,
+        calculatedDeliveryDate: true,
+      },
+    });
+    yield* Effect.annotateLogsScoped({
+      deliveriesFrom: from,
+      deliveriesTo: to,
+      upcomingDeliveries: projects.length,
+    });
+    return projects;
+  },
+);
 
 export const getFicheSuggestionsEffect = Effect.fn("getFicheSuggestions")(
   function* (prisma: PrismaService) {

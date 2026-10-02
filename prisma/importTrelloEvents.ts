@@ -68,12 +68,17 @@ const fetchBoardCards = Effect.fn("fetchBoardCards")(function* (
   return yield* Schema.decodeUnknown(TrelloCardsSchema)(json);
 });
 
+const loadProjectIds = Effect.tryPromise(() =>
+  prisma.project.findMany({ select: { id: true } }),
+).pipe(Effect.map((projects) => new Set(projects.map(({ id }) => id))));
+
 const importBoard = Effect.fn("importBoard")(function* (
   board: TrelloBoardConfig,
+  projectIds: ReadonlySet<string>,
 ) {
   const cards = yield* fetchBoardCards(board);
   const events = cards.flatMap((card) => {
-    const event = trelloCardToEventData(card, board);
+    const event = trelloCardToEventData(card, board, projectIds);
     return event ? [event] : [];
   });
   const { count } = yield* Effect.tryPromise(() =>
@@ -90,8 +95,9 @@ const importBoard = Effect.fn("importBoard")(function* (
 
 const importTrelloEvents = Effect.gen(function* () {
   const { boards } = yield* loadConfig;
+  const projectIds = yield* loadProjectIds;
   const results = yield* Effect.forEach(boards, (board) =>
-    importBoard(board).pipe(
+    importBoard(board, projectIds).pipe(
       Effect.catchAll((error) =>
         Effect.sync(() => {
           console.error(`Board ${board.name} failed to import`, error);

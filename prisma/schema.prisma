@@ -21,22 +21,21 @@ model Statut {
   deletedAt   DateTime?
   deletedBy   Int?
 
-  employees               Employee[]
-  statutSourcePermissions StatutSourcePermission[]
+  employees              Employee[]
+  statutStagePermissions StatutStagePermission[]
 
   @@map("statuts")
 }
 
-model StatutSourcePermission {
+model StatutStagePermission {
   statutId String
-  sourceId String
+  stage    ProjectStage
 
-  statut Statut       @relation(fields: [statutId], references: [id], onDelete: Cascade)
-  source TrelloSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  statut Statut @relation(fields: [statutId], references: [id], onDelete: Cascade)
 
-  @@id([statutId, sourceId])
-  @@index([sourceId])
-  @@map("statutSourcePermissions")
+  @@id([statutId, stage])
+  @@index([stage])
+  @@map("statutStagePermissions")
 }
 
 model Employee {
@@ -160,6 +159,17 @@ enum Role {
   manager
 }
 
+enum ProjectStage {
+  venteDesign
+  planification
+  programmation
+  production
+  finition
+  livraison
+  installation
+  termine
+}
+
 model TimeEntry {
   id          Int       @id @default(autoincrement())
   employeeId  Int?
@@ -246,10 +256,9 @@ model WeeklyObjective {
 }
 
 model Project {
-  id   String @id
-  name String
-
-  sourceId String?
+  id    String        @id
+  name  String
+  stage ProjectStage?
 
   useSignatureDate    Boolean   @default(false)
   signatureDate       DateTime? @db.Date
@@ -300,13 +309,13 @@ model Project {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  source            TrelloSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
   timeEntryProjects TimeEntryProject[]
   contacts          ProjectContact[]
   phases            ProjectPhase[]
   pieces            ProjectPiece[]
+  calendarEvents    CalendarEvent[]
 
-  @@index([sourceId])
+  @@index([stage])
   @@map("projects")
 }
 
@@ -367,39 +376,6 @@ model ProjectPiece {
   @@map("projectPieces")
 }
 
-model TrelloSource {
-  id        String    @id
-  name      String
-  apiKey    String
-  token     String
-  boardId   String
-  boardName String?
-  labelName String?
-  icon      String    @default("📦")
-  isActive  Boolean   @default(false)
-  isDeleted Boolean   @default(false)
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  projects                Project[]
-  importHistory           TrelloImport[]
-  statutSourcePermissions StatutSourcePermission[]
-
-  @@map("trelloSources")
-}
-
-model TrelloImport {
-  id               String   @id
-  sourceId         String
-  projectsImported Int      @default(0)
-  createdAt        DateTime @default(now())
-
-  source TrelloSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-
-  @@map("trelloImports")
-}
-
 enum CalendarEventType {
   livraison
   installation
@@ -447,11 +423,15 @@ model CalendarEvent {
   endCount  Int?
 
   trelloCardId String? @unique
+  projectId    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
   @@index([date])
+  @@index([projectId])
   @@map("calendarEvents")
 }
 

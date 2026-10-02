@@ -1,6 +1,7 @@
 import type { ExternalToast } from "sonner";
 
 import { EVENT_COLOR_LABELS } from "@/constants/calendar";
+import { ProjectStage } from "@/generated/prisma/enums";
 
 export const PROJECT_TABS = [
   { value: "structure", label: "Structure" },
@@ -29,6 +30,23 @@ export const PROJECT_COLOR_SWATCHES = [
   { value: "#5F9E3A", label: EVENT_COLOR_LABELS.lime },
   { value: "#C9850C", label: EVENT_COLOR_LABELS.amber },
 ] as const;
+export const PROJECT_STAGES = Object.values(ProjectStage);
+export const DONE_PROJECT_STAGE = ProjectStage.termine;
+export const PROJECT_STAGE_LABELS: Record<ProjectStage, string> = {
+  venteDesign: "Vente / Design",
+  planification: "Planification",
+  programmation: "Programmation",
+  production: "Production",
+  finition: "Finition",
+  livraison: "Livraison",
+  installation: "Installation",
+  termine: "Terminé",
+};
+export const PROJECT_STAGE_LABEL = "Étape";
+export const ACTIVE_PROJECT_SINGULAR_LABEL = "projet actif";
+export const ACTIVE_PROJECT_PLURAL_LABEL = "projets actifs";
+export const NO_PROJECT_STAGE_VALUE = "none";
+export const NO_PROJECT_STAGE_LABEL = "Aucune étape";
 export const PROJECT_ADDRESS_LABEL = "Adresse du projet";
 export const PROJECT_ADDRESS_PLACEHOLDER =
   "Ex. 300 Chemin d'Iron Hill, Lac-Brome";

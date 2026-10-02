@@ -20,12 +20,14 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { projectPath } from "@/lib/paths";
+import { projectColorLabel, projectColorStyle } from "@/lib/projects";
 import { normalize } from "@/lib/text";
 
 export type FilterableProject = {
   id: string;
   name: string;
   isDeleted: boolean;
+  color: string;
 };
 
 type ProjectGroupProps = {
@@ -53,10 +55,16 @@ function ProjectGroup({ label, projects }: ProjectGroupProps) {
             <p className="text-muted-foreground px-2 text-sm">Aucun projet</p>
           ) : (
             <SidebarMenu>
-              {projects.map(({ id, name }) => (
+              {projects.map(({ id, name, color }) => (
                 <SidebarMenuItem key={id}>
                   <SidebarMenuButton asChild>
                     <Link href={projectPath(id)} title={name}>
+                      <span
+                        aria-hidden
+                        title={projectColorLabel(color)}
+                        style={projectColorStyle(color)}
+                        className="size-2 shrink-0 rounded-full bg-(--project-color)"
+                      />
                       <span className="truncate">{name}</span>
                     </Link>
                   </SidebarMenuButton>

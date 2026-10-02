@@ -64,6 +64,7 @@ export function eventRecordFromDb(event: CalendarEvent): CalendarEventRecord {
     endType: event.endType,
     endDate: event.endDate ? toDateKey(event.endDate) : null,
     endCount: event.endCount,
+    projectId: event.projectId,
   };
 }
 
@@ -145,6 +146,7 @@ export function eventDataFromForm(
       date: toDbDate(form.date),
       hour: form.hour,
       color: form.color,
+      projectId: form.projectId || null,
       ...result.recurrence,
     },
   };
@@ -161,6 +163,7 @@ function trelloLabelColor(
 export function trelloCardToEventData(
   card: TrelloCard,
   board: TrelloBoardConfig,
+  projectIds: ReadonlySet<string>,
 ): TrelloEventData | null {
   if (!card.due) {
     return null;
@@ -177,6 +180,7 @@ export function trelloCardToEventData(
     date: toDbDate(toLocalDateKey(due)),
     hour: toLocalHour(due),
     color: labelColor ?? board.color,
+    projectId: projectIds.has(card.id) ? card.id : null,
     ...ONE_OFF,
   };
 }

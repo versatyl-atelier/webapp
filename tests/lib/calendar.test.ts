@@ -22,11 +22,13 @@ import {
   formatDayLabel,
   formatDayNumber,
   formatHour,
+  formatDayMonth,
   formatWeekLabel,
   formatWeekMonthLabel,
   isDateKey,
   isFilterVisible,
   isOneOf,
+  linkableProjects,
   matchesSearch,
   mondayOf,
   monthStartWeek,
@@ -61,6 +63,7 @@ const event = (
   endType: RecurrenceEnd.never,
   endDate: null,
   endCount: null,
+  projectId: null,
   ...overrides,
 });
 
@@ -370,5 +373,29 @@ describe("fittingWeekCount", () => {
     expect(fittingWeekCount(700, 128, 12)).toBe(5);
     expect(fittingWeekCount(50, 128, 12)).toBe(1);
     expect(fittingWeekCount(5000, 128, 12)).toBe(12);
+  });
+});
+
+describe("formatDayMonth", () => {
+  it("formats a short French day and month", () => {
+    expect(formatDayMonth("2026-05-08")).toBe("8 mai");
+    expect(formatDayMonth("2026-06-23")).toBe("23 juin");
+  });
+});
+
+describe("linkableProjects", () => {
+  it("hides deleted projects unless the event is already linked to one", () => {
+    const projects = [
+      { id: "a", name: "A", color: "#3B7DD8", isDeleted: false },
+      { id: "b", name: "B", color: "#3B7DD8", isDeleted: true },
+      { id: "c", name: "C", color: "#3B7DD8", isDeleted: true },
+    ];
+    expect(linkableProjects(projects, null)).toEqual([
+      { id: "a", name: "A", color: "#3B7DD8" },
+    ]);
+    expect(linkableProjects(projects, "c")).toEqual([
+      { id: "a", name: "A", color: "#3B7DD8" },
+      { id: "c", name: "C", color: "#3B7DD8" },
+    ]);
   });
 });

@@ -29,10 +29,11 @@ export async function ProjetsSidebar() {
     <ToolSidebar glyph="📁" title="Projets" href="/projets">
       <SidebarContent>
         <ProjectsFilter
-          projects={projects.map(({ id, name, isDeleted }) => ({
+          projects={projects.map(({ id, name, isDeleted, color }) => ({
             id,
             name,
             isDeleted,
+            color,
           }))}
         />
       </SidebarContent>

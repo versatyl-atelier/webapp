@@ -86,6 +86,9 @@ import {
   INTERVAL_LABEL_PREFIX,
   LANCEUR_EVENT_TYPES,
   LANCEUR_NOTE,
+  LINKED_PROJECT_HINT,
+  LINKED_PROJECT_LABEL,
+  LINKED_PROJECT_PLACEHOLDER,
   MIDNIGHT_HOUR,
   NEW_EVENT_LABEL,
   NOON_HOUR,
@@ -128,7 +131,9 @@ import {
   type CalendarOccurrence,
   type DateKey,
   type EventTemplate,
+  type LinkableProject,
 } from "@/lib/calendar";
+import { projectColorLabel, projectColorStyle } from "@/lib/projects";
 import { cn } from "@/lib/utils";
 
 type CalendarEventFormProps = {
@@ -136,6 +141,7 @@ type CalendarEventFormProps = {
   initialDate: DateKey;
   initialDayOccurrences: CalendarOccurrence[];
   templates: EventTemplate[];
+  projects: LinkableProject[];
   cancelHref: string;
 };
 
@@ -151,6 +157,7 @@ export function CalendarEventForm({
   initialDate,
   initialDayOccurrences,
   templates,
+  projects,
   cancelHref,
 }: CalendarEventFormProps) {
   const formId = useId();
@@ -165,6 +172,9 @@ export function CalendarEventForm({
   const [hour, setHour] = useState(event?.hour ?? DEFAULT_EVENT_HOUR);
   const [hourMode, setHourMode] = useState<HourMode>("24h");
   const [color, setColor] = useState(event?.color ?? DEFAULT_EVENT_COLOR);
+  const [project, setProject] = useState<LinkableProject | null>(
+    projects.find(({ id }) => id === event?.projectId) ?? null,
+  );
   const [repeats, setRepeats] = useState(!!event?.frequency);
   const [frequency, setFrequency] = useState(
     event?.frequency ?? DEFAULT_FREQUENCY,
@@ -253,6 +263,7 @@ export function CalendarEventForm({
         <input type="hidden" name="type" value={type} />
         <input type="hidden" name="hour" value={hour} />
         <input type="hidden" name="color" value={color} />
+        <input type="hidden" name="projectId" value={project?.id ?? ""} />
         {isRecurring && (
           <input type="hidden" name="repeats" value={REPEATS_VALUE} />
         )}
@@ -363,6 +374,47 @@ export function CalendarEventForm({
             onChange={(e) => setDetail(e.target.value)}
           />
           <FieldErrors errors={errors?.detail} />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor={`${formId}-project`}>
+            {LINKED_PROJECT_LABEL}
+          </FieldLabel>
+          <Combobox
+            items={projects}
+            value={project}
+            onValueChange={setProject}
+            isItemEqualToValue={(a: LinkableProject, b: LinkableProject) =>
+              a.id === b.id
+            }
+            itemToStringLabel={(item: LinkableProject) => item.name}
+            itemToStringValue={(item: LinkableProject) => item.id}
+          >
+            <ComboboxInput
+              id={`${formId}-project`}
+              placeholder={LINKED_PROJECT_PLACEHOLDER}
+              aria-invalid={!!errors?.projectId}
+              showClear
+            />
+            <ComboboxContent>
+              <ComboboxEmpty>{PROJECT_SEARCH_EMPTY}</ComboboxEmpty>
+              <ComboboxList>
+                {(item: LinkableProject) => (
+                  <ComboboxItem key={item.id} value={item}>
+                    <span
+                      aria-hidden
+                      title={projectColorLabel(item.color)}
+                      style={projectColorStyle(item.color)}
+                      className="size-2 shrink-0 rounded-full bg-(--project-color)"
+                    />
+                    {item.name}
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+          <FieldDescription>{LINKED_PROJECT_HINT}</FieldDescription>
+          <FieldErrors errors={errors?.projectId} />
         </Field>
 
         <div className="flex flex-wrap gap-4">

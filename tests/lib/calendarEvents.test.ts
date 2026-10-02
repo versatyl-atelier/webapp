@@ -31,6 +31,7 @@ const form = (
   date: "2026-07-14",
   hour: 8,
   color: CalendarEventColor.indigo,
+  projectId: "",
   repeats: REPEATS_VALUE,
   frequency: RecurrenceFrequency.weekly,
   interval: 1,
@@ -88,6 +89,15 @@ describe("eventDataFromForm", () => {
       eventDataFromForm(form({ endType: RecurrenceEnd.count, endCount: "3" })),
     ).toMatchObject({ data: { endCount: 3, endDate: null } });
   });
+
+  it("links the event to a project only when one is chosen", () => {
+    expect(eventDataFromForm(form())).toMatchObject({
+      data: { projectId: null },
+    });
+    expect(eventDataFromForm(form({ projectId: "p1" }))).toMatchObject({
+      data: { projectId: "p1" },
+    });
+  });
 });
 
 describe("eventRecordFromDb", () => {
@@ -109,6 +119,7 @@ describe("eventRecordFromDb", () => {
         endDate: new Date("2026-07-20T00:00:00.000Z"),
         endCount: null,
         trelloCardId: null,
+        projectId: null,
         createdAt: now,
         updatedAt: now,
       }),
@@ -127,12 +138,14 @@ describe("trelloCardToEventData", () => {
     detail: "Trello",
     labelColors: { green: CalendarEventColor.lime },
   };
+  const noProjects = new Set<string>();
 
   it("skips cards without a due date", () => {
     expect(
       trelloCardToEventData(
         { id: "c", name: "X", due: null, labels: [] },
         board,
+        noProjects,
       ),
     ).toBeNull();
   });
@@ -147,6 +160,7 @@ describe("trelloCardToEventData", () => {
           labels: [],
         },
         board,
+        noProjects,
       ),
     ).toMatchObject({
       trelloCardId: "c1",
@@ -156,8 +170,24 @@ describe("trelloCardToEventData", () => {
       date: new Date("2026-07-14T00:00:00.000Z"),
       hour: 21,
       color: CalendarEventColor.blue,
+      projectId: null,
       frequency: null,
     });
+  });
+
+  it("links the event to the project of the same Trello card", () => {
+    expect(
+      trelloCardToEventData(
+        {
+          id: "c3",
+          name: "Z",
+          due: "2026-07-14T16:00:00.000Z",
+          labels: [],
+        },
+        board,
+        new Set(["c3"]),
+      )?.projectId,
+    ).toBe("c3");
   });
 
   it("maps label colors, including shade variants", () => {
@@ -170,6 +200,7 @@ describe("trelloCardToEventData", () => {
           labels: [{ color: null }, { color: "green_dark" }],
         },
         board,
+        noProjects,
       )?.color,
     ).toBe(CalendarEventColor.lime);
   });
