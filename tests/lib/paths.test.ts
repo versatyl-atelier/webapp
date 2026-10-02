@@ -1,10 +1,13 @@
 import { describe, it, expect } from "vitest";
 
+import { NOTES_TOOL_PATH, PROJECTS_PATH } from "@/constants/tools";
 import {
+  activeToolHref,
   changePasswordPath,
   employeePath,
   isProtectedPath,
   loginPath,
+  projectPath,
 } from "@/lib/paths";
 
 describe("loginPath", () => {
@@ -58,5 +61,33 @@ describe("isProtectedPath", () => {
     expect(isProtectedPath("/punchcard")).toBe(false);
     expect(isProtectedPath("/")).toBe(false);
     expect(isProtectedPath("/login")).toBe(false);
+  });
+});
+
+describe("projectPath", () => {
+  it("builds the project page path", () => {
+    expect(projectPath("abc")).toBe("/projets/abc");
+  });
+
+  it("carries the tab", () => {
+    expect(projectPath("abc", "notes")).toBe("/projets/abc?tab=notes");
+  });
+});
+
+describe("activeToolHref", () => {
+  it("matches the projects tool without a tab", () => {
+    expect(activeToolHref("/projets/abc", new URLSearchParams())).toBe(
+      PROJECTS_PATH,
+    );
+  });
+
+  it("prefers the notes tool on the notes tab", () => {
+    expect(
+      activeToolHref("/projets/abc", new URLSearchParams("tab=notes")),
+    ).toBe(NOTES_TOOL_PATH);
+  });
+
+  it("matches nothing outside the tools", () => {
+    expect(activeToolHref("/", new URLSearchParams())).toBeUndefined();
   });
 });

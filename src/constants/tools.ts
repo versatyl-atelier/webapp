@@ -1,3 +1,5 @@
+import { NOTES_TAB, PROJECT_TAB_PARAM } from "@/constants/projects";
+
 export type Tool = {
   href: string;
   icon: string;
@@ -8,6 +10,8 @@ export type Tool = {
 };
 
 export const HOME_PATH = "/";
+export const PROJECTS_PATH = "/projets";
+export const NOTES_TOOL_PATH = `${PROJECTS_PATH}?${PROJECT_TAB_PARAM}=${NOTES_TAB}`;
 export const LANCEUR_PATH = "/lanceur-de-dates";
 export const HOME_LABEL = "Accueil";
 export const APP_NAME = "Versatyl";
@@ -21,11 +25,10 @@ export const SEARCH_COMING_SOON = "Fonction à venir";
 
 export const TOOLS: Tool[] = [
   {
-    href: "/projets",
-    icon: "📁",
-    title: "Projets",
-    description: "Phases, pièces et listes",
-    tags: ["Nouveau"],
+    href: "/calendrier",
+    icon: "🗓",
+    title: "Calendrier",
+    description: "Échéances et événements",
   },
   {
     href: "/punch",
@@ -33,16 +36,25 @@ export const TOOLS: Tool[] = [
     title: "Punch",
     description: "Timesheet atelier",
   },
+
+  {
+    href: PROJECTS_PATH,
+    icon: "📁",
+    title: "Projets",
+    description: "Phases, pièces et listes",
+  },
+
   {
     href: LANCEUR_PATH,
     icon: "📅",
     title: "Lanceur",
     description: "Planification production",
   },
+
   {
-    href: "/calendrier",
-    icon: "🗓",
-    title: "Calendrier",
-    description: "Échéances et événements",
+    href: NOTES_TOOL_PATH,
+    icon: "📝",
+    title: "Notes",
+    description: "Notes des projets",
   },
 ];

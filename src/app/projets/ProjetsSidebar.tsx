@@ -1,5 +1,5 @@
-import { getAllProjects, getProjects } from "@/actions/projects";
-import { ProjectsFilter } from "@/components/ProjectsFilter";
+import { PropsWithChildren } from "react";
+
 import { ToolSidebar } from "@/components/ToolSidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,35 +8,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { Role } from "@/generated/prisma/enums";
-import { requireActiveSession } from "@/lib/session";
 
-async function loadProjects() {
-  const session = await requireActiveSession("/projets");
-  if (session.role === Role.manager) {
-    return getAllProjects();
-  }
-  if (session.employeeId === null) {
-    return [];
-  }
-  return getProjects(session.employeeId);
-}
-
-export async function ProjetsSidebar() {
-  const projects = await loadProjects();
-
+export async function ProjetsSidebar({ children }: PropsWithChildren) {
   return (
     <ToolSidebar glyph="📁" title="Projets" href="/projets">
-      <SidebarContent>
-        <ProjectsFilter
-          projects={projects.map(({ id, name, isDeleted, color }) => ({
-            id,
-            name,
-            isDeleted,
-            color,
-          }))}
-        />
-      </SidebarContent>
+      <SidebarContent>{children}</SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuButton asChild>

@@ -2,6 +2,7 @@
 
 import { ChevronDown, Search } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
 
 import {
@@ -19,7 +20,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { PROJECT_TAB_PARAM } from "@/constants/projects";
 import { projectPath } from "@/lib/paths";
+import { findProjectTab, type ProjectTab } from "@/lib/projectTabs";
 import { projectColorLabel, projectColorStyle } from "@/lib/projects";
 import { normalize } from "@/lib/text";
 
@@ -33,9 +36,10 @@ export type FilterableProject = {
 type ProjectGroupProps = {
   label: string;
   projects: FilterableProject[];
+  tab?: ProjectTab;
 };
 
-function ProjectGroup({ label, projects }: ProjectGroupProps) {
+function ProjectGroup({ label, projects, tab }: ProjectGroupProps) {
   return (
     <Collapsible defaultOpen asChild>
       <SidebarGroup className="min-h-12">
@@ -58,7 +62,7 @@ function ProjectGroup({ label, projects }: ProjectGroupProps) {
               {projects.map(({ id, name, color }) => (
                 <SidebarMenuItem key={id}>
                   <SidebarMenuButton asChild>
-                    <Link href={projectPath(id)} title={name}>
+                    <Link href={projectPath(id, tab)} title={name}>
                       <span
                         aria-hidden
                         title={projectColorLabel(color)}
@@ -84,6 +88,7 @@ type ProjectsFilterProps = {
 
 export function ProjectsFilter({ projects }: ProjectsFilterProps) {
   const inputId = useId();
+  const tab = findProjectTab(useSearchParams().get(PROJECT_TAB_PARAM));
   const [query, setQuery] = useState("");
   const needle = normalize(query);
   const matches = projects.filter(({ name }) =>
@@ -106,6 +111,7 @@ export function ProjectsFilter({ projects }: ProjectsFilterProps) {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Filtrer les projets…"
+              autoFocus
               className="pl-8"
             />
             <Search
@@ -118,8 +124,8 @@ export function ProjectsFilter({ projects }: ProjectsFilterProps) {
       <p className="sr-only" aria-live="polite">
         {matches.length} projets trouvés
       </p>
-      <ProjectGroup label="Actifs" projects={active} />
-      <ProjectGroup label="Archivés" projects={archived} />
+      <ProjectGroup label="Actifs" projects={active} tab={tab} />
+      <ProjectGroup label="Archivés" projects={archived} tab={tab} />
     </>
   );
 }

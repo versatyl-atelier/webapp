@@ -1,12 +1,12 @@
-import { ToolLayout, ToolLayoutSlots } from "@/components/ToolLayout";
-import { ProjetsSidebar } from "./ProjetsSidebar";
+import { ToolLayout, ToolLayoutProps } from "@/components/ToolLayout";
 
 export default function ProjetsLayout({
   children,
   breadcrumb,
-}: ToolLayoutSlots) {
+  sidebar,
+}: ToolLayoutProps) {
   return (
-    <ToolLayout sidebar={<ProjetsSidebar />} breadcrumb={breadcrumb}>
+    <ToolLayout sidebar={sidebar} breadcrumb={breadcrumb}>
       {children}
     </ToolLayout>
   );

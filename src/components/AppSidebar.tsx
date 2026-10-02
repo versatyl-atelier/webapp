@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import {
   Sidebar,
@@ -14,10 +14,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { TOOLS, HOME_LABEL, HOME_PATH } from "@/constants/tools";
-import { isWithinPath } from "@/lib/paths";
+import { activeToolHref } from "@/lib/paths";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeHref = activeToolHref(pathname, searchParams);
   return (
     <Sidebar
       collapsible="none"
@@ -52,7 +54,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={isWithinPath(pathname, href)}
+                    isActive={href === activeHref}
                     tooltip={{ children: title, hidden: false }}
                     className="justify-center p-3 text-xl"
                   >

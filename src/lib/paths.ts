@@ -6,8 +6,10 @@ import {
   REDIRECT_TO_PARAM,
 } from "@/constants/auth";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
+import { PROJECT_TAB_PARAM } from "@/constants/projects";
 import { TOOLS } from "@/constants/tools";
 import type { DateKey } from "@/lib/calendar";
+import type { ProjectTab } from "@/lib/projectTabs";
 
 function withRedirectTo(path: string, redirectTo?: string): string {
   if (!redirectTo) {
@@ -38,8 +40,13 @@ export function employeeWeekPath(
   return `${employeePath(employeeId)}?${params.toString()}`;
 }
 
-export function projectPath(projectId: string): string {
-  return `/projets/${projectId}`;
+export function projectPath(projectId: string, tab?: ProjectTab): string {
+  const path = `/projets/${projectId}`;
+  if (!tab) {
+    return path;
+  }
+  const params = new URLSearchParams({ [PROJECT_TAB_PARAM]: tab });
+  return `${path}?${params.toString()}`;
 }
 
 export function changePasswordPath(redirectTo?: string): string {
@@ -56,6 +63,24 @@ export function isProtectedPath(pathname: string): boolean {
   );
 }
 
+function splitHref(href: string): { path: string; params: URLSearchParams } {
+  const [path, query = ""] = href.split("?");
+  return { path, params: new URLSearchParams(query) };
+}
+
 export function isToolPath(pathname: string): boolean {
-  return TOOLS.some(({ href }) => isWithinPath(pathname, href));
+  return TOOLS.some(({ href }) => isWithinPath(pathname, splitHref(href).path));
+}
+
+export function activeToolHref(
+  pathname: string,
+  searchParams: URLSearchParams,
+): string | undefined {
+  return TOOLS.map(({ href }) => ({ href, ...splitHref(href) }))
+    .filter(
+      ({ path, params }) =>
+        isWithinPath(pathname, path) &&
+        [...params].every(([key, value]) => searchParams.get(key) === value),
+    )
+    .sort((a, b) => b.params.size - a.params.size)[0]?.href;
 }
