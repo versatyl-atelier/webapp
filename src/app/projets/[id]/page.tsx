@@ -1,12 +1,18 @@
 import { notFound } from "next/navigation";
 
-import { getFicheSuggestions, getProject } from "@/actions/projects";
+import {
+  getFicheSuggestions,
+  getProject,
+  getProjectNotes,
+} from "@/actions/projects";
 import { ProjectContacts } from "@/components/ProjectContacts";
 import { ProjectHeader } from "@/components/ProjectHeader";
+import { ProjectNotes } from "@/components/ProjectNotes";
 import { ProjectPieces } from "@/components/ProjectPieces";
 import { ProjectTabs } from "@/components/ProjectTabs";
 import { TabsContent } from "@/components/ui/tabs";
 import {
+  NOTES_TAB,
   PROJECT_TAB_PARAM,
   PROJECT_TABS,
   STRUCTURE_TAB,
@@ -22,10 +28,11 @@ type ProjectPageProps = {
 
 export default async function Page({ params, searchParams }: ProjectPageProps) {
   const { id } = await params;
-  await requireActiveSession(projectPath(id));
-  const [project, suggestions] = await Promise.all([
+  const session = await requireActiveSession(projectPath(id));
+  const [project, suggestions, notes] = await Promise.all([
     getProject(id),
     getFicheSuggestions(),
+    getProjectNotes(id),
   ]);
 
   if (!project) {
@@ -55,6 +62,14 @@ export default async function Page({ params, searchParams }: ProjectPageProps) {
                   suggestions={suggestions}
                 />
               </div>
+            ) : value === NOTES_TAB ? (
+              <ProjectNotes
+                projectId={project.id}
+                phases={project.phases}
+                notes={notes}
+                currentUser={{ id: session.userId, name: session.name }}
+                now={new Date()}
+              />
             ) : (
               "…"
             )}

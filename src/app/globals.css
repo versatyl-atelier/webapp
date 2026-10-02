@@ -135,6 +135,8 @@
   --text-2xs-line-height: calc(1 / 0.653);
 
   --spacing-toolbar: calc(var(--spacing) * 10);
+  --spacing-note-meta: calc(var(--spacing) * 49);
+  --spacing-note-rule: calc(var(--spacing-note-meta) + var(--spacing) * 1.5);
 
   @keyframes fadeInUp {
     from {

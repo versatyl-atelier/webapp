@@ -10,6 +10,8 @@ import { assertEmployeeAccess, getActiveSession } from "@/effects/auth";
 import { Role } from "@/generated/prisma/enums";
 import {
   CONTACTS_SAVED_MESSAGE,
+  NOTE_NOT_FOUND_MESSAGE,
+  NOTE_SAVED_MESSAGE,
   PHASE_NOT_FOUND_MESSAGE,
   PIECE_NOT_FOUND_MESSAGE,
   PIECE_SAVED_MESSAGE,
@@ -24,11 +26,17 @@ import {
   phaseName,
   type ProjectFiche,
 } from "@/lib/projects";
+import type { NoteRecord } from "@/lib/projectNotes";
 import { Forbidden } from "@/schemas/auth.schemas";
 import {
+  NoteIdSchema,
   PhaseIdSchema,
   PhaseNameSchema,
   PieceIdSchema,
+  type NoteEditFormData,
+  type NoteEditFormState,
+  type NoteFormData,
+  type NoteFormState,
   type PieceFormData,
   type PieceFormState,
   type ProjectContactsFormData,
@@ -503,6 +511,154 @@ export const movePieceEffect = Effect.fn("movePiece")(function* (
     data: {
       phaseId: target,
       sortOrder: yield* piecesSortOrder(prisma, piece.projectId, target),
+    },
+  });
+});
+
+export const getProjectNotesEffect = Effect.fn("getProjectNotes")(function* (
+  prisma: PrismaService,
+  projectId: string,
+) {
+  yield* assertProjectAccess(prisma, projectId);
+  const notes: NoteRecord[] = yield* prisma.projectNote.findMany({
+    where: { projectId },
+    select: {
+      id: true,
+      phaseId: true,
+      isDeleted: true,
+      versions: {
+        select: {
+          id: true,
+          body: true,
+          stage: true,
+          createdAt: true,
+          author: { select: { id: true, name: true } },
+        },
+        orderBy: [{ createdAt: SortOrder.asc }, { id: SortOrder.asc }],
+      },
+    },
+    orderBy: [{ createdAt: SortOrder.asc }, { id: SortOrder.asc }],
+  });
+  yield* Effect.annotateLogsScoped({ notes: notes.length });
+  return notes;
+});
+
+const newNoteVersion = Effect.fn("newNoteVersion")(function* (
+  prisma: PrismaService,
+  projectId: string,
+  body: string,
+) {
+  const session = yield* getActiveSession();
+  const project = yield* prisma.project.findUnique({
+    where: { id: projectId },
+    select: { stage: true },
+  });
+  return { body, authorId: session.userId, stage: project?.stage ?? null };
+});
+
+export const addNoteEffect = Effect.fn("addNote")(function* (
+  prisma: PrismaService,
+  _formState: NoteFormState,
+  { projectId, phaseId, body }: NoteFormData,
+) {
+  yield* assertProjectAccess(prisma, projectId);
+  yield* Effect.annotateLogsScoped({ phaseId });
+  if (!(yield* phaseBelongsTo(prisma, projectId, phaseId))) {
+    return { errors: { dataValidation: PHASE_NOT_FOUND_MESSAGE } };
+  }
+  const note = yield* prisma.projectNote.create({
+    data: {
+      projectId,
+      phaseId,
+      versions: {
+        create: yield* newNoteVersion(prisma, projectId, body),
+      },
+    },
+    select: { id: true },
+  });
+  yield* Effect.annotateLogsScoped({ createdNoteId: note.id });
+  return { message: NOTE_SAVED_MESSAGE };
+});
+
+const accessibleNote = Effect.fn("accessibleNote")(function* (
+  prisma: PrismaService,
+  noteId: unknown,
+) {
+  const id = yield* Schema.decodeUnknown(NoteIdSchema)(noteId);
+  yield* Effect.annotateLogsScoped({ noteId: id });
+  const note = yield* prisma.projectNote.findUnique({
+    where: { id },
+    select: { id: true, projectId: true, isDeleted: true },
+  });
+  if (!note) {
+    return yield* new Forbidden({});
+  }
+  yield* assertProjectAccess(prisma, note.projectId);
+  return note;
+});
+
+export const editNoteEffect = Effect.fn("editNote")(function* (
+  prisma: PrismaService,
+  _formState: NoteEditFormState,
+  { id, body }: NoteEditFormData,
+) {
+  const note = yield* accessibleNote(prisma, id);
+  if (note.isDeleted) {
+    return { errors: { dataValidation: NOTE_NOT_FOUND_MESSAGE } };
+  }
+  yield* prisma.projectNoteVersion.create({
+    data: {
+      noteId: note.id,
+      ...(yield* newNoteVersion(prisma, note.projectId, body)),
+    },
+  });
+  return { message: NOTE_SAVED_MESSAGE };
+});
+
+export const deleteNoteEffect = Effect.fn("deleteNote")(function* (
+  prisma: PrismaService,
+  noteId: unknown,
+) {
+  const note = yield* accessibleNote(prisma, noteId);
+  if (note.isDeleted) {
+    return;
+  }
+  const session = yield* getActiveSession();
+  yield* prisma.projectNote.update({
+    where: { id: note.id },
+    data: {
+      isDeleted: true,
+      deletedAt: new Date(),
+      deletedBy: session.userId,
+    },
+  });
+});
+
+export const restoreNoteEffect = Effect.fn("restoreNote")(function* (
+  prisma: PrismaService,
+  noteId: unknown,
+) {
+  const note = yield* accessibleNote(prisma, noteId);
+  if (!note.isDeleted) {
+    return;
+  }
+  const latest = yield* prisma.projectNoteVersion.findFirst({
+    where: { noteId: note.id },
+    select: { body: true },
+    orderBy: [{ createdAt: SortOrder.desc }, { id: SortOrder.desc }],
+  });
+  if (!latest) {
+    return;
+  }
+  yield* prisma.projectNote.update({
+    where: { id: note.id },
+    data: {
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null,
+      versions: {
+        create: yield* newNoteVersion(prisma, note.projectId, latest.body),
+      },
     },
   });
 });

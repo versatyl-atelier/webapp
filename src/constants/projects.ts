@@ -11,6 +11,7 @@ export const PROJECT_TABS = [
 
 export const DEFAULT_PROJECT_TAB = PROJECT_TABS[0].value;
 export const STRUCTURE_TAB = PROJECT_TABS[0].value;
+export const NOTES_TAB = PROJECT_TABS[2].value;
 
 export const PROJECT_TAB_PARAM = "tab";
 
@@ -95,6 +96,44 @@ export const PIECE_TEXT_FIELDS = [
   { key: "finish", label: "Finition" },
 ] as const;
 
+export const GENERAL_NOTES_HEADING = "Notes générales";
+export const NOTE_SINGULAR_LABEL = "note";
+export const NOTE_PLURAL_LABEL = "notes";
+export const NO_NOTES_LABEL = "Aucune note pour l’instant.";
+export const NEW_NOTE_LABEL = "Nouvelle note";
+export const NEW_NOTE_PLACEHOLDER = "Ajouter une note à";
+export const ADD_NOTE_LABEL = "Ajouter";
+export const SUBMIT_NOTE_HINT = "pour envoyer";
+export const SUBMIT_NOTE_KEYS_DEFAULT = ["Ctrl", "Entrée"] as const;
+export const SUBMIT_NOTE_KEYS_APPLE = ["⌘", "Entrée"] as const;
+export const SUBMIT_NOTE_KEY = "Enter";
+export const EDIT_NOTE_LABEL = "Modifier";
+export const EDITED_NOTE_LABEL = "Modifier la note";
+export const SAVE_NOTE_EDIT_LABEL = "Enregistrer la modification";
+export const DELETE_NOTE_LABEL = "Supprimer";
+export const DELETE_NOTE_CONFIRMATION = "Supprimer cette note ?";
+export const RESTORE_NOTE_LABEL = "Restaurer";
+export const DELETED_NOTE_LABEL = "Supprimée";
+export const SHOW_NOTE_HISTORY_LABEL = "Voir les anciennes versions";
+export const HIDE_NOTE_HISTORY_LABEL = "Masquer les anciennes versions";
+export const LINK_EMAIL_LABEL = "Lier un courriel — bientôt";
+export const CURRENT_USER_LABEL = "Vous";
+export const UNKNOWN_AUTHOR_LABEL = "Auteur inconnu";
+export const UNKNOWN_AUTHOR_INITIALS = "?";
+export const AUTHOR_INITIALS_LENGTH = 2;
+export const JUST_NOW_LABEL = "à l’instant";
+export const NOTE_AUTHOR_COLOR_CLASSES = [
+  "bg-blue-700",
+  "bg-teal-700",
+  "bg-violet-700",
+  "bg-orange-700",
+  "bg-pink-700",
+  "bg-indigo-700",
+  "bg-lime-700",
+  "bg-amber-700",
+] as const;
+export const UNKNOWN_AUTHOR_COLOR_CLASS = "bg-muted-foreground";
+
 export const SUGGESTIONS_LIMIT = 6;
 export const DEFAULT_SUGGESTIONS = {
   type: [
@@ -141,6 +180,9 @@ export const PIECE_SAVED_MESSAGE = "Pièce enregistrée";
 export const PROJECT_NOT_FOUND_MESSAGE = "Projet introuvable";
 export const PIECE_NOT_FOUND_MESSAGE = "Pièce introuvable";
 export const PHASE_NOT_FOUND_MESSAGE = "Phase introuvable";
+export const NOTE_NOT_FOUND_MESSAGE = "Note introuvable";
+export const NOTE_SAVED_MESSAGE = "Note enregistrée";
+export const NOTE_BODY_REQUIRED_MESSAGE = "La note ne peut pas être vide";
 export const PROJECT_NAME_REQUIRED_MESSAGE = "Le nom du projet est requis";
 export const INVALID_COLOR_MESSAGE = "Couleur invalide";
 export const INVALID_EMAIL_MESSAGE = "Courriel invalide";

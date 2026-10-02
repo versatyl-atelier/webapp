@@ -75,9 +75,10 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  employee Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
-  sessions Session[]
-  accounts Account[]
+  employee     Employee?            @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  sessions     Session[]
+  accounts     Account[]
+  noteVersions ProjectNoteVersion[]
 
   @@map("users")
 }
@@ -313,6 +314,7 @@ model Project {
   contacts          ProjectContact[]
   phases            ProjectPhase[]
   pieces            ProjectPiece[]
+  notes             ProjectNote[]
   calendarEvents    CalendarEvent[]
 
   @@index([stage])
@@ -347,6 +349,7 @@ model ProjectPhase {
 
   project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   pieces  ProjectPiece[]
+  notes   ProjectNote[]
 
   @@index([projectId])
   @@map("projectPhases")
@@ -374,6 +377,40 @@ model ProjectPiece {
   @@index([projectId])
   @@index([phaseId])
   @@map("projectPieces")
+}
+
+model ProjectNote {
+  id        Int       @id @default(autoincrement())
+  projectId String
+  phaseId   Int?
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  project  Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase    ProjectPhase?        @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  versions ProjectNoteVersion[]
+
+  @@index([projectId])
+  @@index([phaseId])
+  @@map("projectNotes")
+}
+
+model ProjectNoteVersion {
+  id        Int           @id @default(autoincrement())
+  noteId    Int
+  authorId  String?
+  body      String
+  stage     ProjectStage?
+  createdAt DateTime      @default(now())
+
+  note   ProjectNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  author User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([noteId])
+  @@map("projectNoteVersions")
 }
 
 enum CalendarEventType {
