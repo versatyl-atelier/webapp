@@ -7,8 +7,9 @@
 - See [System Requirements](docs/sys-reqs.md)
 - `git clone <repo>`
 - `cd <repo>`
-- `cp .env.example .env`
+- `cp .env.example .env && cp .env.example .env.staging && cp .env.example .env.prod`
 - `npm install`
+- `git switch dev` (never work on `main`, see [Workflow](docs/workflow.md))
 
 ### For the rest
 
@@ -26,3 +27,4 @@ npm run
 - [Data](docs/data.md)
 - [Logs](docs/logs.md)
 - [Styles](docs/styles.md)
+- [Workflow](docs/workflow.md)

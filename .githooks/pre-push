@@ -1,0 +1,17 @@
+#!/bin/sh
+
+compare_url="https://github.com/versatyl-atelier/webapp/compare/main...dev"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main)
+      echo "✋ main is production and only changes through the dev → main PR." >&2
+      echo "   Push to dev instead: git push origin HEAD:dev" >&2
+      echo "   See docs/workflow.md" >&2
+      exit 1
+      ;;
+    refs/heads/dev)
+      echo "🚀 dev deploys to staging (Vercel Preview + Neon dev branch) and updates the dev → main PR: $compare_url" >&2
+      ;;
+  esac
+done

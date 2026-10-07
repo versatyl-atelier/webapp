@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+    steps:
+      - name: Only dev can be merged into main
+        if: github.event_name == 'pull_request' && github.head_ref != 'dev'
+        run: |
+          echo "::error::PRs into main must come from dev. Push your work to dev instead (see docs/workflow.md)."
+          exit 1
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:ci
+
+  release-pr:
+    if: github.event_name == 'push'
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Open the dev → main PR if none is open
+        run: |
+          if [ -z "$(gh pr list --head dev --base main --state open --json number --jq '.[].number')" ]; then
+            gh pr create --head dev --base main --title "Release: dev → main" --body "Verify on staging, then merge to deploy to production."
+          fi
