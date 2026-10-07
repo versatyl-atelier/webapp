@@ -37,7 +37,7 @@
     "db:seed:prod": "npm run with-prod-db -- npm run db:seed",
     "db:createUsers:prod": "npm run with-prod-db -- npm run db:createUsers",
     "analyze": "next experimental-analyze",
-    "type-check": "tsc --noEmit",
+    "type-check": "next typegen &&  tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
