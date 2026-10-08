@@ -51,7 +51,11 @@ export async function Header() {
       </div>
       <SearchShortcut />
       <div className="my-auto flex items-center gap-2">
-        {session ? <LogoutForm name={session.name} /> : <LoginButton />}
+        {session ? (
+          <LogoutForm name={session.name} role={session.role} />
+        ) : (
+          <LoginButton />
+        )}
       </div>
     </header>
   );
