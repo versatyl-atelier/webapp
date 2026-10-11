@@ -322,10 +322,9 @@ export function CalendarEventForm({
         <FieldSet>
           <FieldLegend variant="label">{TYPE_LABEL}</FieldLegend>
           <ToggleGroup
-            type="single"
             variant="outline"
-            value={type}
-            onValueChange={(value) => {
+            value={[type]}
+            onValueChange={([value]) => {
               if (isOneOf(EVENT_TYPES, value)) {
                 selectType(value);
               }
@@ -336,7 +335,7 @@ export function CalendarEventForm({
               <ToggleGroupItem
                 key={eventType}
                 value={eventType}
-                className="data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary rounded-full px-3"
+                className="data-pressed:border-primary data-pressed:bg-primary/10 data-pressed:text-primary rounded-full px-3"
               >
                 <EventCategoryIcon category={eventType} />
                 {EVENT_CATEGORY_LABELS[eventType]}
@@ -436,12 +435,11 @@ export function CalendarEventForm({
           <FieldSet className="flex-1">
             <FieldLegend variant="label">{HOUR_LABEL}</FieldLegend>
             <ToggleGroup
-              type="single"
               variant="outline"
               size="sm"
               spacing={0}
-              value={hourMode}
-              onValueChange={(value) => {
+              value={[hourMode]}
+              onValueChange={([value]) => {
                 if (isOneOf(HOUR_MODES, value)) {
                   setHourMode(value);
                 }
@@ -471,13 +469,12 @@ export function CalendarEventForm({
               </Select>
             ) : (
               <ToggleGroup
-                type="single"
                 variant="outline"
                 size="sm"
                 spacing={0}
                 aria-label={HOUR_LABEL}
-                value={hour < NOON_HOUR ? AM_LABEL : PM_LABEL}
-                onValueChange={(value) => {
+                value={[hour < NOON_HOUR ? AM_LABEL : PM_LABEL]}
+                onValueChange={([value]) => {
                   if (value) {
                     setHour(value === AM_LABEL ? MIDNIGHT_HOUR : NOON_HOUR);
                   }
@@ -585,7 +582,7 @@ export function CalendarEventForm({
               <FieldSet>
                 <FieldLegend variant="label">{WEEKDAYS_LABEL}</FieldLegend>
                 <ToggleGroup
-                  type="multiple"
+                  multiple
                   variant="outline"
                   size="sm"
                   value={weekdays.map(String)}
@@ -596,7 +593,7 @@ export function CalendarEventForm({
                     <ToggleGroupItem
                       key={day}
                       value={String(day)}
-                      className="bg-background data-[state=on]:bg-primary data-[state=on]:text-primary-foreground w-10"
+                      className="bg-background data-pressed:bg-primary data-pressed:text-primary-foreground w-10"
                     >
                       {WEEKDAY_LABELS[index]}
                     </ToggleGroupItem>
