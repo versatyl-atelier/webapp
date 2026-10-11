@@ -673,15 +673,17 @@ export function CalendarEventForm({
         <footer className="flex flex-wrap justify-end gap-2.5 border-t pt-3">
           {event && (
             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="mr-auto"
-                  disabled={saving}
-                >
-                  {DELETE_EVENT_LABEL}
-                </Button>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="mr-auto"
+                    disabled={saving}
+                  />
+                }
+              >
+                {DELETE_EVENT_LABEL}
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>

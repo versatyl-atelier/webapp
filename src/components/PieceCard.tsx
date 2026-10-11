@@ -100,16 +100,18 @@ export function PieceCard({
 
   const removeButton = piece ? (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label={REMOVE_PIECE_LABEL}
-          disabled={deleting}
-        >
-          <X />
-        </Button>
+      <AlertDialogTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={REMOVE_PIECE_LABEL}
+            disabled={deleting}
+          />
+        }
+      >
+        <X />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
