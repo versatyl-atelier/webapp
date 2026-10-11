@@ -41,43 +41,41 @@ type ProjectGroupProps = {
 
 function ProjectGroup({ label, projects, tab }: ProjectGroupProps) {
   return (
-    <Collapsible defaultOpen asChild>
-      <SidebarGroup className="min-h-12">
-        <SidebarGroupLabel asChild>
-          <CollapsibleTrigger className="group/trigger hover:bg-sidebar-accent w-full cursor-pointer justify-between uppercase">
-            <span>
-              {label} ({projects.length})
-            </span>
-            <ChevronDown
-              aria-hidden="true"
-              className="transition-transform group-data-[state=open]/trigger:rotate-180"
-            />
-          </CollapsibleTrigger>
-        </SidebarGroupLabel>
-        <CollapsibleContent className="min-h-0 overflow-y-auto">
-          {projects.length === 0 ? (
-            <p className="text-muted-foreground px-2 text-sm">Aucun projet</p>
-          ) : (
-            <SidebarMenu>
-              {projects.map(({ id, name, color }) => (
-                <SidebarMenuItem key={id}>
-                  <SidebarMenuButton asChild>
-                    <Link href={projectPath(id, tab)} title={name}>
-                      <span
-                        aria-hidden
-                        title={projectColorLabel(color)}
-                        style={projectColorStyle(color)}
-                        className="size-2 shrink-0 rounded-full bg-(--project-color)"
-                      />
-                      <span className="truncate">{name}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          )}
-        </CollapsibleContent>
-      </SidebarGroup>
+    <Collapsible defaultOpen render={<SidebarGroup className="min-h-12" />}>
+      <SidebarGroupLabel asChild>
+        <CollapsibleTrigger className="group/trigger hover:bg-sidebar-accent w-full cursor-pointer justify-between uppercase">
+          <span>
+            {label} ({projects.length})
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className="transition-transform group-data-panel-open/trigger:rotate-180"
+          />
+        </CollapsibleTrigger>
+      </SidebarGroupLabel>
+      <CollapsibleContent className="min-h-0 overflow-y-auto">
+        {projects.length === 0 ? (
+          <p className="text-muted-foreground px-2 text-sm">Aucun projet</p>
+        ) : (
+          <SidebarMenu>
+            {projects.map(({ id, name, color }) => (
+              <SidebarMenuItem key={id}>
+                <SidebarMenuButton asChild>
+                  <Link href={projectPath(id, tab)} title={name}>
+                    <span
+                      aria-hidden
+                      title={projectColorLabel(color)}
+                      style={projectColorStyle(color)}
+                      className="size-2 shrink-0 rounded-full bg-(--project-color)"
+                    />
+                    <span className="truncate">{name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        )}
+      </CollapsibleContent>
     </Collapsible>
   );
 }
