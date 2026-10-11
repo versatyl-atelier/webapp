@@ -706,8 +706,12 @@ export function CalendarEventForm({
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button asChild variant="ghost">
-            <Link href={cancelHref}>{CANCEL_LABEL}</Link>
+          <Button
+            render={<Link href={cancelHref} />}
+            nativeButton={false}
+            variant="ghost"
+          >
+            {CANCEL_LABEL}
           </Button>
           <Button type="submit" name="command" value="save" disabled={saving}>
             {event ? SAVE_EVENT_LABEL : CREATE_EVENT_LABEL}

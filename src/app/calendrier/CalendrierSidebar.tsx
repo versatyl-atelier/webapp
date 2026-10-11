@@ -26,11 +26,12 @@ export async function CalendrierSidebar() {
       </SidebarContent>
       {canEdit && (
         <SidebarFooter>
-          <Button asChild>
-            <Link href={newCalendarEventPath()}>
-              <Plus />
-              {NEW_EVENT_LABEL}
-            </Link>
+          <Button
+            render={<Link href={newCalendarEventPath()} />}
+            nativeButton={false}
+          >
+            <Plus />
+            {NEW_EVENT_LABEL}
           </Button>
         </SidebarFooter>
       )}
