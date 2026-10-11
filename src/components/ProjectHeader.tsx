@@ -47,6 +47,11 @@ import {
 } from "@/lib/projects";
 import type { ProjectHeaderFormState } from "@/schemas/projects.schemas";
 
+const STAGE_ITEMS = {
+  [NO_PROJECT_STAGE_VALUE]: NO_PROJECT_STAGE_LABEL,
+  ...PROJECT_STAGE_LABELS,
+};
+
 type ProjectHeaderProps = {
   project: Pick<ProjectFiche, "id" | "name" | "stage" | "color" | "address">;
 };
@@ -142,7 +147,15 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
         <FieldLabel htmlFor={`${formId}-stage`}>
           {PROJECT_STAGE_LABEL}
         </FieldLabel>
-        <Select value={stage} onValueChange={setStage}>
+        <Select
+          items={STAGE_ITEMS}
+          value={stage}
+          onValueChange={(value) => {
+            if (value !== null) {
+              setStage(value);
+            }
+          }}
+        >
           <SelectTrigger
             id={`${formId}-stage`}
             aria-invalid={!!errors?.stage}

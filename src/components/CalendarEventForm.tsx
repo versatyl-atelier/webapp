@@ -150,6 +150,10 @@ const EVENT_COLORS = Object.values(CalendarEventColor);
 const FREQUENCIES = Object.values(RecurrenceFrequency);
 const RECURRENCE_ENDS = Object.values(RecurrenceEnd);
 const HOURS = Array.from({ length: HOURS_PER_DAY }, (_, hour) => hour);
+const HOUR_ITEMS = HOURS.map((hour) => ({
+  value: String(hour),
+  label: formatHour(hour),
+}));
 const DRAFT_KEY = "draft";
 
 export function CalendarEventForm({
@@ -453,16 +457,21 @@ export function CalendarEventForm({
             </ToggleGroup>
             {hourMode === "24h" ? (
               <Select
+                items={HOUR_ITEMS}
                 value={String(hour)}
-                onValueChange={(value) => setHour(Number(value))}
+                onValueChange={(value) => {
+                  if (value !== null) {
+                    setHour(Number(value));
+                  }
+                }}
               >
                 <SelectTrigger aria-label={HOUR_LABEL} className="w-36">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {HOURS.map((value) => (
-                    <SelectItem key={value} value={String(value)}>
-                      {formatHour(value)}
+                  {HOUR_ITEMS.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -538,9 +547,10 @@ export function CalendarEventForm({
                   {FREQUENCY_LABEL}
                 </FieldLabel>
                 <Select
+                  items={FREQUENCY_LABELS}
                   value={frequency}
                   onValueChange={(value) => {
-                    if (isOneOf(FREQUENCIES, value)) {
+                    if (value !== null && isOneOf(FREQUENCIES, value)) {
                       setFrequency(value);
                     }
                   }}

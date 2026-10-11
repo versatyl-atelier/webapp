@@ -76,6 +76,10 @@ export function PieceCard({
   const [editing, setEditing] = useState(!piece);
   const [dragging, setDragging] = useState(false);
   const [targetPhaseId, setTargetPhaseId] = useState(phaseId);
+  const phaseItems = phases.map(({ id, name }) => ({
+    value: String(id),
+    label: name,
+  }));
   const [deleting, startDeleting] = useTransition();
   const [state, action, saving] = useActionState(
     async (formState: PieceFormState, formData: FormData) => {
@@ -243,18 +247,21 @@ export function PieceCard({
                 {PIECE_PHASE_LABEL}
               </FieldLabel>
               <Select
-                value={
-                  targetPhaseId === null ? undefined : String(targetPhaseId)
-                }
-                onValueChange={(value) => setTargetPhaseId(Number(value))}
+                items={phaseItems}
+                value={targetPhaseId === null ? null : String(targetPhaseId)}
+                onValueChange={(value) => {
+                  if (value !== null) {
+                    setTargetPhaseId(Number(value));
+                  }
+                }}
               >
                 <SelectTrigger id={`${formId}-phase`} className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {phases.map(({ id, name }) => (
-                    <SelectItem key={id} value={String(id)}>
-                      {name}
+                  {phaseItems.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
