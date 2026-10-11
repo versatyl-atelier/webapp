@@ -57,10 +57,11 @@ export async function AppBreadcrumb({
                     {label}
                   </BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink asChild className="truncate">
-                    <Link href={href} title={label}>
-                      {label}
-                    </Link>
+                  <BreadcrumbLink
+                    render={<Link href={href} title={label} />}
+                    className="truncate"
+                  >
+                    {label}
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
