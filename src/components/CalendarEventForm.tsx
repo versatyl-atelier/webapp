@@ -510,7 +510,7 @@ export function CalendarEventForm({
                 aria-label={EVENT_COLOR_LABELS[eventColor]}
                 title={EVENT_COLOR_LABELS[eventColor]}
                 className={cn(
-                  "data-[state=checked]:ring-foreground data-[state=checked]:ring-offset-background size-7 border-0 text-white data-[state=checked]:ring-2 data-[state=checked]:ring-offset-2",
+                  "data-checked:ring-foreground data-checked:ring-offset-background size-7 border-0 text-white data-checked:ring-2 data-checked:ring-offset-2",
                   eventColorClass(eventColor),
                 )}
               />

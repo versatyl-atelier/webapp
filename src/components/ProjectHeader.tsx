@@ -177,7 +177,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
               aria-label={label}
               title={label}
               style={projectColorStyle(value)}
-              className="data-[state=checked]:ring-foreground data-[state=checked]:ring-offset-background size-6 border-0 bg-(--project-color) text-white data-checked:bg-(--project-color) data-[state=checked]:ring-2 data-[state=checked]:ring-offset-2 dark:bg-(--project-color) dark:data-checked:bg-(--project-color)"
+              className="data-checked:ring-foreground data-checked:ring-offset-background size-6 border-0 bg-(--project-color) text-white data-checked:bg-(--project-color) data-checked:ring-2 data-checked:ring-offset-2 dark:bg-(--project-color) dark:data-checked:bg-(--project-color)"
             />
           ))}
         </RadioGroup>
