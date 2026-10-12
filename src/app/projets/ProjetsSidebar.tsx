@@ -15,8 +15,8 @@ export async function ProjetsSidebar({ children }: PropsWithChildren) {
       <SidebarContent>{children}</SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuButton asChild>
-            <Button variant="default">+ Nouveau projet</Button>
+          <SidebarMenuButton render={<Button variant="default" />}>
+            + Nouveau projet
           </SidebarMenuButton>
         </SidebarMenu>
       </SidebarFooter>

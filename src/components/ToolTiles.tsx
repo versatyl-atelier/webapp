@@ -37,12 +37,12 @@ export function ToolTiles({ isManager }: ToolTilesProps) {
                     <ul className="mt-2 flex gap-2">
                       {tags.map((tag?: string) => (
                         <Badge
-                          asChild
+                          render={<li />}
                           key={tag}
                           className="text-2xs rounded-sm"
                           variant="secondary"
                         >
-                          <li>{tag}</li>
+                          {tag}
                         </Badge>
                       ))}
                     </ul>

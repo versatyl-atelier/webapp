@@ -150,6 +150,10 @@ const EVENT_COLORS = Object.values(CalendarEventColor);
 const FREQUENCIES = Object.values(RecurrenceFrequency);
 const RECURRENCE_ENDS = Object.values(RecurrenceEnd);
 const HOURS = Array.from({ length: HOURS_PER_DAY }, (_, hour) => hour);
+const HOUR_ITEMS = HOURS.map((hour) => ({
+  value: String(hour),
+  label: formatHour(hour),
+}));
 const DRAFT_KEY = "draft";
 
 export function CalendarEventForm({
@@ -322,10 +326,9 @@ export function CalendarEventForm({
         <FieldSet>
           <FieldLegend variant="label">{TYPE_LABEL}</FieldLegend>
           <ToggleGroup
-            type="single"
             variant="outline"
-            value={type}
-            onValueChange={(value) => {
+            value={[type]}
+            onValueChange={([value]) => {
               if (isOneOf(EVENT_TYPES, value)) {
                 selectType(value);
               }
@@ -336,7 +339,7 @@ export function CalendarEventForm({
               <ToggleGroupItem
                 key={eventType}
                 value={eventType}
-                className="data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary rounded-full px-3"
+                className="data-pressed:border-primary data-pressed:bg-primary/10 data-pressed:text-primary rounded-full px-3"
               >
                 <EventCategoryIcon category={eventType} />
                 {EVENT_CATEGORY_LABELS[eventType]}
@@ -436,12 +439,11 @@ export function CalendarEventForm({
           <FieldSet className="flex-1">
             <FieldLegend variant="label">{HOUR_LABEL}</FieldLegend>
             <ToggleGroup
-              type="single"
               variant="outline"
               size="sm"
               spacing={0}
-              value={hourMode}
-              onValueChange={(value) => {
+              value={[hourMode]}
+              onValueChange={([value]) => {
                 if (isOneOf(HOUR_MODES, value)) {
                   setHourMode(value);
                 }
@@ -455,29 +457,33 @@ export function CalendarEventForm({
             </ToggleGroup>
             {hourMode === "24h" ? (
               <Select
+                items={HOUR_ITEMS}
                 value={String(hour)}
-                onValueChange={(value) => setHour(Number(value))}
+                onValueChange={(value) => {
+                  if (value !== null) {
+                    setHour(Number(value));
+                  }
+                }}
               >
                 <SelectTrigger aria-label={HOUR_LABEL} className="w-36">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {HOURS.map((value) => (
-                    <SelectItem key={value} value={String(value)}>
-                      {formatHour(value)}
+                  {HOUR_ITEMS.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             ) : (
               <ToggleGroup
-                type="single"
                 variant="outline"
                 size="sm"
                 spacing={0}
                 aria-label={HOUR_LABEL}
-                value={hour < NOON_HOUR ? AM_LABEL : PM_LABEL}
-                onValueChange={(value) => {
+                value={[hour < NOON_HOUR ? AM_LABEL : PM_LABEL]}
+                onValueChange={([value]) => {
                   if (value) {
                     setHour(value === AM_LABEL ? MIDNIGHT_HOUR : NOON_HOUR);
                   }
@@ -510,7 +516,7 @@ export function CalendarEventForm({
                 aria-label={EVENT_COLOR_LABELS[eventColor]}
                 title={EVENT_COLOR_LABELS[eventColor]}
                 className={cn(
-                  "data-[state=checked]:ring-foreground data-[state=checked]:ring-offset-background size-7 border-0 text-white data-[state=checked]:ring-2 data-[state=checked]:ring-offset-2",
+                  "data-checked:ring-foreground data-checked:ring-offset-background size-7 border-0 text-white data-checked:ring-2 data-checked:ring-offset-2",
                   eventColorClass(eventColor),
                 )}
               />
@@ -541,9 +547,10 @@ export function CalendarEventForm({
                   {FREQUENCY_LABEL}
                 </FieldLabel>
                 <Select
+                  items={FREQUENCY_LABELS}
                   value={frequency}
                   onValueChange={(value) => {
-                    if (isOneOf(FREQUENCIES, value)) {
+                    if (value !== null && isOneOf(FREQUENCIES, value)) {
                       setFrequency(value);
                     }
                   }}
@@ -585,7 +592,7 @@ export function CalendarEventForm({
               <FieldSet>
                 <FieldLegend variant="label">{WEEKDAYS_LABEL}</FieldLegend>
                 <ToggleGroup
-                  type="multiple"
+                  multiple
                   variant="outline"
                   size="sm"
                   value={weekdays.map(String)}
@@ -596,7 +603,7 @@ export function CalendarEventForm({
                     <ToggleGroupItem
                       key={day}
                       value={String(day)}
-                      className="bg-background data-[state=on]:bg-primary data-[state=on]:text-primary-foreground w-10"
+                      className="bg-background data-pressed:bg-primary data-pressed:text-primary-foreground w-10"
                     >
                       {WEEKDAY_LABELS[index]}
                     </ToggleGroupItem>
@@ -673,15 +680,17 @@ export function CalendarEventForm({
         <footer className="flex flex-wrap justify-end gap-2.5 border-t pt-3">
           {event && (
             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="mr-auto"
-                  disabled={saving}
-                >
-                  {DELETE_EVENT_LABEL}
-                </Button>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="mr-auto"
+                    disabled={saving}
+                  />
+                }
+              >
+                {DELETE_EVENT_LABEL}
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -704,8 +713,12 @@ export function CalendarEventForm({
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button asChild variant="ghost">
-            <Link href={cancelHref}>{CANCEL_LABEL}</Link>
+          <Button
+            render={<Link href={cancelHref} />}
+            nativeButton={false}
+            variant="ghost"
+          >
+            {CANCEL_LABEL}
           </Button>
           <Button type="submit" name="command" value="save" disabled={saving}>
             {event ? SAVE_EVENT_LABEL : CREATE_EVENT_LABEL}

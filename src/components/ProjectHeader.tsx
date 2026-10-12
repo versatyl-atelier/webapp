@@ -47,6 +47,11 @@ import {
 } from "@/lib/projects";
 import type { ProjectHeaderFormState } from "@/schemas/projects.schemas";
 
+const STAGE_ITEMS = {
+  [NO_PROJECT_STAGE_VALUE]: NO_PROJECT_STAGE_LABEL,
+  ...PROJECT_STAGE_LABELS,
+};
+
 type ProjectHeaderProps = {
   project: Pick<ProjectFiche, "id" | "name" | "stage" | "color" | "address">;
 };
@@ -142,7 +147,15 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
         <FieldLabel htmlFor={`${formId}-stage`}>
           {PROJECT_STAGE_LABEL}
         </FieldLabel>
-        <Select value={stage} onValueChange={setStage}>
+        <Select
+          items={STAGE_ITEMS}
+          value={stage}
+          onValueChange={(value) => {
+            if (value !== null) {
+              setStage(value);
+            }
+          }}
+        >
           <SelectTrigger
             id={`${formId}-stage`}
             aria-invalid={!!errors?.stage}
@@ -177,7 +190,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
               aria-label={label}
               title={label}
               style={projectColorStyle(value)}
-              className="data-[state=checked]:ring-foreground data-[state=checked]:ring-offset-background size-6 border-0 bg-(--project-color) text-white data-checked:bg-(--project-color) data-[state=checked]:ring-2 data-[state=checked]:ring-offset-2 dark:bg-(--project-color) dark:data-checked:bg-(--project-color)"
+              className="data-checked:ring-foreground data-checked:ring-offset-background size-6 border-0 bg-(--project-color) text-white data-checked:bg-(--project-color) data-checked:ring-2 data-checked:ring-offset-2 dark:bg-(--project-color) dark:data-checked:bg-(--project-color)"
             />
           ))}
         </RadioGroup>

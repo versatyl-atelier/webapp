@@ -71,8 +71,13 @@ export default function FillDayForm({
           </FieldLabel>
           <Select
             name="date"
+            items={dateOptions}
             value={date}
-            onValueChange={setDate}
+            onValueChange={(value) => {
+              if (value !== null) {
+                setDate(value);
+              }
+            }}
             disabled={pending || !!disabled}
           >
             <SelectTrigger className="w-full rounded border-2 px-1.5 py-1 text-xs">

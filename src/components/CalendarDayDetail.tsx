@@ -75,11 +75,14 @@ export async function CalendarDayDetail({
           {formatDayLabel(date)}
         </Heading>
         {canEdit && (
-          <Button asChild variant="outline" size="sm">
-            <Link href={newCalendarEventPath(date)}>
-              <Plus />
-              {ADD_EVENT_LABEL}
-            </Link>
+          <Button
+            render={<Link href={newCalendarEventPath(date)} />}
+            nativeButton={false}
+            variant="outline"
+            size="sm"
+          >
+            <Plus />
+            {ADD_EVENT_LABEL}
           </Button>
         )}
       </header>

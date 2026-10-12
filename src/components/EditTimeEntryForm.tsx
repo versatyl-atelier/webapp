@@ -88,8 +88,8 @@ export default function EditTimeEntryForm({
       </DialogTrigger>
       <DialogContent className="border-2">
         <DialogHeader className="border-primary mb-4 border-b-4 pb-2.5 text-center">
-          <DialogTitle className="text-lg font-bold" asChild>
-            <h2>{"Modifier l'entrée de temps"}</h2>
+          <DialogTitle className="text-lg font-bold">
+            {"Modifier l'entrée de temps"}
           </DialogTitle>
         </DialogHeader>
         <form action={action}>
@@ -171,14 +171,16 @@ export default function EditTimeEntryForm({
             >
               Supprimer
             </Button>
-            <DialogClose asChild>
-              <Button
-                disabled={pending}
-                variant="outline"
-                className="rounded-sm px-5 py-2.5 text-xs font-bold"
-              >
-                Annuler
-              </Button>
+            <DialogClose
+              render={
+                <Button
+                  disabled={pending}
+                  variant="outline"
+                  className="rounded-sm px-5 py-2.5 text-xs font-bold"
+                />
+              }
+            >
+              Annuler
             </DialogClose>
           </DialogFooter>
         </form>

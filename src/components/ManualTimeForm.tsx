@@ -82,6 +82,7 @@ export default function ManualTimeForm({
           </FieldLabel>
           <Select
             name="date"
+            items={dateOptions}
             defaultValue={defaultDate}
             disabled={pending || !!disabled}
           >

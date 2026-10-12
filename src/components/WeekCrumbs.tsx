@@ -43,10 +43,13 @@ function WeekNavButton({
     );
   }
   return (
-    <Button asChild variant="secondary" size="icon-xs">
-      <Link href={href} aria-label={label} title={label}>
-        {children}
-      </Link>
+    <Button
+      render={<Link href={href} aria-label={label} title={label} />}
+      nativeButton={false}
+      variant="secondary"
+      size="icon-xs"
+    >
+      {children}
     </Button>
   );
 }
@@ -67,7 +70,8 @@ export function TodayWeekButton({
   const isCurrentWeek = weekStart === todayWeekStart;
   return (
     <Button
-      asChild
+      render={<Link href={weekPath(todayWeekStart)} inert={isCurrentWeek} />}
+      nativeButton={false}
       variant="outline"
       size="xs"
       className={cn(
@@ -76,9 +80,7 @@ export function TodayWeekButton({
         isCurrentWeek ? "pointer-events-none opacity-0" : null,
       )}
     >
-      <Link href={weekPath(todayWeekStart)} inert={isCurrentWeek}>
-        {TODAY_LABEL}
-      </Link>
+      {TODAY_LABEL}
     </Button>
   );
 }
