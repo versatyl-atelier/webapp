@@ -33,6 +33,10 @@ export function CreateUserForm({ employees, className }: CreateUserFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, action, pending] = useActionState(createUser, undefined);
+  const employeeItems = [
+    { value: NO_EMPLOYEE_ID, label: NO_EMPLOYEE_LABEL },
+    ...employees.map(({ id, name }) => ({ value: id.toString(), label: name })),
+  ];
 
   useEffect(() => {
     if (state?.message !== CREATE_USER_SUCCESS_MESSAGE) {
@@ -66,7 +70,7 @@ export function CreateUserForm({ employees, className }: CreateUserFormProps) {
       </Field>
       <Field>
         <FieldLabel htmlFor="role">Rôle</FieldLabel>
-        <Select name="role" defaultValue={Role.employee}>
+        <Select name="role" defaultValue={Role.employee} items={ROLE_LABELS}>
           <SelectTrigger id="role" className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -86,15 +90,18 @@ export function CreateUserForm({ employees, className }: CreateUserFormProps) {
       </Field>
       <Field>
         <FieldLabel htmlFor="employeeId">Employé</FieldLabel>
-        <Select name="employeeId" defaultValue={NO_EMPLOYEE_ID}>
+        <Select
+          name="employeeId"
+          defaultValue={NO_EMPLOYEE_ID}
+          items={employeeItems}
+        >
           <SelectTrigger id="employeeId" className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={NO_EMPLOYEE_ID}>{NO_EMPLOYEE_LABEL}</SelectItem>
-            {employees.map(({ id, name }) => (
-              <SelectItem key={id} value={id.toString()}>
-                {name}
+            {employeeItems.map(({ value, label }) => (
+              <SelectItem key={value} value={value}>
+                {label}
               </SelectItem>
             ))}
           </SelectContent>

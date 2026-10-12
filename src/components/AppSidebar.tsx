@@ -29,19 +29,17 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              asChild
+              render={<Link href={HOME_PATH} />}
               tooltip={{ children: HOME_LABEL, hidden: false }}
               className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground justify-center p-1 [&_svg]:size-5"
             >
-              <Link href={HOME_PATH}>
-                <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden>
-                  <rect x="1" y="1" width="4" height="4" rx="1" />
-                  <rect x="7" y="1" width="4" height="4" rx="1" />
-                  <rect x="1" y="7" width="4" height="4" rx="1" />
-                  <rect x="7" y="7" width="4" height="4" rx="1" />
-                </svg>
-                <span className="sr-only">{HOME_LABEL}</span>
-              </Link>
+              <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden>
+                <rect x="1" y="1" width="4" height="4" rx="1" />
+                <rect x="7" y="1" width="4" height="4" rx="1" />
+                <rect x="1" y="7" width="4" height="4" rx="1" />
+                <rect x="7" y="7" width="4" height="4" rx="1" />
+              </svg>
+              <span className="sr-only">{HOME_LABEL}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -53,15 +51,13 @@ export function AppSidebar() {
               {TOOLS.map(({ href, icon, title }) => (
                 <SidebarMenuItem key={href}>
                   <SidebarMenuButton
-                    asChild
+                    render={<Link href={href} />}
                     isActive={href === activeHref}
                     tooltip={{ children: title, hidden: false }}
                     className="justify-center p-3 text-xl"
                   >
-                    <Link href={href}>
-                      <span aria-hidden>{icon}</span>
-                      <span className="sr-only">{title}</span>
-                    </Link>
+                    <span aria-hidden>{icon}</span>
+                    <span className="sr-only">{title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

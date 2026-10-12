@@ -272,18 +272,16 @@ export function NoteThread({ note, currentUser, now }: NoteThreadProps) {
   ) : (
     <>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <span tabIndex={0} className="rounded-md">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              aria-label={LINK_EMAIL_LABEL}
-              disabled
-            >
-              <Link />
-            </Button>
-          </span>
+        <TooltipTrigger render={<span tabIndex={0} className="rounded-md" />}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={LINK_EMAIL_LABEL}
+            disabled
+          >
+            <Link />
+          </Button>
         </TooltipTrigger>
         <TooltipContent>{LINK_EMAIL_LABEL}</TooltipContent>
       </Tooltip>

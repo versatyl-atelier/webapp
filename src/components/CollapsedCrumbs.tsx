@@ -28,8 +28,8 @@ export function CollapsedCrumbs({ crumbs }: CollapsedCrumbsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           {crumbs.map(({ href, label }) => (
-            <DropdownMenuItem key={href} asChild>
-              <Link href={href}>{label}</Link>
+            <DropdownMenuItem key={href} render={<Link href={href} />}>
+              {label}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

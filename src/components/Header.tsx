@@ -26,10 +26,14 @@ export async function Header() {
         <h1 className="inline-block font-bold">
           <Link href={HOME_PATH}>{APP_NAME}</Link>
         </h1>
-        <Button asChild variant="ghost" size="icon" className="sm:hidden">
-          <Link href={SEARCH_PATH} aria-label={HEADER_SEARCH_LABEL}>
-            <Search />
-          </Link>
+        <Button
+          render={<Link href={SEARCH_PATH} aria-label={HEADER_SEARCH_LABEL} />}
+          nativeButton={false}
+          variant="ghost"
+          size="icon"
+          className="sm:hidden"
+        >
+          <Search />
         </Button>
         <Link
           href={SEARCH_PATH}

@@ -87,24 +87,29 @@ function NotesSection({
   }
 
   return (
-    <Collapsible asChild>
-      <section aria-labelledby={headingId} className="flex flex-col gap-0.5">
-        <h3 id={headingId}>
-          <CollapsibleTrigger
-            className={cn(
-              SECTION_HEADER_CLASS,
-              "group/trigger hover:bg-muted transition-colors",
-            )}
-          >
-            {header}
-            <ChevronRight
-              aria-hidden
-              className="text-muted-foreground size-3.5 shrink-0 transition-transform group-data-[state=open]/trigger:rotate-90"
-            />
-          </CollapsibleTrigger>
-        </h3>
-        <CollapsibleContent>{body}</CollapsibleContent>
-      </section>
+    <Collapsible
+      render={
+        <section
+          aria-labelledby={headingId}
+          className="flex flex-col gap-0.5"
+        />
+      }
+    >
+      <h3 id={headingId}>
+        <CollapsibleTrigger
+          className={cn(
+            SECTION_HEADER_CLASS,
+            "group/trigger hover:bg-muted transition-colors",
+          )}
+        >
+          {header}
+          <ChevronRight
+            aria-hidden
+            className="text-muted-foreground size-3.5 shrink-0 transition-transform group-data-panel-open/trigger:rotate-90"
+          />
+        </CollapsibleTrigger>
+      </h3>
+      <CollapsibleContent>{body}</CollapsibleContent>
     </Collapsible>
   );
 }
