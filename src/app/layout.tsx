@@ -11,6 +11,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { isOpen } from "@/lib/sidebar";
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,6 +72,7 @@ export default async function RootLayout({
             }}
           />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
