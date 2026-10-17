@@ -10,13 +10,16 @@
 - `cp .env.example .env && cp .env.example .env.staging && cp .env.example .env.prod`
 - `npm install`
 - `git switch dev` (never work on `main`, see [Workflow](docs/workflow.md))
-- 
 
 ### Day-to-day dev
+
 - Start the local database
-    - Launch Docker Desktop or `docker desktop start`
-    - Start the database: `npm run db:dev`
+  - Launch Docker Desktop or `docker desktop start`
+  - Start the database: `npm run db:dev`
 - Start the dev server: `npm run dev`
+- Staging/prod variants (using values from `.env.staging` or `.env.prod`):
+  - `npm run build:staging` or `npm run build:prod`
+  - `npm run start:staging` or `npm run start:prod`
 - push to `dev` branch to deploy to staging and create PR
 - Code owners can merge PR into `main` to deploy to main
 
