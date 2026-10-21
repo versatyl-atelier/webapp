@@ -14,3 +14,4 @@ See @/prisma/schema.prisma
 - `DATABASE_URL`: pooled (`-pooler`), used by the app
 - `DATABASE_URL_UNPOOLED`: direct, used by Prisma CLI (migrations)
 - Run scripts against staging/prod with `npm run db:<script>:staging|prod`
+- `npm run db:prod-to-dev` replaces the local DB with a read-only copy of prod (local passwords kept, sessions not copied). Both must be on the same migrations
