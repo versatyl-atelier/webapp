@@ -22,6 +22,7 @@
   - `npm run start:staging` or `npm run start:prod`
 - push to `dev` branch to deploy to staging and create PR
 - Code owners can merge PR into `main` to deploy to main
+- To import db from prod: `npm run db:prod-to-dev`
 
 ### For the rest
 
