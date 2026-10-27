@@ -16,16 +16,18 @@ import {
   NEW_CALENDAR_EVENT_PATH,
   NOON_HOUR,
   NOON_LABEL,
+  OCCURRENCE_DETAIL_SEPARATOR,
   RECURRENT_CATEGORY,
+  REPEATABLE_EVENT_TYPES,
   WEEK_LABEL_RANGE_SEPARATOR,
   WORK_DAYS_PER_WEEK,
   type EventCategory,
 } from "@/constants/calendar";
 import {
+  CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
   type CalendarEventColor,
-  type CalendarEventType,
 } from "@/generated/prisma/enums";
 
 export type DateKey = string;
@@ -33,6 +35,7 @@ export type DateKey = string;
 export type CalendarEventRecord = {
   id: number;
   type: CalendarEventType;
+  subcategory: string;
   title: string;
   detail: string;
   date: DateKey;
@@ -45,6 +48,7 @@ export type CalendarEventRecord = {
   endDate: DateKey | null;
   endCount: number | null;
   projectId: string | null;
+  ownerId: string | null;
 };
 
 export type CalendarOccurrence = {
@@ -52,6 +56,7 @@ export type CalendarOccurrence = {
   eventId: number;
   date: DateKey;
   category: EventCategory;
+  subcategory: string;
   title: string;
   detail: string;
   hour: number;
@@ -295,10 +300,16 @@ export function occurrenceDates(
   return dates;
 }
 
+export function canRepeat(type: CalendarEventType): boolean {
+  return REPEATABLE_EVENT_TYPES.includes(type);
+}
+
 export function eventCategory(
   event: Pick<CalendarEventRecord, "type" | "frequency">,
 ): EventCategory {
-  return event.frequency === null ? event.type : RECURRENT_CATEGORY;
+  return event.frequency !== null && event.type === CalendarEventType.manuel
+    ? RECURRENT_CATEGORY
+    : event.type;
 }
 
 export function compareOccurrences(
@@ -324,6 +335,7 @@ export function expandOccurrences(
         eventId: event.id,
         date,
         category: eventCategory(event),
+        subcategory: event.subcategory,
         title: event.title,
         detail: event.detail,
         hour: event.hour,
@@ -372,17 +384,39 @@ export function formatHour(hour: number): string {
   return `${hour} ${HOUR_SUFFIX}`;
 }
 
+function occurrenceDetails(
+  occurrence: Pick<CalendarOccurrence, "subcategory" | "detail">,
+): string[] {
+  return [occurrence.subcategory, occurrence.detail].filter(Boolean);
+}
+
 export function occurrenceSubtitle(
-  occurrence: Pick<CalendarOccurrence, "detail" | "hour">,
+  occurrence: Pick<CalendarOccurrence, "subcategory" | "detail" | "hour">,
 ): string {
-  return occurrence.detail || formatHour(occurrence.hour);
+  return (
+    occurrenceDetails(occurrence).join(OCCURRENCE_DETAIL_SEPARATOR) ||
+    formatHour(occurrence.hour)
+  );
+}
+
+export function occurrenceMeta(
+  occurrence: Pick<CalendarOccurrence, "subcategory" | "detail" | "hour">,
+): string {
+  return [formatHour(occurrence.hour), ...occurrenceDetails(occurrence)].join(
+    OCCURRENCE_DETAIL_SEPARATOR,
+  );
 }
 
 export function occurrenceDescription(
-  occurrence: Pick<CalendarOccurrence, "detail" | "hour" | "title">,
+  occurrence: Pick<
+    CalendarOccurrence,
+    "subcategory" | "detail" | "hour" | "title"
+  >,
 ): string {
-  const detail = occurrence.detail ? ` · ${occurrence.detail}` : "";
-  return `${formatHour(occurrence.hour)} — ${occurrence.title}${detail}`;
+  return [
+    `${formatHour(occurrence.hour)} — ${occurrence.title}`,
+    ...occurrenceDetails(occurrence),
+  ].join(OCCURRENCE_DETAIL_SEPARATOR);
 }
 
 export function eventCountLabel(count: number): string {
@@ -440,11 +474,11 @@ export function eventColorClass(color: CalendarEventColor): string {
 }
 
 export function matchesSearch(
-  occurrence: Pick<CalendarOccurrence, "title" | "detail">,
+  occurrence: Pick<CalendarOccurrence, "title" | "subcategory" | "detail">,
   query: string,
 ): boolean {
   const needle = query.trim().toLocaleLowerCase(CALENDAR_LOCALE);
-  return `${occurrence.title} ${occurrence.detail}`
+  return `${occurrence.title} ${occurrence.subcategory} ${occurrence.detail}`
     .toLocaleLowerCase(CALENDAR_LOCALE)
     .includes(needle);
 }

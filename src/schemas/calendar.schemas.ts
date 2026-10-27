@@ -27,6 +27,7 @@ export const CalendarEventFormSchema = Schema.Struct({
   id: Schema.optional(Schema.String),
   command: Schema.Literal("save", "delete"),
   type: Schema.Enums(CalendarEventType),
+  subcategory: Schema.Trim,
   title: Schema.Trim.pipe(
     Schema.minLength(1, { message: () => TITLE_REQUIRED_MESSAGE }),
   ),
@@ -58,6 +59,7 @@ export type CalendarEventFormErrors = {
   id?: string[];
   command?: string[];
   type?: string[];
+  subcategory?: string[];
   title?: string[];
   detail?: string[];
   date?: string[];

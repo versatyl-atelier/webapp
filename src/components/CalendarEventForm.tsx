@@ -75,6 +75,7 @@ import {
   EVENT_COLOR_LABELS,
   EVENT_DELETED_MESSAGE,
   EVENT_SAVED_MESSAGE,
+  EVENT_SUBCATEGORIES,
   FREQUENCY_LABEL,
   FREQUENCY_LABELS,
   FREQUENCY_UNIT_LABELS,
@@ -93,6 +94,7 @@ import {
   NEW_EVENT_LABEL,
   NOON_HOUR,
   OCCURRENCES_LABEL,
+  PERSONAL_NOTE,
   PM_LABEL,
   PROJECT_SEARCH_EMPTY,
   PROJECT_SEARCH_HINT,
@@ -104,6 +106,9 @@ import {
   SAVE_EVENT_LABEL,
   SERIES_EDIT_NOTE,
   START_DATE_LABEL,
+  SUBCATEGORY_LABEL,
+  SUBCATEGORY_OTHER_LABEL,
+  SUBCATEGORY_OTHER_PLACEHOLDER,
   TITLE_LABEL,
   TITLE_PLACEHOLDER,
   TYPE_LABEL,
@@ -121,6 +126,7 @@ import {
 } from "@/generated/prisma/enums";
 import {
   calendarWeekPath,
+  canRepeat,
   dayOrderPreview,
   eventColorClass,
   formatHour,
@@ -155,6 +161,8 @@ const HOUR_ITEMS = HOURS.map((hour) => ({
   label: formatHour(hour),
 }));
 const DRAFT_KEY = "draft";
+const PILL_CLASS =
+  "data-pressed:border-primary data-pressed:bg-primary/10 data-pressed:text-primary rounded-full px-3";
 
 export function CalendarEventForm({
   event,
@@ -170,6 +178,7 @@ export function CalendarEventForm({
   const [previewPending, startPreviewTransition] = useTransition();
 
   const [type, setType] = useState(event?.type ?? DEFAULT_EVENT_TYPE);
+  const [subcategory, setSubcategory] = useState(event?.subcategory ?? "");
   const [title, setTitle] = useState(event?.title ?? "");
   const [detail, setDetail] = useState(event?.detail ?? "");
   const [date, setDate] = useState(event?.date ?? initialDate);
@@ -206,13 +215,14 @@ export function CalendarEventForm({
     router.push(calendarWeekPath(mondayOf(state.date)));
   }, [state, router]);
 
-  const canRepeat = type === CalendarEventType.manuel;
-  const isRecurring = canRepeat && repeats;
+  const repeatable = canRepeat(type);
+  const isRecurring = repeatable && repeats;
+  const isPresetSubcategory = isOneOf(EVENT_SUBCATEGORIES, subcategory);
   const errors = state?.errors;
 
   const selectType = (value: CalendarEventType) => {
     setType(value);
-    if (value !== CalendarEventType.manuel) {
+    if (!canRepeat(value)) {
       setRepeats(false);
     }
   };
@@ -265,6 +275,7 @@ export function CalendarEventForm({
         <FormValidationAlerts errors={errors} />
         {event && <input type="hidden" name="id" value={event.id} />}
         <input type="hidden" name="type" value={type} />
+        <input type="hidden" name="subcategory" value={subcategory} />
         <input type="hidden" name="hour" value={hour} />
         <input type="hidden" name="color" value={color} />
         <input type="hidden" name="projectId" value={project?.id ?? ""} />
@@ -339,7 +350,7 @@ export function CalendarEventForm({
               <ToggleGroupItem
                 key={eventType}
                 value={eventType}
-                className="data-pressed:border-primary data-pressed:bg-primary/10 data-pressed:text-primary rounded-full px-3"
+                className={PILL_CLASS}
               >
                 <EventCategoryIcon category={eventType} />
                 {EVENT_CATEGORY_LABELS[eventType]}
@@ -351,8 +362,45 @@ export function CalendarEventForm({
               {LANCEUR_NOTE}
             </p>
           )}
+          {type === CalendarEventType.personnel && (
+            <p className="bg-muted text-muted-foreground rounded-sm px-2.5 py-1.5 text-xs">
+              {PERSONAL_NOTE}
+            </p>
+          )}
           <FieldErrors errors={errors?.type} />
         </FieldSet>
+
+        {type === CalendarEventType.divers && (
+          <FieldSet>
+            <FieldLegend variant="label">{SUBCATEGORY_LABEL}</FieldLegend>
+            <div className="flex flex-wrap items-center gap-2">
+              <ToggleGroup
+                variant="outline"
+                value={isPresetSubcategory ? [subcategory] : []}
+                onValueChange={([value]) => setSubcategory(value ?? "")}
+                className="flex-wrap"
+              >
+                {EVENT_SUBCATEGORIES.map((preset) => (
+                  <ToggleGroupItem
+                    key={preset}
+                    value={preset}
+                    className={PILL_CLASS}
+                  >
+                    {preset}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+              <Input
+                aria-label={SUBCATEGORY_OTHER_LABEL}
+                placeholder={SUBCATEGORY_OTHER_PLACEHOLDER}
+                value={isPresetSubcategory ? "" : subcategory}
+                onChange={(e) => setSubcategory(e.target.value)}
+                className="h-8 w-32 rounded-full px-3"
+              />
+            </div>
+            <FieldErrors errors={errors?.subcategory} />
+          </FieldSet>
+        )}
 
         <Field>
           <FieldLabel htmlFor={`${formId}-title`}>{TITLE_LABEL}</FieldLabel>
@@ -526,7 +574,7 @@ export function CalendarEventForm({
           <FieldErrors errors={errors?.color} />
         </FieldSet>
 
-        {canRepeat && (
+        {repeatable && (
           <Field orientation="horizontal">
             <Checkbox
               id={`${formId}-repeats`}

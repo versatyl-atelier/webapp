@@ -46,6 +46,8 @@ export const EVENT_CATEGORIES: readonly EventCategory[] = [
   CalendarEventType.installation,
   RECURRENT_CATEGORY,
   CalendarEventType.manuel,
+  CalendarEventType.divers,
+  CalendarEventType.personnel,
 ];
 
 export const EVENT_CATEGORY_LABELS: Record<EventCategory, string> = {
@@ -53,6 +55,8 @@ export const EVENT_CATEGORY_LABELS: Record<EventCategory, string> = {
   installation: "Installation",
   recurrent: "Récurrent",
   manuel: "Manuel",
+  divers: "Divers",
+  personnel: "Personnel",
 };
 
 export const EVENT_TYPE_EMOJIS: Partial<Record<EventCategory, string>> = {
@@ -64,6 +68,21 @@ export const LANCEUR_EVENT_TYPES: readonly CalendarEventType[] = [
   CalendarEventType.livraison,
   CalendarEventType.installation,
 ];
+
+export const REPEATABLE_EVENT_TYPES: readonly CalendarEventType[] = [
+  CalendarEventType.manuel,
+  CalendarEventType.divers,
+  CalendarEventType.personnel,
+];
+
+export const EVENT_SUBCATEGORIES = [
+  "RH",
+  "Loisir",
+  "Sécurité",
+  "Formation",
+] as const;
+
+export const OCCURRENCE_DETAIL_SEPARATOR = " · ";
 
 export const EVENT_COLOR_BG_CLASSES: Record<CalendarEventColor, string> = {
   blue: "bg-blue-700 dark:bg-blue-700 data-checked:bg-blue-700 dark:data-checked:bg-blue-700",
@@ -164,6 +183,10 @@ export const LINKED_PROJECT_HINT =
 export const TYPE_LABEL = "Type";
 export const LANCEUR_NOTE =
   "Normalement généré automatiquement par le Lanceur — à utiliser seulement pour un cas particulier.";
+export const PERSONAL_NOTE = "Visible seulement par vous.";
+export const SUBCATEGORY_LABEL = "Sous-catégorie";
+export const SUBCATEGORY_OTHER_LABEL = "Autre sous-catégorie";
+export const SUBCATEGORY_OTHER_PLACEHOLDER = "Autre";
 export const TITLE_LABEL = "Titre";
 export const TITLE_PLACEHOLDER = "Ex. Gagné Paradis";
 export const DETAIL_LABEL = "Détail (2e ligne, optionnel)";

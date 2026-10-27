@@ -21,11 +21,14 @@ import type {
   TrelloBoardConfig,
 } from "@/schemas/calendar.schemas";
 
+const USER_ID = "u1";
+
 const form = (
   overrides: Partial<CalendarEventFormData> = {},
 ): CalendarEventFormData => ({
   command: "save",
   type: CalendarEventType.manuel,
+  subcategory: "",
   title: "Réunion",
   detail: "",
   date: "2026-07-14",
@@ -43,20 +46,55 @@ const form = (
 });
 
 describe("eventDataFromForm", () => {
-  it("ignores recurrence unless a manual event repeats", () => {
+  it("ignores recurrence unless a repeatable event repeats", () => {
     for (const overrides of [
       { repeats: undefined },
       { type: CalendarEventType.livraison },
+      { type: CalendarEventType.installation },
     ]) {
-      const result = eventDataFromForm(form(overrides));
+      const result = eventDataFromForm(form(overrides), USER_ID);
       expect(result).toMatchObject({
         data: { frequency: null, weekdays: [], endType: RecurrenceEnd.never },
       });
     }
   });
 
+  it("lets divers and personal events repeat", () => {
+    for (const type of [
+      CalendarEventType.divers,
+      CalendarEventType.personnel,
+    ]) {
+      expect(eventDataFromForm(form({ type }), USER_ID)).toMatchObject({
+        data: { type, frequency: RecurrenceFrequency.weekly },
+      });
+    }
+  });
+
+  it("keeps the subcategory of divers events only", () => {
+    expect(
+      eventDataFromForm(
+        form({ type: CalendarEventType.divers, subcategory: "RH" }),
+        USER_ID,
+      ),
+    ).toMatchObject({ data: { subcategory: "RH" } });
+    expect(
+      eventDataFromForm(form({ subcategory: "RH" }), USER_ID),
+    ).toMatchObject({
+      data: { subcategory: "" },
+    });
+  });
+
+  it("gives personal events to the current user only", () => {
+    expect(
+      eventDataFromForm(form({ type: CalendarEventType.personnel }), USER_ID),
+    ).toMatchObject({ data: { ownerId: USER_ID } });
+    expect(eventDataFromForm(form(), USER_ID)).toMatchObject({
+      data: { ownerId: null },
+    });
+  });
+
   it("defaults weekly recurrences to the start weekday", () => {
-    expect(eventDataFromForm(form())).toMatchObject({
+    expect(eventDataFromForm(form(), USER_ID)).toMatchObject({
       data: { frequency: RecurrenceFrequency.weekly, weekdays: [2] },
     });
   });
@@ -65,12 +103,13 @@ describe("eventDataFromForm", () => {
     expect(
       eventDataFromForm(
         form({ frequency: RecurrenceFrequency.monthly, weekdays: "1,3" }),
+        USER_ID,
       ),
     ).toMatchObject({ data: { weekdays: [] } });
   });
 
   it("stores the date as a UTC midnight", () => {
-    const result = eventDataFromForm(form({ repeats: undefined }));
+    const result = eventDataFromForm(form({ repeats: undefined }), USER_ID);
     expect("data" in result && result.data.date.toISOString()).toBe(
       "2026-07-14T00:00:00.000Z",
     );
@@ -80,23 +119,32 @@ describe("eventDataFromForm", () => {
     expect(
       eventDataFromForm(
         form({ endType: RecurrenceEnd.date, endDate: "2026-07-01" }),
+        USER_ID,
       ),
     ).toEqual({ errors: { endDate: [END_DATE_BEFORE_START_MESSAGE] } });
     expect(
-      eventDataFromForm(form({ endType: RecurrenceEnd.count, endCount: "0" })),
+      eventDataFromForm(
+        form({ endType: RecurrenceEnd.count, endCount: "0" }),
+        USER_ID,
+      ),
     ).toEqual({ errors: { endCount: [INVALID_END_COUNT_MESSAGE] } });
     expect(
-      eventDataFromForm(form({ endType: RecurrenceEnd.count, endCount: "3" })),
+      eventDataFromForm(
+        form({ endType: RecurrenceEnd.count, endCount: "3" }),
+        USER_ID,
+      ),
     ).toMatchObject({ data: { endCount: 3, endDate: null } });
   });
 
   it("links the event to a project only when one is chosen", () => {
-    expect(eventDataFromForm(form())).toMatchObject({
+    expect(eventDataFromForm(form(), USER_ID)).toMatchObject({
       data: { projectId: null },
     });
-    expect(eventDataFromForm(form({ projectId: "p1" }))).toMatchObject({
-      data: { projectId: "p1" },
-    });
+    expect(eventDataFromForm(form({ projectId: "p1" }), USER_ID)).toMatchObject(
+      {
+        data: { projectId: "p1" },
+      },
+    );
   });
 });
 
@@ -107,6 +155,7 @@ describe("eventRecordFromDb", () => {
       eventRecordFromDb({
         id: 3,
         type: CalendarEventType.manuel,
+        subcategory: "",
         title: "T",
         detail: "",
         date: new Date("2026-07-14T00:00:00.000Z"),
@@ -120,6 +169,7 @@ describe("eventRecordFromDb", () => {
         endCount: null,
         trelloCardId: null,
         projectId: null,
+        ownerId: null,
         createdAt: now,
         updatedAt: now,
       }),
@@ -171,6 +221,8 @@ describe("trelloCardToEventData", () => {
       hour: 21,
       color: CalendarEventColor.blue,
       projectId: null,
+      ownerId: null,
+      subcategory: "",
       frequency: null,
     });
   });
