@@ -1,15 +1,22 @@
-import { MapPin, Repeat } from "lucide-react";
+import { Lock, MapPin, Repeat, Tag, type LucideIcon } from "lucide-react";
 
 import {
   EVENT_TYPE_EMOJIS,
   RECURRENT_CATEGORY,
   type EventCategory,
 } from "@/constants/calendar";
+import { CalendarEventType } from "@/generated/prisma/enums";
 import { cn } from "@/lib/utils";
 
 type EventCategoryIconProps = {
   category: EventCategory;
   className?: string;
+};
+
+const CATEGORY_ICONS: Partial<Record<EventCategory, LucideIcon>> = {
+  [RECURRENT_CATEGORY]: Repeat,
+  [CalendarEventType.divers]: Tag,
+  [CalendarEventType.personnel]: Lock,
 };
 
 export function EventCategoryIcon({
@@ -24,6 +31,6 @@ export function EventCategoryIcon({
       </span>
     );
   }
-  const Icon = category === RECURRENT_CATEGORY ? Repeat : MapPin;
+  const Icon = CATEGORY_ICONS[category] ?? MapPin;
   return <Icon aria-hidden className={cn("size-3 shrink-0", className)} />;
 }

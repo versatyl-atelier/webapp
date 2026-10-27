@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     root: import.meta.dirname,
   },
   allowedDevOrigins: lanIps,
+  experimental: {
+    agentUpgrade: "security",
+  },
 };
 
 export default nextConfig;

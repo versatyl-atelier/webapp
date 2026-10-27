@@ -15,8 +15,8 @@ import {
   calendarEventPath,
   eventColorClass,
   formatDayLabel,
-  formatHour,
   newCalendarEventPath,
+  occurrenceMeta,
   type CalendarOccurrence,
   type DateKey,
 } from "@/lib/calendar";
@@ -48,8 +48,7 @@ function OccurrenceRowContent({
           {occurrence.title}
         </span>
         <span className="block truncate text-xs tabular-nums opacity-85">
-          {formatHour(occurrence.hour)}
-          {occurrence.detail && ` · ${occurrence.detail}`}
+          {occurrenceMeta(occurrence)}
         </span>
       </span>
     </>

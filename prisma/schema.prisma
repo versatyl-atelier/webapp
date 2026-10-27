@@ -75,10 +75,11 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  employee     Employee?            @relation(fields: [employeeId], references: [id], onDelete: SetNull)
-  sessions     Session[]
-  accounts     Account[]
-  noteVersions ProjectNoteVersion[]
+  employee       Employee?            @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  sessions       Session[]
+  accounts       Account[]
+  noteVersions   ProjectNoteVersion[]
+  calendarEvents CalendarEvent[]
 
   @@map("users")
 }
@@ -417,6 +418,8 @@ enum CalendarEventType {
   livraison
   installation
   manuel
+  divers
+  personnel
 }
 
 enum CalendarEventColor {
@@ -444,13 +447,14 @@ enum RecurrenceEnd {
 }
 
 model CalendarEvent {
-  id     Int                @id @default(autoincrement())
-  type   CalendarEventType
-  title  String
-  detail String             @default("")
-  date   DateTime           @db.Date
-  hour   Int
-  color  CalendarEventColor
+  id          Int                @id @default(autoincrement())
+  type        CalendarEventType
+  subcategory String             @default("")
+  title       String
+  detail      String             @default("")
+  date        DateTime           @db.Date
+  hour        Int
+  color       CalendarEventColor
 
   frequency RecurrenceFrequency?
   interval  Int                  @default(1)
@@ -461,14 +465,17 @@ model CalendarEvent {
 
   trelloCardId String? @unique
   projectId    String?
+  ownerId      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  owner   User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([date])
   @@index([projectId])
+  @@index([ownerId])
   @@map("calendarEvents")
 }
 

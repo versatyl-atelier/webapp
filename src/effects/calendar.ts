@@ -8,7 +8,7 @@ import {
 import { getActiveSession } from "@/effects/auth";
 import { accessibleProjectsWhere } from "@/effects/projects";
 import type { PrismaService } from "@/generated/effect-prisma";
-import { Role } from "@/generated/prisma/enums";
+import { CalendarEventType, Role } from "@/generated/prisma/enums";
 import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
 import type { CalendarEventWhereInput } from "@/generated/prisma/models";
 import {
@@ -36,10 +36,21 @@ function eventsInRange(from: DateKey, to: DateKey): CalendarEventWhereInput {
   };
 }
 
+const visibleEventsWhere = Effect.fn("visibleEventsWhere")(function* () {
+  const session = yield* getActiveSession();
+  return {
+    OR: [
+      { type: { not: CalendarEventType.personnel } },
+      { ownerId: session.userId },
+    ],
+  } satisfies CalendarEventWhereInput;
+});
+
 export const getCalendarOccurrencesEffect = Effect.fn("getCalendarOccurrences")(
   function* (prisma: PrismaService, from: DateKey, to: DateKey) {
+    const visible = yield* visibleEventsWhere();
     const events = yield* prisma.calendarEvent.findMany({
-      where: eventsInRange(from, to),
+      where: { AND: [eventsInRange(from, to), visible] },
     });
     yield* Effect.annotateLogsScoped({
       calendarFrom: from,
@@ -69,8 +80,9 @@ export const getProjectOccurrencesEffect = Effect.fn("getProjectOccurrences")(
     if (!accessible) {
       return [];
     }
+    const visible = yield* visibleEventsWhere();
     const events = yield* prisma.calendarEvent.findMany({
-      where: { AND: [eventsInRange(from, to), accessible] },
+      where: { AND: [eventsInRange(from, to), accessible, visible] },
     });
     yield* Effect.annotateLogsScoped({
       calendarFrom: from,
@@ -85,13 +97,18 @@ export const getCalendarEventEffect = Effect.fn("getCalendarEvent")(function* (
   prisma: PrismaService,
   id: number,
 ) {
-  const event = yield* prisma.calendarEvent.findUnique({ where: { id } });
+  const visible = yield* visibleEventsWhere();
+  const event = yield* prisma.calendarEvent.findFirst({
+    where: { AND: [{ id }, visible] },
+  });
   return event ? eventRecordFromDb(event) : null;
 });
 
 export const getEventTemplatesEffect = Effect.fn("getEventTemplates")(
   function* (prisma: PrismaService) {
+    const visible = yield* visibleEventsWhere();
     const templates = yield* prisma.calendarEvent.findMany({
+      where: visible,
       select: { title: true, color: true, type: true },
       orderBy: { updatedAt: SortOrder.asc },
     });
@@ -104,7 +121,10 @@ const deleteCalendarEvent = Effect.fn("deleteCalendarEvent")(function* (
   id: number,
   date: DateKey,
 ) {
-  const { count } = yield* prisma.calendarEvent.deleteMany({ where: { id } });
+  const visible = yield* visibleEventsWhere();
+  const { count } = yield* prisma.calendarEvent.deleteMany({
+    where: { AND: [{ id }, visible] },
+  });
   return count === 0
     ? { errors: { dataValidation: EVENT_NOT_FOUND_MESSAGE } }
     : { message: EVENT_DELETED_MESSAGE, date };
@@ -129,7 +149,8 @@ export const saveCalendarEventEffect = Effect.fn("saveCalendarEvent")(
         ? { errors: { dataValidation: EVENT_NOT_FOUND_MESSAGE } }
         : yield* deleteCalendarEvent(prisma, id, form.date);
     }
-    const result = eventDataFromForm(form);
+    const session = yield* getActiveSession();
+    const result = eventDataFromForm(form, session.userId);
     if ("errors" in result) {
       return { errors: result.errors };
     }
@@ -137,8 +158,9 @@ export const saveCalendarEventEffect = Effect.fn("saveCalendarEvent")(
       yield* prisma.calendarEvent.create({ data: result.data });
       return { message: EVENT_SAVED_MESSAGE, date: form.date };
     }
+    const visible = yield* visibleEventsWhere();
     const { count } = yield* prisma.calendarEvent.updateMany({
-      where: { id },
+      where: { AND: [{ id }, visible] },
       data: result.data,
     });
     return count === 0

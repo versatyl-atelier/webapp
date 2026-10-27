@@ -10,6 +10,7 @@ import {
 import {
   addDays,
   buildWeeks,
+  canRepeat,
   calendarDayPath,
   calendarEventPath,
   calendarWeekPath,
@@ -34,6 +35,8 @@ import {
   monthStartWeek,
   newCalendarEventPath,
   occurrenceDates,
+  occurrenceDescription,
+  occurrenceMeta,
   occurrenceSubtitle,
   ordinal,
   parseDateParam,
@@ -52,6 +55,7 @@ const event = (
 ): CalendarEventRecord => ({
   id: 1,
   type: CalendarEventType.manuel,
+  subcategory: "",
   title: "Réunion d'équipe",
   detail: "",
   date: "2026-07-06",
@@ -64,6 +68,7 @@ const event = (
   endDate: null,
   endCount: null,
   projectId: null,
+  ownerId: null,
   ...overrides,
 });
 
@@ -241,6 +246,25 @@ describe("expandOccurrences and buildWeeks", () => {
     expect(eventCategory(events[1])).toBe("livraison");
   });
 
+  it("keeps the type of recurring divers and personal events", () => {
+    for (const type of [
+      CalendarEventType.divers,
+      CalendarEventType.personnel,
+    ]) {
+      expect(
+        eventCategory({ type, frequency: RecurrenceFrequency.weekly }),
+      ).toBe(type);
+    }
+  });
+
+  it("only lets manual, divers and personal events repeat", () => {
+    expect(canRepeat(CalendarEventType.manuel)).toBe(true);
+    expect(canRepeat(CalendarEventType.divers)).toBe(true);
+    expect(canRepeat(CalendarEventType.personnel)).toBe(true);
+    expect(canRepeat(CalendarEventType.livraison)).toBe(false);
+    expect(canRepeat(CalendarEventType.installation)).toBe(false);
+  });
+
   it("places occurrences in their day and flags special days", () => {
     const weeks = buildWeeks("2026-06-29", 3, "2026-07-01", occurrences);
     const [firstWeek, secondWeek] = weeks;
@@ -265,9 +289,32 @@ describe("formatting", () => {
     expect(formatHour(9)).toBe("9 h");
   });
 
-  it("uses the detail, or the hour, as subtitle", () => {
-    expect(occurrenceSubtitle({ detail: "Quai 2", hour: 9 })).toBe("Quai 2");
-    expect(occurrenceSubtitle({ detail: "", hour: 9 })).toBe("9 h");
+  it("uses the subcategory and detail, or the hour, as subtitle", () => {
+    expect(
+      occurrenceSubtitle({ subcategory: "", detail: "Quai 2", hour: 9 }),
+    ).toBe("Quai 2");
+    expect(occurrenceSubtitle({ subcategory: "", detail: "", hour: 9 })).toBe(
+      "9 h",
+    );
+    expect(
+      occurrenceSubtitle({ subcategory: "RH", detail: "Bureau", hour: 9 }),
+    ).toBe("RH · Bureau");
+  });
+
+  it("describes the hour, subcategory and detail", () => {
+    const occurrence = {
+      subcategory: "Formation",
+      detail: "Salle de pause",
+      hour: 9,
+      title: "SIMDUT",
+    };
+    expect(occurrenceMeta(occurrence)).toBe("9 h · Formation · Salle de pause");
+    expect(occurrenceDescription(occurrence)).toBe(
+      "9 h — SIMDUT · Formation · Salle de pause",
+    );
+    expect(
+      occurrenceDescription({ ...occurrence, subcategory: "", detail: "" }),
+    ).toBe("9 h — SIMDUT");
   });
 
   it("formats labels in Québec French", () => {
@@ -301,10 +348,15 @@ describe("formatting", () => {
 });
 
 describe("filters", () => {
-  it("searches title and detail, ignoring case", () => {
-    const occurrence = { title: "Gagné Paradis", detail: "Camion 5T" };
+  it("searches title, subcategory and detail, ignoring case", () => {
+    const occurrence = {
+      title: "Gagné Paradis",
+      subcategory: "Sécurité",
+      detail: "Camion 5T",
+    };
     expect(matchesSearch(occurrence, "gagné")).toBe(true);
     expect(matchesSearch(occurrence, "CAMION")).toBe(true);
+    expect(matchesSearch(occurrence, "sécurité")).toBe(true);
     expect(matchesSearch(occurrence, "tremblay")).toBe(false);
   });
 

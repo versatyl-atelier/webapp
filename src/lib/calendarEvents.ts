@@ -14,6 +14,7 @@ import {
   RecurrenceFrequency,
 } from "@/generated/prisma/enums";
 import {
+  canRepeat,
   isDateKey,
   parseWeekdays,
   toDateKey,
@@ -53,6 +54,7 @@ export function eventRecordFromDb(event: CalendarEvent): CalendarEventRecord {
   return {
     id: event.id,
     type: event.type,
+    subcategory: event.subcategory,
     title: event.title,
     detail: event.detail,
     date: toDateKey(event.date),
@@ -65,6 +67,7 @@ export function eventRecordFromDb(event: CalendarEvent): CalendarEventRecord {
     endDate: event.endDate ? toDateKey(event.endDate) : null,
     endCount: event.endCount,
     projectId: event.projectId,
+    ownerId: event.ownerId,
   };
 }
 
@@ -73,8 +76,7 @@ function recurrenceFromForm(
 ):
   | { recurrence: typeof ONE_OFF; errors?: never }
   | { errors: CalendarEventFormErrors } {
-  const repeats =
-    form.type === CalendarEventType.manuel && form.repeats === REPEATS_VALUE;
+  const repeats = canRepeat(form.type) && form.repeats === REPEATS_VALUE;
   if (!repeats) {
     return { recurrence: ONE_OFF };
   }
@@ -133,6 +135,7 @@ function recurrenceFromForm(
 
 export function eventDataFromForm(
   form: CalendarEventFormData,
+  userId: string,
 ): { data: CalendarEventData } | { errors: CalendarEventFormErrors } {
   const result = recurrenceFromForm(form);
   if (result.errors) {
@@ -141,12 +144,15 @@ export function eventDataFromForm(
   return {
     data: {
       type: form.type,
+      subcategory:
+        form.type === CalendarEventType.divers ? form.subcategory : "",
       title: form.title,
       detail: form.detail,
       date: toDbDate(form.date),
       hour: form.hour,
       color: form.color,
       projectId: form.projectId || null,
+      ownerId: form.type === CalendarEventType.personnel ? userId : null,
       ...result.recurrence,
     },
   };
@@ -175,12 +181,14 @@ export function trelloCardToEventData(
   return {
     trelloCardId: card.id,
     type: board.type,
+    subcategory: "",
     title: card.name.trim(),
     detail: board.detail,
     date: toDbDate(toLocalDateKey(due)),
     hour: toLocalHour(due),
     color: labelColor ?? board.color,
     projectId: projectIds.has(card.id) ? card.id : null,
+    ownerId: null,
     ...ONE_OFF,
   };
 }
