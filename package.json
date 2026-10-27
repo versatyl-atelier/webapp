@@ -47,7 +47,8 @@
     "analyze": "next analyze",
     "type-check": "next typegen &&  tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "gh:prune-runs": "gh run list --limit 1000 --json databaseId --jq '.[10:][].databaseId' | xargs -r -n1 gh run delete"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
