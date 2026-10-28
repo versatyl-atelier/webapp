@@ -3,13 +3,10 @@
 import {
   startTransition,
   useActionState,
-  useEffect,
   useState,
   type DragEvent,
   type PropsWithChildren,
 } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
 import { moveTimeEntry } from "@/actions/timeEntries";
 import {
@@ -19,6 +16,7 @@ import {
   MOVE_COMMAND,
   TIME_ENTRY_DRAG_TYPE,
 } from "@/constants/timeEntries";
+import { useFormToast } from "@/hooks/use-form-toast";
 import { cn } from "@/lib/utils";
 
 type DropMode = typeof MOVE_COMMAND | typeof COPY_COMMAND;
@@ -39,23 +37,10 @@ export function DayColumn({
   disabled,
   children,
 }: DayColumnProps) {
-  const router = useRouter();
   const [state, action, pending] = useActionState(moveTimeEntry, undefined);
   const [dropMode, setDropMode] = useState<DropMode | null>(null);
 
-  useEffect(() => {
-    if (state?.message) {
-      router.refresh();
-      toast.success(state.message, { position: "top-left", icon: "✅" });
-      return;
-    }
-    const error = Object.values(state?.errors ?? {})
-      .flat()
-      .find(Boolean);
-    if (error) {
-      toast.error(error, { position: "top-left" });
-    }
-  }, [state, router]);
+  useFormToast(state);
 
   function acceptsDrop(event: DragEvent<HTMLDivElement>) {
     return !disabled && event.dataTransfer.types.includes(TIME_ENTRY_DRAG_TYPE);

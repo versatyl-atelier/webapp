@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Wrench } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { ToolTile } from "@/components/ToolTile";
 import {
   Card,
   CardContent,
@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TOOLS } from "@/constants/tools";
-import { cn } from "@/lib/utils";
 
 type ToolTilesProps = {
   isManager: boolean;
@@ -20,38 +19,11 @@ export function ToolTiles({ isManager }: ToolTilesProps) {
   return (
     <>
       <ul className="flex flex-wrap gap-3">
-        {TOOLS.map(
-          ({ href, icon, title, description, tags = [], disabled }) => (
-            <li key={href}>
-              <Link href={href}>
-                <Card
-                  className={cn(
-                    "h-36 w-44 shadow-sm transition-shadow hover:shadow-lg",
-                    disabled ? "opacity-35" : "",
-                  )}
-                >
-                  <CardHeader className="text-xl">{icon}</CardHeader>
-                  <CardContent>
-                    <CardTitle>{title}</CardTitle>
-                    <CardDescription>{description}</CardDescription>
-                    <ul className="mt-2 flex gap-2">
-                      {tags.map((tag?: string) => (
-                        <Badge
-                          render={<li />}
-                          key={tag}
-                          className="text-2xs rounded-sm"
-                          variant="secondary"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </Link>
-            </li>
-          ),
-        )}
+        {TOOLS.map((tool) => (
+          <li key={tool.href}>
+            <ToolTile tool={tool} />
+          </li>
+        ))}
       </ul>
 
       {isManager && (

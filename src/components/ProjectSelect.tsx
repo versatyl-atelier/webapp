@@ -36,6 +36,7 @@ type ProjectSelectProps = {
   defaultSelected?: ProjectOrTask | ProjectOrTask[];
   className?: string;
   disabled?: boolean;
+  onTypeChange?: (type: ProjectType | null) => void;
 };
 
 type Option = {
@@ -69,6 +70,7 @@ export default function ProjectSelect({
   defaultSelected,
   className = "",
   disabled = false,
+  onTypeChange,
 }: ProjectSelectProps) {
   const { projectsPromise, tasksPromise } = usePageContext();
   const projects = use(projectsPromise) || [];
@@ -122,6 +124,7 @@ export default function ProjectSelect({
       return;
     }
     setSelected(next);
+    onTypeChange?.(next[0]?.type ?? null);
   }
 
   const label =

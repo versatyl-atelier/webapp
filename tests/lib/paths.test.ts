@@ -8,6 +8,7 @@ import {
   isProtectedPath,
   loginPath,
   projectPath,
+  punchHomeHref,
 } from "@/lib/paths";
 
 describe("loginPath", () => {
@@ -35,6 +36,16 @@ describe("loginPath", () => {
 describe("employeePath", () => {
   it("builds the employee page path", () => {
     expect(employeePath(4)).toBe("/punch/employe/4");
+  });
+});
+
+describe("punchHomeHref", () => {
+  it("goes straight to the employee linked to the account", () => {
+    expect(punchHomeHref(4)).toBe("/punch/employe/4");
+  });
+
+  it("falls back to the employee list when no employee is linked", () => {
+    expect(punchHomeHref(null)).toBe("/punch/employes");
   });
 });
 

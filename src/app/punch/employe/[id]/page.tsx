@@ -14,7 +14,7 @@ import { notFound } from "next/navigation";
 import { getEmployee } from "@/actions/employees";
 import { getActivePunch } from "@/actions/multiPunch";
 import { getProjects } from "@/actions/projects";
-import { getTasks } from "@/actions/tasks";
+import { getSubtasks, getTasks } from "@/actions/tasks";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
 import { mondayOf, parseWeekParam, toLocalDateKey } from "@/lib/calendar";
 import {
@@ -110,6 +110,7 @@ export default async function EmployeePage({
 
   const projectsPromise = getProjects(employeeId);
   const tasksPromise = getTasks();
+  const subtasks = await getSubtasks();
 
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
 
@@ -198,6 +199,7 @@ export default async function EmployeePage({
                               entry={entry}
                               date={dateOptions[i].value}
                               dateOptions={dateOptions}
+                              subtasks={subtasks}
                               disabled={disabledReason}
                             />
                           );

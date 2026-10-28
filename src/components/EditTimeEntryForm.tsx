@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DEFAULT_SUBTASK_ID, SUBTASK_FIELD_LABEL } from "@/constants/tasks";
 import { TIME_ENTRY_DRAG_TYPE } from "@/constants/timeEntries";
 
 import { formatTimeDisplay } from "@/lib/time";
@@ -40,6 +41,7 @@ export type EditTimeEntryFormProps = {
   entry: TimeEntryWithRelations;
   date: string;
   dateOptions: DateOption[];
+  subtasks: { id: string; name: string }[];
   disabled?: string;
 };
 
@@ -47,12 +49,16 @@ export default function EditTimeEntryForm({
   entry,
   date,
   dateOptions,
+  subtasks,
   disabled,
 }: EditTimeEntryFormProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const canDrag = !disabled && !!entry.end;
+  const [projectType, setProjectType] = useState<ProjectType | null>(
+    entry.projects[0]?.projectType ?? null,
+  );
   const [state, action, pending] = useActionState(editTimeEntry, undefined);
   useEffect(() => {
     if (
@@ -63,6 +69,10 @@ export default function EditTimeEntryForm({
       setIsOpen(false);
     }
   }, [state, router]);
+  const subtaskItems = subtasks.map(({ id, name }) => ({
+    value: id,
+    label: name,
+  }));
   const firstProject = entry.projects[0];
   const projectName =
     firstProject?.projectType === ProjectType.trello
@@ -108,9 +118,9 @@ export default function EditTimeEntryForm({
             title={`${projectName} - ${formatTimeDisplay(calculateHours())}`}
           >
             <div className="text-xs font-bold wrap-anywhere">{projectName}</div>
-            {entry.subtaskId && entry.subtaskId !== "1default" && (
+            {entry.subtaskId !== DEFAULT_SUBTASK_ID && (
               <div className="text-xs wrap-anywhere opacity-90">
-                {entry.subtaskId}
+                {entry.subtask.name}
               </div>
             )}
             <div className="text-xs">{formatTimeDisplay(calculateHours())}</div>
@@ -154,10 +164,38 @@ export default function EditTimeEntryForm({
                       : ProjectType.task,
                 }}
                 disabled={pending || !!disabled}
+                onTypeChange={setProjectType}
               />
               {state?.errors?.projectId?.map((error: string) => (
                 <FieldError key={error}>- {error}</FieldError>
               ))}
+              {projectType === ProjectType.trello && (
+                <Field>
+                  <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
+                    {SUBTASK_FIELD_LABEL}
+                  </FieldLabel>
+                  <Select
+                    name="subtaskId"
+                    items={subtaskItems}
+                    defaultValue={entry.subtaskId}
+                    disabled={pending || !!disabled}
+                  >
+                    <SelectTrigger className="w-full rounded border-2 px-1.5 py-1 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subtaskItems.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {state?.errors?.subtaskId?.map((error: string) => (
+                    <FieldError key={error}>- {error}</FieldError>
+                  ))}
+                </Field>
+              )}
               <Field>
                 <FieldLabel
                   htmlFor="hours"

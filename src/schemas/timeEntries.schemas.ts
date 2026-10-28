@@ -9,6 +9,7 @@ export const EditTimeEntryFormSchema = Schema.Struct({
   startTime: Schema.String,
   hours: Schema.String,
   date: Schema.optional(Schema.String),
+  subtaskId: Schema.optional(Schema.String),
   command: Schema.Literal("save", "delete"),
 });
 
@@ -18,6 +19,7 @@ export type EditTimeEntryFormErrors = {
   startTime?: string[];
   hours?: string[];
   date?: string[];
+  subtaskId?: string[];
   command?: string[];
 };
 
@@ -79,6 +81,9 @@ export type DateRange = {
 };
 
 export const timeEntryInclude = {
+  subtask: {
+    select: { name: true },
+  },
   projects: {
     include: {
       project: {

@@ -27,6 +27,11 @@ import {
 
 import { INVALID_DATE_MESSAGE } from "@/constants/calendar";
 import {
+  DEFAULT_SUBTASK_ID,
+  LUNCH_TASK_NAME,
+  SUBTASK_NOT_FOUND_MESSAGE,
+} from "@/constants/tasks";
+import {
   ACTIVE_PUNCH_NOT_MOVABLE_MESSAGE,
   COPY_ENTRY_METHOD,
   ENTRY_COPIED_MESSAGE,
@@ -42,7 +47,6 @@ import { assertEmployeeAccess } from "@/effects/auth";
 import { assertWeekNotFrozen, handleWeekFrozen } from "@/effects/frozenWeeks";
 import { ProjectOrTask } from "@/components/ProjectSelect";
 
-const LUNCH_TASK_NAME = "Dîner";
 const LUNCH_HOURS = 0.5;
 
 const assertTimeEntryAccess = Effect.fn("assertTimeEntryAccess")(function* (
@@ -109,6 +113,7 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
       startTime,
       hours,
       date,
+      subtaskId,
       command,
     }: Record<string, FormDataEntryValue | null>,
   ) {
@@ -153,11 +158,22 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
           return { errors: { projectId: [PROJECT_REQUIRED_MESSAGE] } };
         }
         const strId = id.toString();
+        const entrySubtaskId =
+          type === ProjectType.trello && subtaskId
+            ? String(subtaskId)
+            : DEFAULT_SUBTASK_ID;
+        const subtask = yield* prisma.subtask.findFirst({
+          where: { id: entrySubtaskId, isDeleted: false },
+        });
+        if (!subtask) {
+          return { errors: { subtaskId: [SUBTASK_NOT_FOUND_MESSAGE] } };
+        }
         yield* Effect.tryPromise(() =>
           putTimeEntry({
             id: entryId,
             start,
             end,
+            subtaskId: entrySubtaskId,
             projects: [
               {
                 id: type === ProjectType.trello ? strId : parseInt(strId, 10),
@@ -220,6 +236,7 @@ export const putTimeEntryEffect = Effect.fn("putTimeEntry")(function* (
     data: {
       start: entry.start,
       end: entry.end,
+      subtaskId: entry.subtaskId,
     },
   };
 

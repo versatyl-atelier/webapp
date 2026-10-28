@@ -7,6 +7,7 @@ import {
 } from "@/constants/auth";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
 import { PROJECT_TAB_PARAM } from "@/constants/projects";
+import { PUNCH_EMPLOYEES_PATH } from "@/constants/punch";
 import { TOOLS } from "@/constants/tools";
 import type { DateKey } from "@/lib/calendar";
 import type { ProjectTab } from "@/lib/projectTabs";
@@ -30,6 +31,10 @@ export function loginPath(redirectTo?: string, email?: string): string {
 
 export function employeePath(employeeId: number): string {
   return `/punch/employe/${employeeId}`;
+}
+
+export function punchHomeHref(employeeId: number | null): string {
+  return employeeId === null ? PUNCH_EMPLOYEES_PATH : employeePath(employeeId);
 }
 
 export function employeeWeekPath(

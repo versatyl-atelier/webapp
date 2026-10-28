@@ -7,6 +7,7 @@ export type Tool = {
   description: string;
   tags?: string[];
   disabled?: boolean;
+  managerOnly?: boolean;
 };
 
 export const HOME_PATH = "/";

@@ -195,8 +195,8 @@ model TimeEntry {
 }
 
 model Subtask {
-  id          String    @id
-  description String
+  id          String    @id @default(cuid())
+  name        String
   isDeleted   Boolean   @default(false)
   deletedAt   DateTime?
   deletedBy   Int?
