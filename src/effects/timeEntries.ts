@@ -22,10 +22,22 @@ import {
   DateRange,
   type EditTimeEntryFormState,
   type AddManualTimeFormState,
+  type MoveTimeEntryFormState,
 } from "@/schemas/timeEntries.schemas";
 
+import { INVALID_DATE_MESSAGE } from "@/constants/calendar";
+import {
+  ACTIVE_PUNCH_NOT_MOVABLE_MESSAGE,
+  COPY_ENTRY_METHOD,
+  ENTRY_COPIED_MESSAGE,
+  ENTRY_MOVED_MESSAGE,
+  ENTRY_NOT_FOUND_MESSAGE,
+  MOVE_COMMAND,
+  PROJECT_REQUIRED_MESSAGE,
+} from "@/constants/timeEntries";
+import { isDateKey } from "@/lib/calendar";
 import { parseItemKey } from "@/lib/itemKey";
-import { secondsToHours, parseTimeToSeconds } from "@/lib/time";
+import { secondsToHours, parseTimeToSeconds, shiftToDay } from "@/lib/time";
 import { assertEmployeeAccess } from "@/effects/auth";
 import { assertWeekNotFrozen, handleWeekFrozen } from "@/effects/frozenWeeks";
 import { ProjectOrTask } from "@/components/ProjectSelect";
@@ -96,11 +108,17 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
       projectId,
       startTime,
       hours,
+      date,
       command,
     }: Record<string, FormDataEntryValue | null>,
   ) {
     const entryId = parseInt(String(timeEntryId), 10);
     yield* Effect.annotateLogsScoped({ timeEntryId: entryId });
+
+    if (date && !isDateKey(String(date))) {
+      return { errors: { date: [INVALID_DATE_MESSAGE] } };
+    }
+    const targetDay = date ? dayBounds(String(date)).dayStart : null;
 
     const findArgs: TimeEntryFindFirstArgs = {
       where: { id: entryId, isDeleted: false },
@@ -117,14 +135,23 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
         existingEntry.employeeId,
         existingEntry.start,
       );
+      if (targetDay) {
+        yield* assertWeekNotFrozen(prisma, existingEntry.employeeId, targetDay);
+      }
     }
 
     switch (command) {
       case "save": {
         const hourValue = secondsToHours(parseTimeToSeconds(String(hours)));
-        const start = new Date(String(startTime));
+        const currentStart = new Date(String(startTime));
+        const start = targetDay
+          ? shiftToDay(currentStart, targetDay)
+          : currentStart;
         const end = new Date(start.getTime() + hourValue * 3600000);
         const { id, type } = parseItemKey(String(projectId));
+        if (!id) {
+          return { errors: { projectId: [PROJECT_REQUIRED_MESSAGE] } };
+        }
         const strId = id.toString();
         yield* Effect.tryPromise(() =>
           putTimeEntry({
@@ -298,6 +325,82 @@ export const addManualTimeEffect = Effect.fn("addManualTime")(
     );
 
     return { message: "Ajouté" };
+  },
+  Effect.catchTag("WeekFrozenError", handleWeekFrozen),
+);
+
+export const moveTimeEntryEffect = Effect.fn("moveTimeEntry")(
+  function* (
+    prisma: PrismaService,
+    _formState: MoveTimeEntryFormState,
+    { timeEntryId, date, command }: Record<string, FormDataEntryValue | null>,
+  ) {
+    const entryId = parseInt(String(timeEntryId), 10);
+    yield* Effect.annotateLogsScoped({ timeEntryId: entryId, command });
+
+    if (!isDateKey(String(date))) {
+      return { errors: { date: [INVALID_DATE_MESSAGE] } };
+    }
+
+    const entry = yield* prisma.timeEntry.findFirst({
+      where: { id: entryId, isDeleted: false },
+      include: { projects: true },
+    });
+    yield* assertEmployeeAccess(entry?.employeeId ?? null);
+    if (!entry?.employeeId) {
+      return { errors: { timeEntryId: [ENTRY_NOT_FOUND_MESSAGE] } };
+    }
+    if (!entry.end) {
+      return { errors: { timeEntryId: [ACTIVE_PUNCH_NOT_MOVABLE_MESSAGE] } };
+    }
+    const { employeeId } = entry;
+    yield* Effect.annotateLogsScoped({ employeeId });
+
+    const { dayStart } = dayBounds(String(date));
+    yield* assertWeekNotFrozen(prisma, employeeId, dayStart);
+
+    const start = shiftToDay(entry.start, dayStart);
+    const end = new Date(
+      start.getTime() + (entry.end.getTime() - entry.start.getTime()),
+    );
+
+    if (command === MOVE_COMMAND) {
+      if (start.getTime() === entry.start.getTime()) {
+        return {};
+      }
+      yield* assertWeekNotFrozen(prisma, employeeId, entry.start);
+      const updateArgs: TimeEntryUpdateArgs = {
+        where: { id: entryId },
+        data: { start, end },
+      };
+      yield* prisma.timeEntry.update(updateArgs);
+      return { message: ENTRY_MOVED_MESSAGE };
+    }
+
+    yield* prisma.$transaction(
+      Effect.gen(function* () {
+        const createArgs: TimeEntryCreateArgs = {
+          data: {
+            employeeId,
+            start,
+            end,
+            subtaskId: entry.subtaskId,
+            entryMethod: COPY_ENTRY_METHOD,
+          },
+        };
+        const copy = yield* prisma.timeEntry.create(createArgs);
+        const createProjectsArgs: TimeEntryProjectCreateManyArgs = {
+          data: entry.projects.map(({ projectId, taskId, projectType }) => ({
+            timeEntryId: copy.id,
+            projectId,
+            taskId,
+            projectType,
+          })),
+        };
+        yield* prisma.timeEntryProject.createMany(createProjectsArgs);
+      }),
+    );
+    return { message: ENTRY_COPIED_MESSAGE };
   },
   Effect.catchTag("WeekFrozenError", handleWeekFrozen),
 );

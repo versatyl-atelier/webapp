@@ -49,14 +49,14 @@ export default function ManualTimeForm({
   }, [state, router]);
 
   return (
-    <div className="bg-card rounded-lg border-2 p-2.5">
+    <div className="bg-card rounded-lg border-2 p-2">
       <div className="border-primary mb-2 border-b-2 pb-1 text-center text-xs font-bold">
         Ajout Manuel
       </div>
-      <form action={action} className="space-y-2.5">
+      <form action={action} className="space-y-1.5">
         <input type="hidden" name="employeeId" value={employeeId} />
         <FormValidationAlerts errors={state?.errors} />
-        <ProjectSelect className="p-1.5" disabled={pending || !!disabled} />
+        <ProjectSelect disabled={pending || !!disabled} />
         {state?.errors?.projectId?.map((error: string) => (
           <FieldError key={error}>- {error}</FieldError>
         ))}
@@ -102,21 +102,23 @@ export default function ManualTimeForm({
           ))}
         </Field>
         <Button
+          size="sm"
           type="submit"
           name="command"
           value="add"
           disabled={pending || !!disabled}
-          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
+          className="w-full rounded-sm text-xs font-semibold uppercase"
         >
           Ajouter
         </Button>
         <Button
+          size="sm"
           type="submit"
           name="command"
           value="lunch"
           variant="secondary"
           disabled={pending || !!disabled}
-          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
+          className="w-full rounded-sm text-xs font-semibold uppercase"
         >
           {LUNCH_HOURS_LABEL}
         </Button>

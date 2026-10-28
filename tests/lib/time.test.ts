@@ -11,6 +11,7 @@ import {
   isSameDay,
   isSameUTCDate,
   localDateFromKey,
+  shiftToDay,
   toUTCDate,
 } from "@/lib/time";
 
@@ -176,5 +177,35 @@ describe("toUTCDate", () => {
     expect(result.getUTCMonth()).toBe(0);
     expect(result.getUTCDate()).toBe(15);
     expect(result.getUTCHours()).toBe(0);
+  });
+});
+
+describe("shiftToDay", () => {
+  it("keeps the time of day and takes the calendar day of the target", () => {
+    const instant = new Date(2026, 9, 27, 8, 2, 30, 5);
+    const day = new Date(2026, 9, 30);
+    expect(shiftToDay(instant, day)).toEqual(
+      new Date(2026, 9, 30, 8, 2, 30, 5),
+    );
+  });
+
+  it("keeps midnight at midnight, as for manual entries", () => {
+    const instant = new Date(2026, 9, 27);
+    const day = new Date(2026, 9, 29);
+    expect(shiftToDay(instant, day)).toEqual(new Date(2026, 9, 29));
+  });
+
+  it("can move an entry back to an earlier week", () => {
+    const instant = new Date(2026, 10, 2, 13, 15);
+    const day = new Date(2026, 9, 26);
+    expect(shiftToDay(instant, day)).toEqual(new Date(2026, 9, 26, 13, 15));
+  });
+
+  it("leaves both inputs untouched", () => {
+    const instant = new Date(2026, 9, 27, 8, 2);
+    const day = new Date(2026, 9, 30);
+    shiftToDay(instant, day);
+    expect(instant).toEqual(new Date(2026, 9, 27, 8, 2));
+    expect(day).toEqual(new Date(2026, 9, 30));
   });
 });

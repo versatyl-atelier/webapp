@@ -4,6 +4,7 @@ import {
   ACTIVITY_UNKNOWN_SUBJECT_LABEL,
   PUNCH_ENTRY_METHOD,
 } from "@/constants/activity";
+import { COPY_ENTRY_METHOD } from "@/constants/timeEntries";
 import {
   activityDayLabel,
   activityDetail,
@@ -171,6 +172,14 @@ describe("buildActivityEvents", () => {
       }),
     );
     expect(kinds(events)).toEqual(["entryEdited", "punchStarted"]);
+  });
+
+  it("logs a copied entry as a copy, with its duration", () => {
+    const events = buildActivityEvents(
+      source({ entries: [entry({ entryMethod: COPY_ENTRY_METHOD })] }),
+    );
+    expect(kinds(events)).toEqual(["entryCopied"]);
+    expect(events[0].hours).toBe(1);
   });
 
   it("treats a legacy fill entry like a manual one", () => {

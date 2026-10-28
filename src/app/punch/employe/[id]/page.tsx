@@ -8,6 +8,7 @@ import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometr
 import ManualTimeForm from "@/components/ManualTimeForm";
 import MultiPunchForm from "@/components/MultiPunchForm";
 import Clock from "@/components/Clock";
+import { DayColumn } from "@/components/DayColumn";
 
 import { notFound } from "next/navigation";
 import { getEmployee } from "@/actions/employees";
@@ -177,13 +178,15 @@ export default async function EmployeePage({
 
                 {/* Day Content */}
                 <div className={cn("bg-muted grid gap-px p-px", colsTemplate)}>
-                  {daysData.map((day) => {
+                  {daysData.map((day, i) => {
                     const isToday =
                       new Date(day.dateStr).toDateString() ===
                       new Date().toDateString();
                     return (
-                      <div
+                      <DayColumn
                         key={day.dateStr}
+                        date={dateOptions[i].value}
+                        disabled={disabledReason}
                         className={`min-h-48 min-w-0 p-0.5 sm:min-h-64 sm:p-1 ${
                           isToday ? "bg-warning" : "bg-card"
                         }`}
@@ -193,11 +196,13 @@ export default async function EmployeePage({
                             <EditTimeEntryForm
                               key={entry.id}
                               entry={entry}
+                              date={dateOptions[i].value}
+                              dateOptions={dateOptions}
                               disabled={disabledReason}
                             />
                           );
                         })}
-                      </div>
+                      </DayColumn>
                     );
                   })}
                 </div>

@@ -95,6 +95,16 @@ export function getMondayOfDate(date: Date): Date {
   result.setHours(0, 0, 0, 0);
   return result;
 }
+export function shiftToDay(instant: Date, day: Date): Date {
+  const result = new Date(day);
+  result.setHours(
+    instant.getHours(),
+    instant.getMinutes(),
+    instant.getSeconds(),
+    instant.getMilliseconds(),
+  );
+  return result;
+}
 export function isSameDay(a: Date, b: Date) {
   const result =
     a.getFullYear() === b.getFullYear() &&

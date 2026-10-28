@@ -151,7 +151,7 @@ export default function MultiPunchForm({
     : "";
 
   return (
-    <div className="bg-card rounded-lg border-2 p-2.5">
+    <div className="bg-card rounded-lg border-2 p-2">
       <div className="border-primary mb-2 border-b-2 pb-1 text-center text-xs font-bold">
         Pointage Multiple
       </div>
@@ -160,18 +160,15 @@ export default function MultiPunchForm({
           <Field>
             <input type="hidden" name="employeeId" value={employeeId} />
           </Field>
-          <ProjectSelect
-            multiple
-            maxSelections={MAX_SELECTIONS}
-            className="bg-muted p-1.5"
-          />
+          <ProjectSelect multiple maxSelections={MAX_SELECTIONS} />
           {startState?.errors?.projectIds?.map((error: string) => (
             <FieldError key={error}>- {error}</FieldError>
           ))}
           <Button
+            size="sm"
             type="submit"
             disabled={startPending || !!disabled}
-            className="mt-2 w-full rounded-sm py-2 text-xs font-semibold uppercase"
+            className="mt-2 w-full rounded-sm text-xs font-semibold uppercase"
           >
             {startPending ? "..." : "Punch In"}
           </Button>
@@ -191,26 +188,28 @@ export default function MultiPunchForm({
             </dd>
           </dl>
 
-          <form action={endAction} className="mt-2.5 space-y-2.5">
+          <form action={endAction} className="mt-1.5 space-y-1.5">
             <input type="hidden" name="employeeId" value={employeeId} />
             <div className="flex gap-2.5">
               <Button
+                size="sm"
                 type="submit"
                 name="command"
                 value="end"
                 disabled={endPending || !!disabled}
-                className="flex-1 rounded-sm py-2 font-semibold"
+                className="flex-1 rounded-sm font-semibold"
               >
                 {endPending ? "..." : "Punch Out"}
               </Button>
               <Button
+                size="sm"
                 type="submit"
                 name="command"
                 value="cancel"
                 onClick={handleCancelClick}
                 disabled={endPending || !!disabled}
                 variant="outline"
-                className="flex-1 rounded-sm py-2 font-semibold"
+                className="flex-1 rounded-sm font-semibold"
               >
                 {endPending ? "..." : "Annuler"}
               </Button>

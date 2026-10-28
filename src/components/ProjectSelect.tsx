@@ -157,7 +157,7 @@ export default function ProjectSelect({
         >
           <div className="relative">
             {multiple ? (
-              <ComboboxChips ref={chipsAnchor} className="rounded-xs border-2">
+              <ComboboxChips ref={chipsAnchor} className="rounded border-2">
                 {selected.map((option) => (
                   <ComboboxChip
                     key={option.key}
@@ -174,7 +174,7 @@ export default function ProjectSelect({
               </ComboboxChips>
             ) : (
               <ComboboxInput
-                className="rounded-xs border-2 [&>div>button]:rounded-full"
+                className="rounded border-2 [&>div>button]:rounded-full"
                 placeholder="Rechercher un projet..."
                 showClear
               />

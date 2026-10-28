@@ -13,6 +13,7 @@ import {
   type ActivityKind,
 } from "@/constants/activity";
 import { CALENDAR_LOCALE, CALENDAR_TIME_ZONE } from "@/constants/calendar";
+import { COPY_ENTRY_METHOD } from "@/constants/timeEntries";
 import type { FrozenWeek, WeeklyObjective } from "@/generated/prisma/client";
 import { toDbDate, toLocalDateKey, type DateKey } from "@/lib/calendar";
 import { formatTimeDisplay } from "@/lib/time";
@@ -117,11 +118,12 @@ function weekEvent(
 
 function entryEvents(entry: ActivityEntry): ActivityEvent[] {
   const isPunch = entry.entryMethod === PUNCH_ENTRY_METHOD;
-  const events = [
-    isPunch
-      ? entryEvent(entry, "punchStarted", entry.createdAt, false)
-      : entryEvent(entry, "manualAdded", entry.createdAt, true),
-  ];
+  const createdKind: ActivityKind = isPunch
+    ? "punchStarted"
+    : entry.entryMethod === COPY_ENTRY_METHOD
+      ? "entryCopied"
+      : "manualAdded";
+  const events = [entryEvent(entry, createdKind, entry.createdAt, !isPunch)];
 
   if (entry.isDeleted) {
     if (isPunch && entry.deletedAt) {

@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import { COPY_COMMAND, MOVE_COMMAND } from "@/constants/timeEntries";
 import { FormState } from "@/schemas/forms.schemas";
 import { TimeEntryGetPayload } from "@/generated/prisma/models";
 
@@ -7,6 +8,7 @@ export const EditTimeEntryFormSchema = Schema.Struct({
   projectId: Schema.String,
   startTime: Schema.String,
   hours: Schema.String,
+  date: Schema.optional(Schema.String),
   command: Schema.Literal("save", "delete"),
 });
 
@@ -15,6 +17,7 @@ export type EditTimeEntryFormErrors = {
   projectId?: string[];
   startTime?: string[];
   hours?: string[];
+  date?: string[];
   command?: string[];
 };
 
@@ -43,6 +46,24 @@ export type AddManualTimeFormErrors = {
 export type AddManualTimeFormState =
   | (FormState & {
       errors?: AddManualTimeFormErrors;
+    })
+  | undefined;
+
+export const MoveTimeEntryFormSchema = Schema.Struct({
+  timeEntryId: Schema.String,
+  date: Schema.String,
+  command: Schema.Literal(MOVE_COMMAND, COPY_COMMAND),
+});
+
+export type MoveTimeEntryFormErrors = {
+  timeEntryId?: string[];
+  date?: string[];
+  command?: string[];
+};
+
+export type MoveTimeEntryFormState =
+  | (FormState & {
+      errors?: MoveTimeEntryFormErrors;
     })
   | undefined;
 
