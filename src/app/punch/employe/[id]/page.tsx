@@ -6,10 +6,12 @@ import { getWeeklyKilometrage } from "@/actions/weeklyKilometrage";
 
 import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
 import ManualTimeForm from "@/components/ManualTimeForm";
-import FillDayForm from "@/components/FillDayForm";
+import MultiPunchForm from "@/components/MultiPunchForm";
+import Clock from "@/components/Clock";
 
 import { notFound } from "next/navigation";
 import { getEmployee } from "@/actions/employees";
+import { getActivePunch } from "@/actions/multiPunch";
 import { getProjects } from "@/actions/projects";
 import { getTasks } from "@/actions/tasks";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
@@ -104,9 +106,6 @@ export default async function EmployeePage({
   }));
   const todayIso = today.toISOString().split("T")[0];
   const defaultDate = isCurrentWeek ? todayIso : dateOptions[0]?.value;
-  const dailyHours = Object.fromEntries(
-    daysData.map((day, i) => [dateOptions[i].value, day.total]),
-  );
 
   const projectsPromise = getProjects(employeeId);
   const tasksPromise = getTasks();
@@ -114,6 +113,7 @@ export default async function EmployeePage({
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
 
   const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
+  const activePunch = await getActivePunch(employeeId);
 
   const colsTemplate = "grid-cols-[repeat(5,16.8%)_repeat(2,8%)]";
 
@@ -123,23 +123,26 @@ export default async function EmployeePage({
       tasksPromise={tasksPromise}
     >
       <div className="relative flex flex-1 flex-col gap-2.5 p-1.5">
-        <div className="flex items-center justify-between gap-2">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <h1 className="ml-1 text-2xl font-bold tracking-tight">
             {employee.name}
           </h1>
-          {weekFrozen && (
-            <Alert variant="warning" role="status" className="w-auto flex-1">
-              <Info />
-              <AlertDescription>{WEEK_FROZEN_NOTICE}</AlertDescription>
-            </Alert>
-          )}
-          <FreezeForm
-            employeeId={employee.id}
-            weekStart={weekStart}
-            weekTotal={weekly}
-            objective={objective}
-            weekFrozen={weekFrozen}
-          />
+          <Clock className="text-lg" />
+          <div className="flex items-center justify-end gap-2">
+            {weekFrozen && (
+              <Alert variant="warning" role="status" className="w-auto flex-1">
+                <Info />
+                <AlertDescription>{WEEK_FROZEN_NOTICE}</AlertDescription>
+              </Alert>
+            )}
+            <FreezeForm
+              employeeId={employee.id}
+              weekStart={weekStart}
+              weekTotal={weekly}
+              objective={objective}
+              weekFrozen={weekFrozen}
+            />
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-2.5">
           <div>
@@ -223,13 +226,9 @@ export default async function EmployeePage({
           </div>
         </div>
         <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
-          <ObjectivesAndKilometrageForm
+          <MultiPunchForm
             employeeId={employeeId}
-            weekStart={weekStart}
-            currentObjective={objective}
-            currentKilometrage={weeklyKilometrage?.kilometrage ?? 0}
-            weekly={weekly}
-            hoursDifference={hoursDifference}
+            activePunch={activePunch}
             disabled={disabledReason}
           />
           <ManualTimeForm
@@ -238,11 +237,13 @@ export default async function EmployeePage({
             defaultDate={defaultDate}
             disabled={disabledReason}
           />
-          <FillDayForm
+          <ObjectivesAndKilometrageForm
             employeeId={employeeId}
-            dateOptions={dateOptions}
-            defaultDate={defaultDate}
-            dailyHours={dailyHours}
+            weekStart={weekStart}
+            currentObjective={objective}
+            currentKilometrage={weeklyKilometrage?.kilometrage ?? 0}
+            weekly={weekly}
+            hoursDifference={hoursDifference}
             disabled={disabledReason}
           />
         </div>

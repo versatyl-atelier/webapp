@@ -46,26 +46,6 @@ export type AddManualTimeFormState =
     })
   | undefined;
 
-export const FillDayFormSchema = Schema.Struct({
-  employeeId: Schema.String,
-  projectId: Schema.String,
-  target: Schema.String,
-  date: Schema.String,
-});
-
-export type FillDayFormErrors = {
-  employeeId?: string[];
-  projectId?: string[];
-  target?: string[];
-  date?: string[];
-};
-
-export type FillDayFormState =
-  | (FormState & {
-      errors?: FillDayFormErrors;
-    })
-  | undefined;
-
 export type Employee = {
   id: number;
   name: string;

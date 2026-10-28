@@ -9,11 +9,8 @@ import {
   type EditTimeEntryFormErrors,
   type AddManualTimeFormState,
   type AddManualTimeFormErrors,
-  type FillDayFormState,
-  type FillDayFormErrors,
   EditTimeEntryFormSchema,
   AddManualTimeFormSchema,
-  FillDayFormSchema,
 } from "@/schemas/timeEntries.schemas";
 import { Role } from "@/generated/prisma/client";
 import { cachedGetter, protectedEffect } from "@/lib/effect";
@@ -21,7 +18,6 @@ import {
   addManualTimeEffect,
   deleteTimeEntryEffect,
   editTimeEntryEffect,
-  fillDayEffect,
   getTimeEntriesEffect,
   putTimeEntryEffect,
 } from "@/effects/timeEntries";
@@ -65,15 +61,4 @@ export async function addManualTime(
   >(formState, formData, AddManualTimeFormSchema, addManualTimeEffect, [
     Role.employee,
   ]);
-}
-
-export async function fillDay(
-  formState: FillDayFormState,
-  formData: FormData,
-): Promise<FillDayFormState> {
-  return runEffectAsFormAction<
-    FillDayFormState,
-    typeof FillDayFormSchema,
-    FillDayFormErrors
-  >(formState, formData, FillDayFormSchema, fillDayEffect, [Role.employee]);
 }
