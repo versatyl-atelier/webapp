@@ -44,3 +44,8 @@ export const PROJECT_SECTIONS = [
   { name: "Finition", folder: "Finition" },
   { name: "Commande de portes", folder: "Commande de portes" },
 ] as const;
+
+export const DROPBOX_SYNC_FAILED_MESSAGE = "Dropbox sync failed";
+export const FILE_SECTION_NOT_FOUND_MESSAGE = "Section introuvable";
+export const FILE_SECTION_FIXED_MESSAGE =
+  "Cette section ne peut pas être modifiée";

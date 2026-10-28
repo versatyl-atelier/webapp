@@ -85,6 +85,27 @@ export const ProjectContactsFormSchema = Schema.Struct({
   contacts: Schema.parseJson(Schema.Array(ContactSchema)),
 });
 
+export const ProjectCreateFormSchema = Schema.Struct({
+  name: Schema.Trim.pipe(
+    Schema.minLength(1, { message: () => PROJECT_NAME_REQUIRED_MESSAGE }),
+  ),
+});
+
+export type ProjectCreateFormData = typeof ProjectCreateFormSchema.Type;
+
+export type ProjectCreateFormErrors = {
+  name?: string[];
+  dataValidation?: string;
+  schemaValidation?: string;
+};
+
+export type ProjectCreateFormState =
+  | (FormState & {
+      errors?: ProjectCreateFormErrors;
+      projectId?: string;
+    })
+  | undefined;
+
 export type ProjectContactsFormData = typeof ProjectContactsFormSchema.Type;
 
 export type ProjectContactsFormErrors = {
@@ -141,6 +162,7 @@ export type PieceFormErrors = {
 export type PieceFormState =
   | (FormState & {
       errors?: PieceFormErrors;
+      pieceId?: number;
     })
   | undefined;
 
@@ -194,3 +216,5 @@ export const PhaseIdSchema = Schema.Int;
 export const PieceIdSchema = Schema.Int;
 export const NoteIdSchema = Schema.Int;
 export const PhaseNameSchema = Schema.Trim.pipe(Schema.minLength(1));
+export const FileSectionIdSchema = Schema.Int;
+export const FileSectionNameSchema = Schema.Trim.pipe(Schema.minLength(1));

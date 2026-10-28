@@ -3,6 +3,7 @@
 import "server-only";
 
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { Role } from "@/generated/prisma/enums";
 import {
@@ -27,15 +28,26 @@ import {
   movePieceEffect,
   renamePhaseEffect,
   restoreNoteEffect,
+  restorePieceEffect,
   saveProjectContactsEffect,
-  saveProjectHeaderEffect,
-  savePieceEffect,
 } from "@/effects/projects";
+import {
+  addFileSectionEffect,
+  createProjectEffect,
+  deleteFileSectionEffect,
+  ensurePieceFoldersEffect,
+  renameFileSectionEffect,
+  restoreFileSectionEffect,
+  savePieceWithFoldersEffect,
+  saveProjectHeaderWithFoldersEffect,
+} from "@/effects/projectFolders";
+import { projectPath } from "@/lib/paths";
 import {
   NoteEditFormSchema,
   NoteFormSchema,
   PieceFormSchema,
   ProjectContactsFormSchema,
+  ProjectCreateFormSchema,
   ProjectHeaderFormSchema,
   type NoteEditFormErrors,
   type NoteEditFormState,
@@ -45,6 +57,8 @@ import {
   type PieceFormState,
   type ProjectContactsFormErrors,
   type ProjectContactsFormState,
+  type ProjectCreateFormErrors,
+  type ProjectCreateFormState,
   type ProjectHeaderFormErrors,
   type ProjectHeaderFormState,
 } from "@/schemas/projects.schemas";
@@ -81,10 +95,31 @@ export async function saveProjectHeader(
     ProjectHeaderFormState,
     typeof ProjectHeaderFormSchema,
     ProjectHeaderFormErrors
-  >(formState, formData, ProjectHeaderFormSchema, saveProjectHeaderEffect, [
+  >(
+    formState,
+    formData,
+    ProjectHeaderFormSchema,
+    saveProjectHeaderWithFoldersEffect,
+    [Role.employee],
+  );
+  refresh();
+  return state;
+}
+
+export async function createProject(
+  formState: ProjectCreateFormState,
+  formData: FormData,
+): Promise<ProjectCreateFormState> {
+  const state = await runEffectAsFormAction<
+    ProjectCreateFormState,
+    typeof ProjectCreateFormSchema,
+    ProjectCreateFormErrors
+  >(formState, formData, ProjectCreateFormSchema, createProjectEffect, [
     Role.employee,
   ]);
-  refresh();
+  if (state?.projectId) {
+    redirect(projectPath(state.projectId));
+  }
   return state;
 }
 
@@ -111,7 +146,9 @@ export async function savePiece(
     PieceFormState,
     typeof PieceFormSchema,
     PieceFormErrors
-  >(formState, formData, PieceFormSchema, savePieceEffect, [Role.employee]);
+  >(formState, formData, PieceFormSchema, savePieceWithFoldersEffect, [
+    Role.employee,
+  ]);
   refresh();
   return state;
 }
@@ -196,6 +233,74 @@ export async function movePiece(
 
 export async function deletePiece(pieceId: number): Promise<void> {
   await deletePieceMutation(pieceId);
+  refresh();
+}
+
+const restorePieceMutation = protectedEffect(
+  restorePieceEffect,
+  [Role.employee],
+  "mutation",
+);
+const ensurePieceFoldersMutation = protectedEffect(
+  ensurePieceFoldersEffect,
+  [Role.employee],
+  "mutation",
+);
+const addFileSectionMutation = protectedEffect(
+  addFileSectionEffect,
+  [Role.employee],
+  "mutation",
+);
+const renameFileSectionMutation = protectedEffect(
+  renameFileSectionEffect,
+  [Role.employee],
+  "mutation",
+);
+const deleteFileSectionMutation = protectedEffect(
+  deleteFileSectionEffect,
+  [Role.employee],
+  "mutation",
+);
+const restoreFileSectionMutation = protectedEffect(
+  restoreFileSectionEffect,
+  [Role.employee],
+  "mutation",
+);
+
+export async function restorePiece(pieceId: number): Promise<void> {
+  await restorePieceMutation(pieceId);
+  refresh();
+}
+
+export async function ensurePieceFolders(pieceId: number): Promise<void> {
+  await ensurePieceFoldersMutation(pieceId);
+  refresh();
+}
+
+export async function addFileSection(
+  projectId: string,
+  pieceId: number | null,
+  name: string,
+): Promise<void> {
+  await addFileSectionMutation(projectId, pieceId, name);
+  refresh();
+}
+
+export async function renameFileSection(
+  sectionId: number,
+  name: string,
+): Promise<void> {
+  await renameFileSectionMutation(sectionId, name);
+  refresh();
+}
+
+export async function deleteFileSection(sectionId: number): Promise<void> {
+  await deleteFileSectionMutation(sectionId);
+  refresh();
+}
+
+export async function restoreFileSection(sectionId: number): Promise<void> {
+  await restoreFileSectionMutation(sectionId);
   refresh();
 }
 

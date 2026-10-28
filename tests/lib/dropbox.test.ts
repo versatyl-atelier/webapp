@@ -5,7 +5,10 @@ import {
   PIECE_SECTION_NAMES,
 } from "@/constants/dropbox";
 import {
+  choosePieceFolder,
+  chooseProjectFolder,
   dropboxSafeName,
+  folderLabel,
   folderNumber,
   joinDropboxPath,
   nextFolderNumber,
@@ -86,5 +89,62 @@ describe("pieceSectionFolders", () => {
       folder: "7. Dessins production",
     });
     expect(folders[7]?.folder).toBe("8. Listes de débit");
+  });
+});
+
+describe("folderLabel", () => {
+  it("strips the number prefix", () => {
+    expect(folderLabel("2. Vanité SDB")).toBe("Vanité SDB");
+    expect(folderLabel("PDM")).toBe("PDM");
+  });
+});
+
+describe("chooseProjectFolder", () => {
+  it("adopts a free folder with the same name", () => {
+    expect(
+      chooseProjectFolder("Beauregard Lacasse", ["beauregard lacasse"], []),
+    ).toBe("beauregard lacasse");
+  });
+
+  it("does not adopt a folder claimed by another project", () => {
+    expect(
+      chooseProjectFolder(
+        "Beauregard Lacasse",
+        ["Beauregard Lacasse"],
+        ["Beauregard Lacasse"],
+      ),
+    ).toBe("Beauregard Lacasse (2)");
+  });
+
+  it("uses the name when no folder exists", () => {
+    expect(chooseProjectFolder("Tremblay Sophie", ["Autre"], [])).toBe(
+      "Tremblay Sophie",
+    );
+  });
+});
+
+describe("choosePieceFolder", () => {
+  const existing = ["PDM", "Finition", "2. Vanité SDB des maitres"];
+
+  it("adopts an existing numbered folder with the same name", () => {
+    expect(choosePieceFolder("Vanité SDB des maitres", existing, [])).toBe(
+      "2. Vanité SDB des maitres",
+    );
+  });
+
+  it("creates the next numbered folder otherwise", () => {
+    expect(choosePieceFolder("Cuisine", existing, [])).toBe("3. Cuisine");
+  });
+
+  it("does not adopt a folder claimed by another piece", () => {
+    expect(
+      choosePieceFolder("Vanité SDB des maitres", existing, [
+        "2. Vanité SDB des maitres",
+      ]),
+    ).toBe("3. Vanité SDB des maitres");
+  });
+
+  it("does not adopt an unnumbered project folder", () => {
+    expect(choosePieceFolder("Finition", existing, [])).toBe("3. Finition");
   });
 });

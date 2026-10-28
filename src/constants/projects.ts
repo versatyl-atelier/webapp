@@ -32,6 +32,7 @@ export const PROJECT_COLOR_SWATCHES = [
   { value: "#C9850C", label: EVENT_COLOR_LABELS.amber },
 ] as const;
 export const PROJECT_STAGES = Object.values(ProjectStage);
+export const NEW_PROJECT_STAGE = ProjectStage.venteDesign;
 export const DONE_PROJECT_STAGE = ProjectStage.termine;
 export const PROJECT_STAGE_LABELS: Record<ProjectStage, string> = {
   venteDesign: "Vente / Design",
@@ -175,6 +176,7 @@ export const SAVED_TOAST_OPTIONS = {
 } as const satisfies ExternalToast;
 
 export const PROJECT_SAVED_MESSAGE = "Projet enregistré";
+export const PROJECT_CREATED_MESSAGE = "Projet créé";
 export const CONTACTS_SAVED_MESSAGE = "Contacts enregistrés";
 export const PIECE_SAVED_MESSAGE = "Pièce enregistrée";
 export const PROJECT_NOT_FOUND_MESSAGE = "Projet introuvable";

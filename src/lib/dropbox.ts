@@ -72,3 +72,44 @@ export function renumberedFolder(folder: string, name: string): string {
   const number = folderNumber(folder);
   return number === null ? dropboxSafeName(name) : numberedFolder(number, name);
 }
+
+export function folderLabel(folder: string): string {
+  return folder.replace(DROPBOX_FOLDER_NUMBER_PATTERN, "");
+}
+
+function sameFolder(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
+export function chooseProjectFolder(
+  name: string,
+  existing: readonly string[],
+  claimed: readonly string[],
+): string {
+  const safe = dropboxSafeName(name);
+  const adoptable = existing.find(
+    (folder) =>
+      sameFolder(folder, safe) &&
+      !claimed.some((other) => sameFolder(other, folder)),
+  );
+  return adoptable ?? uniqueFolderName(name, [...existing, ...claimed]);
+}
+
+export function choosePieceFolder(
+  name: string,
+  existing: readonly string[],
+  claimed: readonly string[],
+): string {
+  const safe = dropboxSafeName(name);
+  const adoptable = existing.find(
+    (folder) =>
+      folderNumber(folder) !== null &&
+      sameFolder(folderLabel(folder), safe) &&
+      !claimed.some((other) => sameFolder(other, folder)),
+  );
+  if (adoptable) {
+    return adoptable;
+  }
+  const taken = [...existing, ...claimed];
+  return uniqueFolderName(numberedFolder(nextFolderNumber(taken), name), taken);
+}

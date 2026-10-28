@@ -121,7 +121,7 @@ export const accessibleProjectsWhere = Effect.fn("accessibleProjectsWhere")(
   },
 );
 
-const assertProjectAccess = Effect.fn("assertProjectAccess")(function* (
+export const assertProjectAccess = Effect.fn("assertProjectAccess")(function* (
   prisma: PrismaService,
   projectId: string,
 ) {
@@ -152,6 +152,7 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
       color: true,
       address: true,
       contacts: {
+        where: { isDeleted: false },
         select: {
           role: true,
           name: true,
@@ -162,10 +163,12 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
         orderBy: { sortOrder: SortOrder.asc },
       },
       phases: {
+        where: { isDeleted: false },
         select: { id: true, name: true },
         orderBy: { sortOrder: SortOrder.asc },
       },
       pieces: {
+        where: { isDeleted: false },
         select: {
           id: true,
           phaseId: true,
@@ -244,7 +247,7 @@ export const getFicheSuggestionsEffect = Effect.fn("getFicheSuggestions")(
     const project = where ?? { id: { in: [] } };
     const [pieces, contacts] = yield* Effect.all([
       prisma.projectPiece.findMany({
-        where: { project },
+        where: { project, isDeleted: false },
         select: {
           type: true,
           caissonMaterial: true,
@@ -258,7 +261,7 @@ export const getFicheSuggestionsEffect = Effect.fn("getFicheSuggestions")(
         take: RECENT_SUGGESTION_ROWS,
       }),
       prisma.projectContact.findMany({
-        where: { project },
+        where: { project, isDeleted: false },
         select: { role: true, company: true },
         orderBy: { updatedAt: SortOrder.desc },
         take: RECENT_SUGGESTION_ROWS,
@@ -275,7 +278,15 @@ export const saveProjectHeaderEffect = Effect.fn("saveProjectHeader")(
     { projectId, ...data }: ProjectHeaderFormData,
   ) {
     yield* assertProjectAccess(prisma, projectId);
-    yield* prisma.project.update({ where: { id: projectId }, data });
+    const current = yield* prisma.project.findUnique({
+      where: { id: projectId },
+      select: { isManual: true },
+    });
+    const { name, ...trelloOwned } = data;
+    yield* prisma.project.update({
+      where: { id: projectId },
+      data: current?.isManual ? { name, ...trelloOwned } : trelloOwned,
+    });
     return { message: PROJECT_SAVED_MESSAGE };
   },
 );
@@ -318,7 +329,7 @@ const phaseBelongsTo = Effect.fn("phaseBelongsTo")(function* (
     return true;
   }
   const count = yield* prisma.projectPhase.count({
-    where: { id: phaseId, projectId },
+    where: { id: phaseId, projectId, isDeleted: false },
   });
   return count > 0;
 });
@@ -329,7 +340,7 @@ const piecesSortOrder = Effect.fn("piecesSortOrder")(function* (
   phaseId: number | null,
 ) {
   const pieces = yield* prisma.projectPiece.findMany({
-    where: { projectId, phaseId },
+    where: { projectId, phaseId, isDeleted: false },
     select: { sortOrder: true },
   });
   return nextSortOrder(pieces);
@@ -356,7 +367,7 @@ export const savePieceEffect = Effect.fn("savePiece")(function* (
       select: { id: true },
     });
     yield* Effect.annotateLogsScoped({ createdPieceId: piece.id });
-    return { message: PIECE_SAVED_MESSAGE };
+    return { message: PIECE_SAVED_MESSAGE, pieceId: piece.id };
   }
   const current = yield* prisma.projectPiece.findFirst({
     where: { id, projectId },
@@ -375,7 +386,7 @@ export const savePieceEffect = Effect.fn("savePiece")(function* (
         : { sortOrder: yield* piecesSortOrder(prisma, projectId, phaseId) }),
     },
   });
-  return { message: PIECE_SAVED_MESSAGE };
+  return { message: PIECE_SAVED_MESSAGE, pieceId: id };
 });
 
 export const addPhaseEffect = Effect.fn("addPhase")(function* (
@@ -384,7 +395,7 @@ export const addPhaseEffect = Effect.fn("addPhase")(function* (
 ) {
   yield* assertProjectAccess(prisma, projectId);
   const phases = yield* prisma.projectPhase.findMany({
-    where: { projectId },
+    where: { projectId, isDeleted: false },
     select: { sortOrder: true },
   });
   const isFirst = phases.length === 0;
@@ -447,24 +458,36 @@ export const deletePhaseEffect = Effect.fn("deletePhase")(function* (
 ) {
   const phase = yield* phaseProjectId(prisma, phaseId);
   const fallback = yield* prisma.projectPhase.findFirst({
-    where: { projectId: phase.projectId, id: { not: phase.id } },
+    where: {
+      projectId: phase.projectId,
+      id: { not: phase.id },
+      isDeleted: false,
+    },
     select: { id: true },
     orderBy: { sortOrder: SortOrder.asc },
   });
   const fallbackId = fallback?.id ?? null;
   const sortOrder = yield* piecesSortOrder(prisma, phase.projectId, fallbackId);
+  const session = yield* getActiveSession();
   yield* prisma.$transaction(
     Effect.all([
       prisma.projectPiece.updateMany({
-        where: { phaseId: phase.id },
+        where: { phaseId: phase.id, isDeleted: false },
         data: { phaseId: fallbackId, sortOrder },
       }),
-      prisma.projectPhase.delete({ where: { id: phase.id } }),
+      prisma.projectPhase.update({
+        where: { id: phase.id },
+        data: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: session.userId,
+        },
+      }),
     ]),
   );
 });
 
-const accessiblePiece = Effect.fn("accessiblePiece")(function* (
+export const accessiblePiece = Effect.fn("accessiblePiece")(function* (
   prisma: PrismaService,
   pieceId: unknown,
 ) {
@@ -486,7 +509,35 @@ export const deletePieceEffect = Effect.fn("deletePiece")(function* (
   pieceId: unknown,
 ) {
   const piece = yield* accessiblePiece(prisma, pieceId);
-  yield* prisma.projectPiece.delete({ where: { id: piece.id } });
+  const session = yield* getActiveSession();
+  yield* prisma.projectPiece.update({
+    where: { id: piece.id },
+    data: { isDeleted: true, deletedAt: new Date(), deletedBy: session.userId },
+  });
+});
+
+export const restorePieceEffect = Effect.fn("restorePiece")(function* (
+  prisma: PrismaService,
+  pieceId: unknown,
+) {
+  const piece = yield* accessiblePiece(prisma, pieceId);
+  const phaseId = (yield* phaseBelongsTo(
+    prisma,
+    piece.projectId,
+    piece.phaseId,
+  ))
+    ? piece.phaseId
+    : null;
+  yield* prisma.projectPiece.update({
+    where: { id: piece.id },
+    data: {
+      phaseId,
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null,
+      sortOrder: yield* piecesSortOrder(prisma, piece.projectId, phaseId),
+    },
+  });
 });
 
 export const movePieceEffect = Effect.fn("movePiece")(function* (
