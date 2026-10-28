@@ -196,13 +196,13 @@ model TimeEntry {
 }
 
 model Subtask {
-  id          String    @id @default(cuid())
-  name        String
-  isDeleted   Boolean   @default(false)
-  deletedAt   DateTime?
-  deletedBy   Int?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  name      String
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   timeEntries TimeEntry[]
 
@@ -282,7 +282,7 @@ model Project {
   useDaysApprovalToDelivery Boolean @default(false)
   daysApprovalToDelivery    Int?
 
-  submissionPrice Float
+  submissionPrice Float?
 
   useExtraProductionDelay Boolean @default(false)
   extraProductionDays     Int?
@@ -296,7 +296,8 @@ model Project {
   calendarOrder Int     @default(0)
   isLocked      Boolean @default(false)
 
-  address String @default("")
+  address  String  @default("")
+  isManual Boolean @default(false)
 
   productionDurationDays Int?
   planningDurationDays   Int?
@@ -317,6 +318,7 @@ model Project {
   phases            ProjectPhase[]
   pieces            ProjectPiece[]
   notes             ProjectNote[]
+  fileSections      ProjectFileSection[]
   calendarEvents    CalendarEvent[]
 
   @@index([stage])
@@ -324,16 +326,20 @@ model Project {
 }
 
 model ProjectContact {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   projectId String
-  role      String   @default("")
-  name      String   @default("")
-  company   String   @default("")
-  phone     String   @default("")
-  email     String   @default("")
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      String    @default("")
+  name      String    @default("")
+  company   String    @default("")
+  phone     String    @default("")
+  email     String    @default("")
+  address   String    @default("")
+  sortOrder Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -342,12 +348,15 @@ model ProjectContact {
 }
 
 model ProjectPhase {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   projectId String
   name      String
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sortOrder Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   pieces  ProjectPiece[]
@@ -358,23 +367,34 @@ model ProjectPhase {
 }
 
 model ProjectPiece {
-  id              Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   projectId       String
   phaseId         Int?
-  type            String   @default("")
-  caissonMaterial String   @default("")
-  cladding        String   @default("")
-  doors           String   @default("")
-  drawers         String   @default("")
-  hardware        String   @default("")
-  finish          String   @default("")
+  type            String    @default("")
+  caissonMaterial String    @default("")
+  cladding        String    @default("")
+  doors           String    @default("")
+  drawers         String    @default("")
+  hardware        String    @default("")
+  finish          String    @default("")
   cabinetCount    Int?
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  description     String    @default("")
+  countertop      String    @default("")
+  coverPath       String?
+  coverX          Float     @default(50)
+  coverY          Float     @default(50)
+  coverZoom       Float     @default(1)
+  sortOrder       Int       @default(0)
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+  deletedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  phase   ProjectPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  project      Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase        ProjectPhase?        @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  notes        ProjectNote[]
+  fileSections ProjectFileSection[]
 
   @@index([projectId])
   @@index([phaseId])
@@ -385,6 +405,7 @@ model ProjectNote {
   id        Int       @id @default(autoincrement())
   projectId String
   phaseId   Int?
+  pieceId   Int?
   isDeleted Boolean   @default(false)
   deletedAt DateTime?
   deletedBy String?
@@ -393,10 +414,12 @@ model ProjectNote {
 
   project  Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
   phase    ProjectPhase?        @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  piece    ProjectPiece?        @relation(fields: [pieceId], references: [id], onDelete: SetNull)
   versions ProjectNoteVersion[]
 
   @@index([projectId])
   @@index([phaseId])
+  @@index([pieceId])
   @@map("projectNotes")
 }
 
@@ -413,6 +436,27 @@ model ProjectNoteVersion {
 
   @@index([noteId])
   @@map("projectNoteVersions")
+}
+
+model ProjectFileSection {
+  id        Int       @id @default(autoincrement())
+  projectId String
+  pieceId   Int?
+  name      String
+  isCustom  Boolean   @default(false)
+  sortOrder Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  piece   ProjectPiece? @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([pieceId])
+  @@map("projectFileSections")
 }
 
 enum CalendarEventType {
