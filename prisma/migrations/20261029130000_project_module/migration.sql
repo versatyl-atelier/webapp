@@ -1,5 +1,6 @@
 -- AlterTable
-ALTER TABLE "projects" ADD COLUMN     "isManual" BOOLEAN NOT NULL DEFAULT false,
+ALTER TABLE "projects" ADD COLUMN     "dropboxFolder" TEXT,
+ADD COLUMN     "isManual" BOOLEAN NOT NULL DEFAULT false,
 ALTER COLUMN "submissionPrice" DROP NOT NULL;
 
 -- AlterTable
@@ -22,6 +23,7 @@ ADD COLUMN     "coverZoom" DOUBLE PRECISION NOT NULL DEFAULT 1,
 ADD COLUMN     "deletedAt" TIMESTAMP(3),
 ADD COLUMN     "deletedBy" TEXT,
 ADD COLUMN     "description" TEXT NOT NULL DEFAULT '',
+ADD COLUMN     "dropboxFolder" TEXT,
 ADD COLUMN     "isDeleted" BOOLEAN NOT NULL DEFAULT false;
 
 -- AlterTable
@@ -33,6 +35,7 @@ CREATE TABLE "projectFileSections" (
     "projectId" TEXT NOT NULL,
     "pieceId" INTEGER,
     "name" TEXT NOT NULL,
+    "dropboxFolder" TEXT,
     "isCustom" BOOLEAN NOT NULL DEFAULT false,
     "sortOrder" INTEGER NOT NULL DEFAULT 0,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,

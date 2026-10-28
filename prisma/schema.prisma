@@ -296,8 +296,9 @@ model Project {
   calendarOrder Int     @default(0)
   isLocked      Boolean @default(false)
 
-  address  String  @default("")
-  isManual Boolean @default(false)
+  address       String  @default("")
+  isManual      Boolean @default(false)
+  dropboxFolder String?
 
   productionDurationDays Int?
   planningDurationDays   Int?
@@ -384,6 +385,7 @@ model ProjectPiece {
   coverX          Float     @default(50)
   coverY          Float     @default(50)
   coverZoom       Float     @default(1)
+  dropboxFolder   String?
   sortOrder       Int       @default(0)
   isDeleted       Boolean   @default(false)
   deletedAt       DateTime?
@@ -439,17 +441,18 @@ model ProjectNoteVersion {
 }
 
 model ProjectFileSection {
-  id        Int       @id @default(autoincrement())
-  projectId String
-  pieceId   Int?
-  name      String
-  isCustom  Boolean   @default(false)
-  sortOrder Int       @default(0)
-  isDeleted Boolean   @default(false)
-  deletedAt DateTime?
-  deletedBy String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            Int       @id @default(autoincrement())
+  projectId     String
+  pieceId       Int?
+  name          String
+  dropboxFolder String?
+  isCustom      Boolean   @default(false)
+  sortOrder     Int       @default(0)
+  isDeleted     Boolean   @default(false)
+  deletedAt     DateTime?
+  deletedBy     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   piece   ProjectPiece? @relation(fields: [pieceId], references: [id], onDelete: Cascade)
