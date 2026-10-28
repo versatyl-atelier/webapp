@@ -55,6 +55,10 @@ export function secondsToHours(seconds: number): number {
   return seconds / 3600;
 }
 
+export function formatDecimalHours(decimal: number): string {
+  return `${(Number.isFinite(decimal) ? decimal : 0).toFixed(2)} h`;
+}
+
 export function formatTimeDisplay(decimal: number): string {
   if (!decimal || Number.isNaN(decimal)) return "0h 0m";
 

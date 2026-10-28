@@ -4,6 +4,9 @@ export const PUNCH_PATH = "/punch";
 export const PUNCH_EMPLOYEES_PATH = `${PUNCH_PATH}/employes`;
 export const PUNCH_DATA_PATH = `${PUNCH_PATH}/donnees`;
 export const PUNCH_TASKS_PATH = `${PUNCH_DATA_PATH}/taches`;
+export const PUNCH_TIMESHEET_PATH = `${PUNCH_DATA_PATH}/feuille-de-temps`;
+export const PUNCH_REPORT_PATH = `${PUNCH_DATA_PATH}/rapport`;
+export const PUNCH_REPORT_PRINT_PATH = `${PUNCH_REPORT_PATH}/imprimable`;
 
 export const PUNCH_TILE: Omit<Tool, "href"> = {
   icon: "⏱",
@@ -27,17 +30,15 @@ export const PUNCH_DATA_TOOLS: Tool[] = [
     managerOnly: true,
   },
   {
-    href: `${PUNCH_DATA_PATH}/feuille-de-temps`,
+    href: PUNCH_TIMESHEET_PATH,
     icon: "🕒",
     title: "Feuille de temps",
     description: "Le temps de chaque employé",
-    disabled: true,
   },
   {
-    href: `${PUNCH_DATA_PATH}/rapport`,
+    href: PUNCH_REPORT_PATH,
     icon: "📈",
     title: "Rapport",
     description: "Heures par projet, statut, employé",
-    disabled: true,
   },
 ];

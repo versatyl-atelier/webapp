@@ -4,6 +4,7 @@ import {
   parseTimeToSeconds,
   hoursToSeconds,
   secondsToHours,
+  formatDecimalHours,
   formatTimeDisplay,
   getWeek,
   getMonday,
@@ -207,5 +208,17 @@ describe("shiftToDay", () => {
     shiftToDay(instant, day);
     expect(instant).toEqual(new Date(2026, 9, 27, 8, 2));
     expect(day).toEqual(new Date(2026, 9, 30));
+  });
+});
+
+describe("formatDecimalHours", () => {
+  it("shows two decimals with the unit", () => {
+    expect(formatDecimalHours(2.5)).toBe("2.50 h");
+    expect(formatDecimalHours(0)).toBe("0.00 h");
+    expect(formatDecimalHours(7.456)).toBe("7.46 h");
+  });
+
+  it("falls back to zero for a value that is not a number", () => {
+    expect(formatDecimalHours(NaN)).toBe("0.00 h");
   });
 });
