@@ -17,8 +17,8 @@ const SECTION_HEADING_CLASS =
 
 export default async function Home() {
   const session = await getSession();
-  const isManager = session?.role === Role.manager;
-  const showWidgets = !!session && !session.mustChangePassword;
+  const showWidgets =
+    !!session && !session.mustChangePassword && session.role !== Role.atelier;
   const today = toLocalDateKey(new Date());
 
   return (
@@ -47,7 +47,7 @@ export default async function Home() {
         <h2 id="applications-heading" className={SECTION_HEADING_CLASS}>
           {APPLICATIONS_HEADING}
         </h2>
-        <ToolTiles isManager={isManager} />
+        <ToolTiles role={session?.role ?? null} />
       </section>
     </main>
   );

@@ -1,24 +1,30 @@
-import { CreateUserForm } from "@/components/CreateUserForm";
-import { UserList } from "@/components/UserList";
+import { notFound } from "next/navigation";
 
+import { getPeople, getStatuts } from "@/actions/accounts";
 import { getEmployeesWithoutAccount } from "@/actions/employees";
-import { getUsers } from "@/actions/users";
+import { PeopleTable } from "@/components/PeopleTable";
+import { PUNCH_MANAGER_PATH } from "@/constants/punch";
+import { Role } from "@/generated/prisma/enums";
+import { requireActiveSession } from "@/lib/session";
 
 export default async function Page() {
-  const employees = await getEmployeesWithoutAccount();
-  const users = await getUsers();
+  const session = await requireActiveSession(PUNCH_MANAGER_PATH);
+  if (session.role !== Role.manager) {
+    notFound();
+  }
+  const [people, statuts, employeesWithoutAccount] = await Promise.all([
+    getPeople(),
+    getStatuts(),
+    getEmployeesWithoutAccount(),
+  ]);
+
   return (
-    <div className="flex flex-col gap-4 px-8">
-      <h1 className="ml-2 text-2xl">Admin</h1>
-      <h2 className="text-xl font-bold">Créer un compte</h2>
-      <CreateUserForm
-        employees={employees || []}
-        className="bg-background flex max-w-prose flex-col gap-4 rounded border-2 p-2"
-      />
-      <h2 className="text-xl font-bold">Comptes existants</h2>
-      <UserList
-        users={users}
-        className="bg-background mb-4 w-full max-w-prose rounded border-2"
+    <div className="p-4">
+      <PeopleTable
+        people={people}
+        statuts={statuts}
+        employeesWithoutAccount={employeesWithoutAccount}
+        currentUserId={session.userId}
       />
     </div>
   );

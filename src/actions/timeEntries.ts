@@ -27,7 +27,7 @@ import {
 } from "@/effects/timeEntries";
 
 export const getTimeEntries = cachedGetter(getTimeEntriesEffect, [
-  Role.employee,
+  Role.atelier,
 ]);
 
 export async function editTimeEntry(
@@ -39,18 +39,18 @@ export async function editTimeEntry(
     typeof EditTimeEntryFormSchema,
     EditTimeEntryFormErrors
   >(formState, formData, EditTimeEntryFormSchema, editTimeEntryEffect, [
-    Role.employee,
+    Role.atelier,
   ]);
 }
 export const putTimeEntry = protectedEffect(
   putTimeEntryEffect,
-  [Role.employee],
+  [Role.atelier],
   "mutation",
 );
 
 export const deleteTimeEntry = protectedEffect(
   deleteTimeEntryEffect,
-  [Role.employee],
+  [Role.atelier],
   "mutation",
 );
 
@@ -63,7 +63,7 @@ export async function addManualTime(
     typeof AddManualTimeFormSchema,
     AddManualTimeFormErrors
   >(formState, formData, AddManualTimeFormSchema, addManualTimeEffect, [
-    Role.employee,
+    Role.atelier,
   ]);
 }
 
@@ -76,6 +76,6 @@ export async function moveTimeEntry(
     typeof MoveTimeEntryFormSchema,
     MoveTimeEntryFormErrors
   >(formState, formData, MoveTimeEntryFormSchema, moveTimeEntryEffect, [
-    Role.employee,
+    Role.atelier,
   ]);
 }

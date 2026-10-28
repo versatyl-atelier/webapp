@@ -7,5 +7,5 @@ import { Role } from "@/generated/prisma/enums";
 import { getEmployeeActivityEffect } from "@/effects/activity";
 
 export const getEmployeeActivity = cachedGetter(getEmployeeActivityEffect, [
-  Role.employee,
+  Role.atelier,
 ]);

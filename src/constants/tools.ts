@@ -24,6 +24,8 @@ export const SEARCH_SHORTCUT_HINT_APPLE = "⌘ K";
 export const APPLE_PLATFORM_PATTERN = /mac|iphone|ipad|ipod/i;
 export const SEARCH_COMING_SOON = "Fonction à venir";
 
+export const ATELIER_TOOL_HREFS: readonly string[] = ["/punch"];
+
 export const TOOLS: Tool[] = [
   {
     href: "/calendrier",

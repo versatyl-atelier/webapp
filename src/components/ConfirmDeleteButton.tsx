@@ -1,7 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 
 import {
   AlertDialog,
@@ -24,6 +24,10 @@ type ConfirmDeleteButtonProps = {
   title: string;
   description?: string;
   label: string;
+  confirmLabel?: string;
+  icon?: ReactNode;
+  triggerText?: string;
+  onDone?: () => void;
 };
 
 export function ConfirmDeleteButton({
@@ -32,10 +36,14 @@ export function ConfirmDeleteButton({
   title,
   description,
   label,
+  confirmLabel = DELETE_LABEL,
+  icon = <Trash2 />,
+  triggerText,
+  onDone,
 }: ConfirmDeleteButtonProps) {
   const [state, setState] = useState<ToastableState>();
   const [pending, startTransition] = useTransition();
-  useFormToast(state);
+  useFormToast(state, { onSuccess: onDone });
 
   function handleConfirm() {
     const formData = new FormData();
@@ -51,16 +59,26 @@ export function ConfirmDeleteButton({
     <AlertDialog>
       <AlertDialogTrigger
         render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label={label}
-            disabled={pending}
-          />
+          triggerText ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              className="text-destructive w-full rounded-sm text-xs font-semibold uppercase"
+            />
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={label}
+              disabled={pending}
+            />
+          )
         }
       >
-        <Trash2 />
+        {triggerText ?? icon}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -72,7 +90,7 @@ export function ConfirmDeleteButton({
         <AlertDialogFooter>
           <AlertDialogCancel>{CANCEL_LABEL}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" onClick={handleConfirm}>
-            {DELETE_LABEL}
+            {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

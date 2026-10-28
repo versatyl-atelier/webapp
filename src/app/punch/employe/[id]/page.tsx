@@ -22,6 +22,8 @@ import {
   DEFAULT_WEEKLY_TARGET,
   getEmployeeWeek,
 } from "@/lib/employee-week";
+import { Role } from "@/generated/prisma/enums";
+import { getSession } from "@/lib/session";
 import { formatTimeDisplay, isSameDay } from "@/lib/time";
 import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
 import { Info } from "lucide-react";
@@ -113,6 +115,8 @@ export default async function EmployeePage({
   const subtasks = await getSubtasks();
 
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
+  const canToggleFreeze =
+    !weekFrozen || (await getSession())?.role !== Role.atelier;
 
   const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
   const activePunch = await getActivePunch(employeeId);
@@ -137,13 +141,15 @@ export default async function EmployeePage({
                 <AlertDescription>{WEEK_FROZEN_NOTICE}</AlertDescription>
               </Alert>
             )}
-            <FreezeForm
-              employeeId={employee.id}
-              weekStart={weekStart}
-              weekTotal={weekly}
-              objective={objective}
-              weekFrozen={weekFrozen}
-            />
+            {canToggleFreeze && (
+              <FreezeForm
+                employeeId={employee.id}
+                weekStart={weekStart}
+                weekTotal={weekly}
+                objective={objective}
+                weekFrozen={weekFrozen}
+              />
+            )}
           </div>
         </div>
         <div className="grid grid-cols-1 gap-2.5">

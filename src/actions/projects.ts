@@ -49,7 +49,7 @@ import {
   type ProjectHeaderFormState,
 } from "@/schemas/projects.schemas";
 
-export const getProjects = cachedGetter(getProjectsEffect, [Role.employee]);
+export const getProjects = cachedGetter(getProjectsEffect, [Role.atelier]);
 
 export const getAllProjects = cachedGetter(getAllProjectsEffect, [
   Role.manager,

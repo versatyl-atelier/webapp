@@ -3,7 +3,7 @@ import { EmployeeSelect } from "@/components/EmployeeSelect";
 import { getEmployees } from "@/actions/employees";
 import { PUNCH_EMPLOYEES_PATH } from "@/constants/punch";
 import { pinEmployeeFirst } from "@/lib/employees";
-import { Role } from "@/generated/prisma/enums";
+import { ALL_EMPLOYEES_ACCESS_ROLES } from "@/constants/auth";
 import { requireActiveSession } from "@/lib/session";
 
 export default async function Page() {
@@ -13,7 +13,7 @@ export default async function Page() {
     <EmployeeSelect
       employees={pinEmployeeFirst(employees || [], session.employeeId)}
       currentEmployeeId={session.employeeId}
-      canAccessAll={session.role === Role.manager}
+      canAccessAll={ALL_EMPLOYEES_ACCESS_ROLES.includes(session.role)}
       className="mt-4 w-md self-center"
     />
   );

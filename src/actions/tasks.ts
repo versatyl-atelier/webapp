@@ -27,9 +27,9 @@ import {
   type TaskFormState,
 } from "@/schemas/tasks.schemas";
 
-export const getTasks = cachedGetter(getTasksEffect, [Role.employee]);
+export const getTasks = cachedGetter(getTasksEffect, [Role.atelier]);
 
-export const getSubtasks = cachedGetter(getSubtasksEffect, [Role.employee]);
+export const getSubtasks = cachedGetter(getSubtasksEffect, [Role.atelier]);
 
 export async function addTask(
   formState: TaskFormState,

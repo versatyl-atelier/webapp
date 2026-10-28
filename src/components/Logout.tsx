@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, User, UserShield, type LucideIcon } from "lucide-react";
+import { LogOut, User, UserShield, Users, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 
@@ -12,6 +12,7 @@ import { Role } from "@/generated/prisma/enums";
 const ROLE_ICONS: Record<Role, LucideIcon> = {
   [Role.employee]: User,
   [Role.manager]: UserShield,
+  [Role.atelier]: Users,
 };
 
 type LogoutFormProps = {

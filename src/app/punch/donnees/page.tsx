@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+
 import { ToolTile } from "@/components/ToolTile";
 import { PUNCH_DATA_PATH, PUNCH_DATA_TOOLS } from "@/constants/punch";
 import { Role } from "@/generated/prisma/enums";
@@ -5,6 +7,9 @@ import { requireActiveSession } from "@/lib/session";
 
 export default async function Page() {
   const session = await requireActiveSession(PUNCH_DATA_PATH);
+  if (session.role === Role.atelier) {
+    notFound();
+  }
   const isManager = session.role === Role.manager;
 
   return (

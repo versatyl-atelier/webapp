@@ -159,6 +159,7 @@ enum ProjectType {
 enum Role {
   employee
   manager
+  atelier
 }
 
 enum ProjectStage {

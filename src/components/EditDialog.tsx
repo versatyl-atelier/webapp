@@ -15,25 +15,41 @@ import {
 type EditDialogProps = {
   title: string;
   label: string;
+  icon?: ReactNode;
+  triggerText?: string;
   children: (close: () => void) => ReactNode;
 };
 
-export function EditDialog({ title, label, children }: EditDialogProps) {
+export function EditDialog({
+  title,
+  label,
+  icon = <Pencil />,
+  triggerText,
+  children,
+}: EditDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger
         render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label={label}
-          />
+          triggerText ? (
+            <Button
+              type="button"
+              size="sm"
+              className="rounded-sm text-xs font-semibold uppercase"
+            />
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={label}
+            />
+          )
         }
       >
-        <Pencil />
+        {triggerText ?? icon}
       </DialogTrigger>
       <DialogContent className="border-2">
         <DialogHeader className="border-primary mb-4 border-b-4 pb-2.5 text-center">

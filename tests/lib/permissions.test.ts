@@ -105,3 +105,27 @@ describe("toAppSession", () => {
     ).toBeNull();
   });
 });
+
+describe("atelier role", () => {
+  it("is parsed as a known role", () => {
+    expect(parseRole("atelier")).toBe(Role.atelier);
+  });
+
+  it("passes atelier-level actions but not employee or manager ones", () => {
+    expect(hasRole(Role.atelier, Role.atelier)).toBe(true);
+    expect(hasRole(Role.atelier, Role.employee)).toBe(false);
+    expect(hasRole(Role.atelier, Role.manager)).toBe(false);
+  });
+
+  it("lets employees and managers do what the atelier can", () => {
+    expect(hasRole(Role.employee, Role.atelier)).toBe(true);
+    expect(hasRole(Role.manager, Role.atelier)).toBe(true);
+  });
+
+  it("can access any employee without being linked to one", () => {
+    const atelier = { role: Role.atelier, employeeId: null };
+
+    expect(canAccessEmployee(atelier, 1)).toBe(true);
+    expect(canAccessEmployee(atelier, 42)).toBe(true);
+  });
+});
