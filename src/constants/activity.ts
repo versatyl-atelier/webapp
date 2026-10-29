@@ -29,7 +29,6 @@ export const ACTIVITY_UNKNOWN_SUBJECT_LABEL = "Projet inconnu";
 export const ACTIVITY_NAME_SEPARATOR = ", ";
 export const ACTIVITY_DETAIL_SEPARATOR = " · ";
 export const ACTIVITY_OUT_OF_LABEL = "sur";
-export const ACTIVITY_HOURS_UNIT = "h";
 export const ACTIVITY_KILOMETRAGE_UNIT = "km";
 
 export const ACTIVITY_LABELS: Record<ActivityKind, string> = {

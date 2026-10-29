@@ -6,24 +6,10 @@ import { toast } from "sonner";
 import { addManualTime } from "@/actions/timeEntries";
 import { Button } from "@/components/ui/button";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
-import ProjectSelect from "@/components/ProjectSelect";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import TimeEntryFields, { type DateOption } from "@/components/TimeEntryFields";
 
 const DEFAULT_MANUAL_HOURS = "1";
 const LUNCH_HOURS_LABEL = "🍽️ Ajouter Dîner (0.5h)";
-
-export type DateOption = {
-  value: string;
-  label: string;
-};
 
 type ManualTimeFormProps = {
   employeeId: number;
@@ -56,51 +42,13 @@ export default function ManualTimeForm({
       <form action={action} className="space-y-1.5">
         <input type="hidden" name="employeeId" value={employeeId} />
         <FormValidationAlerts errors={state?.errors} />
-        <ProjectSelect disabled={pending || !!disabled} />
-        {state?.errors?.projectId?.map((error: string) => (
-          <FieldError key={error}>- {error}</FieldError>
-        ))}
-        <Field>
-          <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
-            Heures
-          </FieldLabel>
-          <Input
-            name="hours"
-            type="text"
-            defaultValue={DEFAULT_MANUAL_HOURS}
-            placeholder="ex: 1.5, 1h30, 30m"
-            className="w-full rounded border-2 px-1.5 py-1 text-xs"
-            disabled={pending || !!disabled}
-          />
-          {state?.errors?.hours?.map((error: string) => (
-            <FieldError key={error}>- {error}</FieldError>
-          ))}
-        </Field>
-        <Field>
-          <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
-            Date
-          </FieldLabel>
-          <Select
-            name="date"
-            items={dateOptions}
-            defaultValue={defaultDate}
-            disabled={pending || !!disabled}
-          >
-            <SelectTrigger className="w-full rounded border-2 px-1.5 py-1 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {dateOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {state?.errors?.date?.map((error: string) => (
-            <FieldError key={error}>- {error}</FieldError>
-          ))}
-        </Field>
+        <TimeEntryFields
+          errors={state?.errors}
+          dateOptions={dateOptions}
+          defaultDate={defaultDate}
+          defaultHours={DEFAULT_MANUAL_HOURS}
+          disabled={pending || !!disabled}
+        />
         <Button
           size="sm"
           type="submit"

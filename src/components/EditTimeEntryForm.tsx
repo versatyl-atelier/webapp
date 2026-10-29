@@ -12,27 +12,14 @@ import {
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import type { DateOption } from "@/components/ManualTimeForm";
-import ProjectSelect from "@/components/ProjectSelect";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DEFAULT_SUBTASK_ID, SUBTASK_FIELD_LABEL } from "@/constants/tasks";
+import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import type { ProjectOrTask } from "@/components/ProjectSelect";
+import TimeEntryFields, { type DateOption } from "@/components/TimeEntryFields";
+import { DEFAULT_SUBTASK_ID } from "@/constants/tasks";
 import { TIME_ENTRY_DRAG_TYPE } from "@/constants/timeEntries";
 
 import { formatTimeDisplay } from "@/lib/time";
 import { cn } from "@/lib/utils";
-import { Input } from "./ui/input";
 import { useRouter } from "next/navigation";
 import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
 import { ProjectType } from "@/generated/prisma/enums";
@@ -56,9 +43,6 @@ export default function EditTimeEntryForm({
   const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const canDrag = !disabled && !!entry.end;
-  const [projectType, setProjectType] = useState<ProjectType | null>(
-    entry.projects[0]?.projectType ?? null,
-  );
   const [state, action, pending] = useActionState(editTimeEntry, undefined);
   useEffect(() => {
     if (
@@ -69,11 +53,11 @@ export default function EditTimeEntryForm({
       setIsOpen(false);
     }
   }, [state, router]);
-  const subtaskItems = subtasks.map(({ id, name }) => ({
-    value: id,
-    label: name,
-  }));
   const firstProject = entry.projects[0];
+  const defaultProject: ProjectOrTask =
+    firstProject?.projectType === ProjectType.trello
+      ? { id: firstProject.projectId || "", type: ProjectType.trello }
+      : { id: firstProject?.taskId || -1, type: ProjectType.task };
   const projectName =
     firstProject?.projectType === ProjectType.trello
       ? firstProject?.project?.name
@@ -152,95 +136,16 @@ export default function EditTimeEntryForm({
                   ))}
               </Field>
 
-              <ProjectSelect
-                defaultSelected={{
-                  id:
-                    firstProject?.projectType === ProjectType.trello
-                      ? firstProject?.projectId || ""
-                      : firstProject?.taskId || -1,
-                  type:
-                    firstProject?.projectType === ProjectType.trello
-                      ? ProjectType.trello
-                      : ProjectType.task,
-                }}
+              <TimeEntryFields
+                errors={state?.errors}
+                dateOptions={dateOptions}
+                defaultDate={date}
+                defaultHours={formatTimeDisplay(calculateHours())}
+                defaultProject={defaultProject}
+                subtasks={subtasks}
+                defaultSubtaskId={entry.subtaskId}
                 disabled={pending || !!disabled}
-                onTypeChange={setProjectType}
               />
-              {state?.errors?.projectId?.map((error: string) => (
-                <FieldError key={error}>- {error}</FieldError>
-              ))}
-              {projectType === ProjectType.trello && (
-                <Field>
-                  <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
-                    {SUBTASK_FIELD_LABEL}
-                  </FieldLabel>
-                  <Select
-                    name="subtaskId"
-                    items={subtaskItems}
-                    defaultValue={entry.subtaskId}
-                    disabled={pending || !!disabled}
-                  >
-                    <SelectTrigger className="w-full rounded border-2 px-1.5 py-1 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subtaskItems.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {state?.errors?.subtaskId?.map((error: string) => (
-                    <FieldError key={error}>- {error}</FieldError>
-                  ))}
-                </Field>
-              )}
-              <Field>
-                <FieldLabel
-                  htmlFor="hours"
-                  className="mb-1 block text-xs font-semibold uppercase"
-                >
-                  Heures
-                </FieldLabel>
-                <Input
-                  id="hours"
-                  name="hours"
-                  type="text"
-                  defaultValue={formatTimeDisplay(calculateHours())}
-                  className="w-full rounded border-2 px-1.5 py-1 text-xs"
-                  placeholder="Ex: 8.75 ou 8h45"
-                  disabled={pending || !!disabled}
-                />
-                {state?.errors?.hours?.map((error: string) => (
-                  <FieldError key={error}>- {error}</FieldError>
-                ))}
-              </Field>
-              <Field>
-                <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
-                  Date
-                </FieldLabel>
-                <Select
-                  name="date"
-                  items={dateOptions}
-                  defaultValue={date}
-                  disabled={pending || !!disabled}
-                >
-                  <SelectTrigger className="w-full rounded border-2 px-1.5 py-1 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dateOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {state?.errors?.date?.map((error: string) => (
-                  <FieldError key={error}>- {error}</FieldError>
-                ))}
-              </Field>
             </FieldGroup>
             <DialogFooter className="mt-5 flex justify-center gap-2.5 border-t-0 bg-transparent">
               <Button

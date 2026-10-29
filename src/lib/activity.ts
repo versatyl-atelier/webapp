@@ -3,7 +3,6 @@ import {
   ACTIVITY_EDIT_GRACE_MS,
   ACTIVITY_GROUP_WINDOW_MS,
   ACTIVITY_GROUPABLE_KINDS,
-  ACTIVITY_HOURS_UNIT,
   ACTIVITY_KILOMETRAGE_UNIT,
   ACTIVITY_KINDS,
   ACTIVITY_NAME_SEPARATOR,
@@ -149,7 +148,7 @@ function frozenEvents(frozenWeek: ActivityFrozenWeek | null): ActivityEvent[] {
   if (!frozenWeek) {
     return [];
   }
-  const note = `${formatTimeDisplay(frozenWeek.weekTotal)} ${ACTIVITY_OUT_OF_LABEL} ${frozenWeek.objective}${ACTIVITY_HOURS_UNIT}`;
+  const note = `${formatTimeDisplay(frozenWeek.weekTotal)} ${ACTIVITY_OUT_OF_LABEL} ${formatTimeDisplay(frozenWeek.objective)}`;
   if (!frozenWeek.isDeleted) {
     return [weekEvent("weekFrozen", frozenWeek.updatedAt, note)];
   }
@@ -167,7 +166,7 @@ function objectiveEvents(
     return [];
   }
   const note = [
-    `${objective.objective}${ACTIVITY_HOURS_UNIT}`,
+    formatTimeDisplay(objective.objective),
     kilometrage > 0 ? `${kilometrage} ${ACTIVITY_KILOMETRAGE_UNIT}` : null,
   ]
     .filter(Boolean)

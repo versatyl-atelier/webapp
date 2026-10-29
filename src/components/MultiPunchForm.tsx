@@ -7,9 +7,11 @@ import { startMultiPunch, endMultiPunch } from "@/actions/multiPunch";
 import { Button } from "@/components/ui/button";
 import ProjectSelect from "@/components/ProjectSelect";
 import { Field, FieldError } from "./ui/field";
+import Clock from "@/components/Clock";
 import { formatTimeDisplay } from "@/lib/time";
 
 const CUTOFF_HOUR = 16;
+const PUNCH_CUTOFF_NOTICE = `Les punchs s'arrêtent automatiquement à ${CUTOFF_HOUR}h00`;
 const MAX_SELECTIONS = 3;
 const PUNCH_START_MESSAGE = "Punch démarré";
 const PUNCH_END_MESSAGE = "Punch terminé";
@@ -151,7 +153,7 @@ export default function MultiPunchForm({
     : "";
 
   return (
-    <div className="bg-card rounded-lg border-2 p-2">
+    <div className="bg-card flex flex-col rounded-lg border-2 p-2">
       <div className="border-primary mb-2 border-b-2 pb-1 text-center text-xs font-bold">
         Pointage Multiple
       </div>
@@ -173,7 +175,7 @@ export default function MultiPunchForm({
             {startPending ? "..." : "Punch In"}
           </Button>
           <p className="text-2xs text-muted-foreground mt-1 text-center font-bold italic">
-            Tous les punchs s'arrêtent automatiquement à {CUTOFF_HOUR}h00
+            {PUNCH_CUTOFF_NOTICE}
           </p>
         </form>
       ) : (
@@ -216,11 +218,16 @@ export default function MultiPunchForm({
             </div>
 
             <div className="text-2xs text-muted-foreground text-center font-bold italic">
-              Punch s'arrête automatiquement à {CUTOFF_HOUR}h00
+              {PUNCH_CUTOFF_NOTICE}
             </div>
           </form>
         </>
       )}
+      <div className="mt-auto pt-2">
+        <div className="bg-muted flex h-12 items-center justify-center rounded border-2">
+          <Clock className="bg-transparent text-2xl" />
+        </div>
+      </div>
     </div>
   );
 }

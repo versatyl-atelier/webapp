@@ -7,7 +7,6 @@ import { getWeeklyKilometrage } from "@/actions/weeklyKilometrage";
 import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
 import ManualTimeForm from "@/components/ManualTimeForm";
 import MultiPunchForm from "@/components/MultiPunchForm";
-import Clock from "@/components/Clock";
 import { DayColumn } from "@/components/DayColumn";
 
 import { notFound } from "next/navigation";
@@ -129,12 +128,11 @@ export default async function EmployeePage({
       tasksPromise={tasksPromise}
     >
       <div className="relative flex flex-1 flex-col gap-2.5 p-1.5">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <h1 className="ml-1 text-2xl font-bold tracking-tight">
             {employee.name}
           </h1>
-          <Clock className="text-lg" />
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
             {weekFrozen && (
               <Alert variant="warning" role="status" className="w-auto flex-1">
                 <Info />
