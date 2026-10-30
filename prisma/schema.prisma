@@ -79,6 +79,8 @@ model User {
   sessions       Session[]
   accounts       Account[]
   noteVersions   ProjectNoteVersion[]
+  projectViews   ProjectView[]
+  projectPins    ProjectPin[]
   calendarEvents CalendarEvent[]
 
   @@map("users")
@@ -320,6 +322,8 @@ model Project {
   pieces            ProjectPiece[]
   notes             ProjectNote[]
   fileSections      ProjectFileSection[]
+  views             ProjectView[]
+  pins              ProjectPin[]
   calendarEvents    CalendarEvent[]
 
   @@index([stage])
@@ -373,15 +377,13 @@ model ProjectPiece {
   phaseId         Int?
   type            String    @default("")
   caissonMaterial String    @default("")
-  cladding        String    @default("")
-  doors           String    @default("")
+  cladding        String[]  @default([])
   drawers         String    @default("")
-  hardware        String    @default("")
   finish          String    @default("")
   cabinetCount    Int?
   description     String    @default("")
   countertop      String    @default("")
-  coverPath       String?
+  coverFileId     String?
   coverX          Float     @default(50)
   coverY          Float     @default(50)
   coverZoom       Float     @default(1)
@@ -438,6 +440,33 @@ model ProjectNoteVersion {
 
   @@index([noteId])
   @@map("projectNoteVersions")
+}
+
+model ProjectView {
+  userId    String
+  projectId String
+  viewedAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, projectId])
+  @@index([userId, viewedAt])
+  @@map("projectViews")
+}
+
+model ProjectPin {
+  userId    String
+  projectId String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, projectId])
+  @@index([userId, sortOrder])
+  @@map("projectPins")
 }
 
 model ProjectFileSection {

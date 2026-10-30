@@ -7,6 +7,7 @@ import {
   employeePath,
   isProtectedPath,
   loginPath,
+  projectNotesPath,
   projectPath,
   punchHomeHref,
 } from "@/lib/paths";
@@ -80,8 +81,9 @@ describe("projectPath", () => {
     expect(projectPath("abc")).toBe("/projets/abc");
   });
 
-  it("carries the tab", () => {
-    expect(projectPath("abc", "notes")).toBe("/projets/abc?tab=notes");
+  it("points the notes tab to the notes page", () => {
+    expect(projectPath("abc", "notes")).toBe("/projets/abc/notes");
+    expect(projectNotesPath("abc")).toBe("/projets/abc/notes");
   });
 });
 
@@ -96,6 +98,12 @@ describe("activeToolHref", () => {
     expect(
       activeToolHref("/projets/abc", new URLSearchParams("tab=notes")),
     ).toBe(NOTES_TOOL_PATH);
+  });
+
+  it("treats the notes page as the notes tool", () => {
+    expect(activeToolHref("/projets/abc/notes", new URLSearchParams())).toBe(
+      NOTES_TOOL_PATH,
+    );
   });
 
   it("matches nothing outside the tools", () => {

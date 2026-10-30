@@ -1,284 +1,94 @@
 "use client";
 
-import { GripVertical, X } from "lucide-react";
-import { useActionState, useId, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { GripVertical, ImageIcon, StickyNote } from "lucide-react";
+import { useState } from "react";
 
-import { deletePiece, savePiece } from "@/actions/projects";
-import { FieldErrors } from "@/components/FieldErrors";
-import { FormValidationAlerts } from "@/components/FormValidationAlerts";
-import { SuggestInput } from "@/components/SuggestInput";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  CABINET_COUNT_LABEL,
-  CANCEL_LABEL,
-  DRAG_PIECE_LABEL,
-  EDIT_LABEL,
   NO_PIECE_DETAILS_LABEL,
+  DRAG_PIECE_LABEL,
   PIECE_DRAG_TYPE,
-  PIECE_PHASE_LABEL,
-  PIECE_TEXT_FIELDS,
-  PIECE_TYPE_LABEL,
-  PIECE_TYPE_PLACEHOLDER,
-  REMOVE_PIECE_LABEL,
-  SAVE_LABEL,
-  SAVED_TOAST_OPTIONS,
+  PIECE_NOTES_LABEL,
   UNNAMED_PIECE_LABEL,
 } from "@/constants/projects";
-import {
-  pieceReadFields,
-  type FicheSuggestions,
-  type PhaseRecord,
-  type PieceRecord,
-} from "@/lib/projects";
+import { pieceReadFields, type PieceRecord } from "@/lib/projects";
 import { cn } from "@/lib/utils";
-import type { PieceFormState } from "@/schemas/projects.schemas";
 
 type PieceCardProps = {
-  projectId: string;
-  phaseId: number | null;
-  phases: PhaseRecord[];
-  suggestions: FicheSuggestions;
-  piece?: PieceRecord;
-  draggable?: boolean;
-  onClose?: () => void;
+  piece: PieceRecord;
+  draggable: boolean;
+  onOpen: () => void;
 };
 
-export function PieceCard({
-  projectId,
-  phaseId,
-  phases,
-  suggestions,
-  piece,
-  draggable = false,
-  onClose,
-}: PieceCardProps) {
-  const formId = useId();
-  const [editing, setEditing] = useState(!piece);
+export function PieceCard({ piece, draggable, onOpen }: PieceCardProps) {
   const [dragging, setDragging] = useState(false);
-  const [targetPhaseId, setTargetPhaseId] = useState(phaseId);
-  const phaseItems = phases.map(({ id, name }) => ({
-    value: String(id),
-    label: name,
-  }));
-  const [deleting, startDeleting] = useTransition();
-  const [state, action, saving] = useActionState(
-    async (formState: PieceFormState, formData: FormData) => {
-      const next = await savePiece(formState, formData);
-      if (next?.message) {
-        toast.success(next.message, SAVED_TOAST_OPTIONS);
-        setEditing(false);
-        onClose?.();
-      }
-      return next;
-    },
-    undefined,
-  );
-  const errors = state?.errors;
-  const title = piece?.type || UNNAMED_PIECE_LABEL;
+  const fields = pieceReadFields(piece);
+  const title = piece.type || UNNAMED_PIECE_LABEL;
 
-  const cancel = () => {
-    setTargetPhaseId(phaseId);
-    setEditing(false);
-    onClose?.();
-  };
-
-  const removeButton = piece ? (
-    <AlertDialog>
-      <AlertDialogTrigger
-        render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label={REMOVE_PIECE_LABEL}
-            disabled={deleting}
-          />
-        }
-      >
-        <X />
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {REMOVE_PIECE_LABEL} « {title} » ?
-          </AlertDialogTitle>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{CANCEL_LABEL}</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={() => startDeleting(() => deletePiece(piece.id))}
+  return (
+    <li
+      draggable={draggable}
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData(PIECE_DRAG_TYPE, String(piece.id));
+        setDragging(true);
+      }}
+      onDragEnd={() => setDragging(false)}
+      className={cn(
+        "bg-card focus-within:ring-ring/50 relative flex flex-col overflow-hidden rounded-xl border shadow-xs transition-shadow focus-within:ring-3 hover:shadow-md",
+        dragging && "opacity-40",
+      )}
+    >
+      <div className="bg-muted text-muted-foreground flex aspect-video items-center justify-center border-b">
+        <ImageIcon aria-hidden className="size-7" />
+        {draggable && (
+          <span
+            title={DRAG_PIECE_LABEL}
+            className="absolute top-2 left-2 cursor-grab"
           >
-            {REMOVE_PIECE_LABEL}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  ) : null;
-
-  if (!editing && piece) {
-    const fields = pieceReadFields(piece);
-    return (
-      <li
-        draggable={draggable}
-        onDragStart={(e) => {
-          e.dataTransfer.effectAllowed = "move";
-          e.dataTransfer.setData(PIECE_DRAG_TYPE, String(piece.id));
-          setDragging(true);
-        }}
-        onDragEnd={() => setDragging(false)}
-        className={cn(
-          "bg-card rounded-lg border px-3 py-2.5",
-          dragging && "opacity-40",
-          deleting && "opacity-60",
+            <GripVertical aria-hidden className="size-4" />
+          </span>
         )}
-      >
-        <div className="mb-2 flex items-center gap-2.5">
-          {draggable && (
-            <span title={DRAG_PIECE_LABEL} className="cursor-grab">
-              <GripVertical
-                aria-hidden
-                className="text-muted-foreground size-4 shrink-0"
-              />
-            </span>
-          )}
-          <h3 className="min-w-0 flex-1 font-semibold">{title}</h3>
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-            {EDIT_LABEL}
-          </Button>
-          {removeButton}
-        </div>
-        {fields.length === 0 ? (
+      </div>
+      <div className="flex flex-1 flex-col gap-2 p-3.5">
+        <h3 className="font-semibold">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="text-left outline-none after:absolute after:inset-0"
+          >
+            {title}
+          </button>
+        </h3>
+        {piece.description && (
+          <p className="text-muted-foreground line-clamp-2 text-sm">
+            {piece.description}
+          </p>
+        )}
+        {fields.length === 0 && !piece.description ? (
           <p className="text-muted-foreground text-sm italic">
             {NO_PIECE_DETAILS_LABEL}
           </p>
         ) : (
-          <dl className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-xs">
             {fields.map(({ label, value }) => (
-              <div key={label} className="flex gap-1">
-                <dt className="text-foreground font-semibold">{label} :</dt>
-                <dd>{value}</dd>
+              <div key={label} className="col-span-2 grid grid-cols-subgrid">
+                <dt className="text-muted-foreground">{label}</dt>
+                <dd className="truncate" title={value}>
+                  {value}
+                </dd>
               </div>
             ))}
           </dl>
         )}
-      </li>
-    );
-  }
-
-  return (
-    <li className="bg-card rounded-lg border px-3 py-2.5">
-      <form action={action} className="flex flex-col gap-3">
-        <FormValidationAlerts errors={errors} />
-        <input type="hidden" name="projectId" value={projectId} />
-        {piece && <input type="hidden" name="id" value={piece.id} />}
-        <input type="hidden" name="phaseId" value={targetPhaseId ?? ""} />
-        <div className="flex items-end gap-2.5">
-          <Field className="min-w-0 flex-1 gap-1">
-            <FieldLabel htmlFor={`${formId}-type`} className="text-xs">
-              {PIECE_TYPE_LABEL}
-            </FieldLabel>
-            <SuggestInput
-              id={`${formId}-type`}
-              name="type"
-              suggestions={suggestions.type}
-              defaultValue={piece?.type}
-              placeholder={PIECE_TYPE_PLACEHOLDER}
-              invalid={!!errors?.type}
-              className="font-semibold"
-            />
-            <FieldErrors errors={errors?.type} />
-          </Field>
-          {removeButton}
-        </div>
-        <div className="grid grid-cols-2 gap-x-2.5 gap-y-2 md:grid-cols-3">
-          {PIECE_TEXT_FIELDS.map(({ key, label }) => (
-            <Field key={key} className="gap-1">
-              <FieldLabel htmlFor={`${formId}-${key}`} className="text-xs">
-                {label}
-              </FieldLabel>
-              <SuggestInput
-                id={`${formId}-${key}`}
-                name={key}
-                suggestions={suggestions[key]}
-                defaultValue={piece?.[key]}
-                invalid={!!errors?.[key]}
-              />
-              <FieldErrors errors={errors?.[key]} />
-            </Field>
-          ))}
-          <Field className="gap-1">
-            <FieldLabel htmlFor={`${formId}-cabinetCount`} className="text-xs">
-              {CABINET_COUNT_LABEL}
-            </FieldLabel>
-            <Input
-              id={`${formId}-cabinetCount`}
-              name="cabinetCount"
-              type="number"
-              min={0}
-              defaultValue={piece?.cabinetCount ?? ""}
-              aria-invalid={!!errors?.cabinetCount}
-            />
-            <FieldErrors errors={errors?.cabinetCount} />
-          </Field>
-          {phases.length > 0 && (
-            <Field className="gap-1">
-              <FieldLabel htmlFor={`${formId}-phase`} className="text-xs">
-                {PIECE_PHASE_LABEL}
-              </FieldLabel>
-              <Select
-                items={phaseItems}
-                value={targetPhaseId === null ? null : String(targetPhaseId)}
-                onValueChange={(value) => {
-                  if (value !== null) {
-                    setTargetPhaseId(Number(value));
-                  }
-                }}
-              >
-                <SelectTrigger id={`${formId}-phase`} className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {phaseItems.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldErrors errors={errors?.phaseId} />
-            </Field>
-          )}
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={cancel}>
-            {CANCEL_LABEL}
-          </Button>
-          <Button type="submit" disabled={saving}>
-            {SAVE_LABEL}
-          </Button>
-        </div>
-      </form>
+        {piece.noteCount > 0 && (
+          <p className="text-muted-foreground mt-auto flex items-center gap-1 pt-1 text-xs">
+            <StickyNote aria-hidden className="size-3" />
+            <span>
+              {piece.noteCount} {PIECE_NOTES_LABEL.toLowerCase()}
+            </span>
+          </p>
+        )}
+      </div>
     </li>
   );
 }

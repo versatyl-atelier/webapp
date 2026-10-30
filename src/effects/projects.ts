@@ -143,7 +143,7 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
   if (!where) {
     return null;
   }
-  const project: ProjectFiche | null = yield* prisma.project.findFirst({
+  const project = yield* prisma.project.findFirst({
     where: { ...where, id },
     select: {
       id: true,
@@ -151,6 +151,7 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
       stage: true,
       color: true,
       address: true,
+      isManual: true,
       contacts: {
         where: { isDeleted: false },
         select: {
@@ -173,19 +174,34 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
           id: true,
           phaseId: true,
           type: true,
+          description: true,
           caissonMaterial: true,
           cladding: true,
-          doors: true,
+          countertop: true,
           drawers: true,
-          hardware: true,
           finish: true,
           cabinetCount: true,
+          coverFileId: true,
+          coverX: true,
+          coverY: true,
+          coverZoom: true,
+          _count: { select: { notes: { where: { isDeleted: false } } } },
         },
         orderBy: [{ sortOrder: SortOrder.asc }, { id: SortOrder.asc }],
       },
     },
   });
-  return project;
+  if (!project) {
+    return null;
+  }
+  const fiche: ProjectFiche = {
+    ...project,
+    pieces: project.pieces.map(({ _count, ...piece }) => ({
+      ...piece,
+      noteCount: _count.notes,
+    })),
+  };
+  return fiche;
 });
 
 export const getPipelineProjectsEffect = Effect.fn("getPipelineProjects")(
@@ -252,9 +268,8 @@ export const getFicheSuggestionsEffect = Effect.fn("getFicheSuggestions")(
           type: true,
           caissonMaterial: true,
           cladding: true,
-          doors: true,
+          countertop: true,
           drawers: true,
-          hardware: true,
           finish: true,
         },
         orderBy: { updatedAt: SortOrder.desc },
@@ -334,7 +349,7 @@ const phaseBelongsTo = Effect.fn("phaseBelongsTo")(function* (
   return count > 0;
 });
 
-const piecesSortOrder = Effect.fn("piecesSortOrder")(function* (
+export const piecesSortOrder = Effect.fn("piecesSortOrder")(function* (
   prisma: PrismaService,
   projectId: string,
   phaseId: number | null,

@@ -1,5 +1,9 @@
 export const DROPBOX_TOKEN_URL = "https://api.dropbox.com/oauth2/token";
 export const DROPBOX_API_URL = "https://api.dropboxapi.com/2";
+export const DROPBOX_THUMBNAIL_URL =
+  "https://content.dropboxapi.com/2/files/get_thumbnail_v2";
+export const DROPBOX_API_ARG_HEADER = "Dropbox-API-Arg";
+export const DROPBOX_PATH_RESOURCE_TAG = "path";
 export const DROPBOX_REFRESH_GRANT = "refresh_token";
 export const DROPBOX_TOKEN_TTL_HOURS = 3;
 export const DROPBOX_PATH_SEPARATOR = "/";

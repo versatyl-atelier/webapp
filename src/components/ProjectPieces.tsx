@@ -10,6 +10,7 @@ import {
   renamePhase,
 } from "@/actions/projects";
 import { PieceCard } from "@/components/PieceCard";
+import { PieceDialog } from "@/components/PieceDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,7 +30,7 @@ import {
 } from "@/lib/projects";
 import { cn } from "@/lib/utils";
 
-type Draft = { key: string; phaseId: number | null };
+type OpenDialog = { pieceId: number } | { phaseId: number | null } | null;
 
 type ProjectPiecesProps = {
   projectId: string;
@@ -49,7 +50,7 @@ export function ProjectPieces({
   suggestions,
 }: ProjectPiecesProps) {
   const headingId = useId();
-  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [dialog, setDialog] = useState<OpenDialog>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [optimisticPieces, movePieceOptimistic] = useOptimistic(
@@ -60,12 +61,12 @@ export function ProjectPieces({
       ),
   );
   const canDrag = phases.length > 1;
+  const closeDialog = () => setDialog(null);
 
-  const addDraft = (phaseId: number | null) =>
-    setDrafts((current) => [...current, { key: crypto.randomUUID(), phaseId }]);
-
-  const removeDraft = (key: string) =>
-    setDrafts((current) => current.filter((draft) => draft.key !== key));
+  const openPiece =
+    dialog && "pieceId" in dialog
+      ? pieces.find(({ id }) => id === dialog.pieceId)
+      : undefined;
 
   const dropOn = (phaseId: number | null, pieceId: number) =>
     startTransition(async () => {
@@ -146,7 +147,7 @@ export function ProjectPieces({
                 }
               }}
               className={cn(
-                "-m-1 flex flex-col gap-2 rounded-xl p-1 transition-colors",
+                "-m-1 grid grid-cols-[repeat(auto-fill,minmax(var(--container-3xs),1fr))] gap-3.5 rounded-xl p-1 transition-colors",
                 dropTarget === key &&
                   "bg-primary/5 outline-primary outline-2 -outline-offset-2 outline-dashed",
               )}
@@ -154,39 +155,47 @@ export function ProjectPieces({
               {pieces.map((piece) => (
                 <PieceCard
                   key={piece.id}
-                  projectId={projectId}
-                  phaseId={phaseId}
-                  phases={phases}
-                  suggestions={suggestions}
                   piece={piece}
                   draggable={canDrag}
+                  onOpen={() => setDialog({ pieceId: piece.id })}
                 />
               ))}
-              {drafts
-                .filter((draft) => draft.phaseId === phaseId)
-                .map((draft) => (
-                  <PieceCard
-                    key={draft.key}
-                    projectId={projectId}
-                    phaseId={phaseId}
-                    phases={phases}
-                    suggestions={suggestions}
-                    onClose={() => removeDraft(draft.key)}
-                  />
-                ))}
+              <li className="flex">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDialog({ phaseId })}
+                  className="text-muted-foreground min-h-28 w-full flex-1 border-dashed"
+                >
+                  <Plus />
+                  {ADD_PIECE_LABEL}
+                </Button>
+              </li>
             </ul>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2"
-              onClick={() => addDraft(phaseId)}
-            >
-              <Plus />
-              {ADD_PIECE_LABEL}
-            </Button>
           </div>
         );
       })}
+
+      {dialog && "pieceId" in dialog && openPiece && (
+        <PieceDialog
+          key={openPiece.id}
+          projectId={projectId}
+          phaseId={openPiece.phaseId}
+          phases={phases}
+          suggestions={suggestions}
+          piece={openPiece}
+          onClose={closeDialog}
+        />
+      )}
+      {dialog && "phaseId" in dialog && (
+        <PieceDialog
+          projectId={projectId}
+          phaseId={dialog.phaseId}
+          phases={phases}
+          suggestions={suggestions}
+          onClose={closeDialog}
+        />
+      )}
     </section>
   );
 }

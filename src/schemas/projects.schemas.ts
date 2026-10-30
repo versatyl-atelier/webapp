@@ -127,11 +127,17 @@ export const PieceFormSchema = Schema.Struct({
   id: Schema.optional(IdFromFormSchema),
   phaseId: OptionalIdFromFormSchema,
   type: Schema.Trim,
+  description: Schema.Trim,
   caissonMaterial: Schema.Trim,
-  cladding: Schema.Trim,
-  doors: Schema.Trim,
+  cladding: Schema.parseJson(Schema.mutable(Schema.Array(Schema.Trim))).pipe(
+    Schema.transform(Schema.mutable(Schema.Array(Schema.String)), {
+      strict: true,
+      decode: (values) => values.filter(Boolean),
+      encode: (values) => values,
+    }),
+  ),
+  countertop: Schema.Trim,
   drawers: Schema.Trim,
-  hardware: Schema.Trim,
   finish: Schema.Trim,
   cabinetCount: Schema.Union(
     EmptyAsNullSchema,
@@ -148,11 +154,11 @@ export type PieceFormErrors = {
   id?: string[];
   phaseId?: string[];
   type?: string[];
+  description?: string[];
   caissonMaterial?: string[];
   cladding?: string[];
-  doors?: string[];
+  countertop?: string[];
   drawers?: string[];
-  hardware?: string[];
   finish?: string[];
   cabinetCount?: string[];
   dataValidation?: string;
@@ -218,3 +224,5 @@ export const NoteIdSchema = Schema.Int;
 export const PhaseNameSchema = Schema.Trim.pipe(Schema.minLength(1));
 export const FileSectionIdSchema = Schema.Int;
 export const FileSectionNameSchema = Schema.Trim.pipe(Schema.minLength(1));
+export const ProjectIdSchema = Schema.String.pipe(Schema.minLength(1));
+export const ProjectIdsSchema = Schema.Array(ProjectIdSchema);

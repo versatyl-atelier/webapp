@@ -1,12 +1,21 @@
 import { Config, Duration, Effect, Option, Redacted, Schema } from "effect";
 
 import {
+  COVER_CONTENT_TYPE,
+  COVER_THUMBNAIL_FORMAT,
+  COVER_THUMBNAIL_MODE,
+  COVER_THUMBNAIL_SIZE,
+} from "@/constants/projectHome";
+import {
+  DROPBOX_API_ARG_HEADER,
   DROPBOX_API_URL,
   DROPBOX_ENDPOINTS,
   DROPBOX_FOLDER_CONFLICT_PREFIX,
   DROPBOX_FOLDER_TAG,
   DROPBOX_LIST_LIMIT,
+  DROPBOX_PATH_RESOURCE_TAG,
   DROPBOX_REFRESH_GRANT,
+  DROPBOX_THUMBNAIL_URL,
   DROPBOX_TOKEN_TTL_HOURS,
   DROPBOX_TOKEN_URL,
 } from "@/constants/dropbox";
@@ -182,3 +191,39 @@ export const dropboxTemporaryLink = Effect.fn("dropboxTemporaryLink")(
     return link;
   },
 );
+
+export const getDropboxThumbnail = Effect.fn("getDropboxThumbnail")(function* (
+  fileId: string,
+) {
+  const token = yield* cachedAccessToken;
+  const response = yield* Effect.tryPromise({
+    try: () =>
+      fetch(DROPBOX_THUMBNAIL_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          [DROPBOX_API_ARG_HEADER]: JSON.stringify({
+            resource: { ".tag": DROPBOX_PATH_RESOURCE_TAG, path: fileId },
+            format: COVER_THUMBNAIL_FORMAT,
+            size: COVER_THUMBNAIL_SIZE,
+            mode: COVER_THUMBNAIL_MODE,
+          }),
+        },
+      }),
+    catch: (cause) =>
+      new DropboxError({ endpoint: DROPBOX_THUMBNAIL_URL, cause }),
+  });
+  if (!response.ok) {
+    return yield* new DropboxError({
+      endpoint: DROPBOX_THUMBNAIL_URL,
+      status: response.status,
+      summary: yield* Effect.promise(() => response.text()),
+    });
+  }
+  const bytes = yield* Effect.tryPromise({
+    try: () => response.arrayBuffer(),
+    catch: (cause) =>
+      new DropboxError({ endpoint: DROPBOX_THUMBNAIL_URL, cause }),
+  });
+  return { bytes, contentType: COVER_CONTENT_TYPE };
+});

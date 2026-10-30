@@ -11,6 +11,7 @@ import {
 import {
   accessiblePiece,
   assertProjectAccess,
+  piecesSortOrder,
   saveProjectHeaderEffect,
   savePieceEffect,
 } from "@/effects/projects";
@@ -32,7 +33,7 @@ import {
   renumberedFolder,
   uniqueFolderName,
 } from "@/lib/dropbox";
-import { nextSortOrder } from "@/lib/projects";
+import { nextSortOrder, pieceCopyName } from "@/lib/projects";
 import { Forbidden } from "@/schemas/auth.schemas";
 import { DropboxError } from "@/schemas/dropbox.schemas";
 import {
@@ -408,4 +409,43 @@ export const saveProjectHeaderWithFoldersEffect = Effect.fn(
     yield* bestEffortDropbox(syncProjectFolders(prisma, form.projectId));
   }
   return state;
+});
+
+export const duplicatePieceEffect = Effect.fn("duplicatePiece")(function* (
+  prisma: PrismaService,
+  pieceId: unknown,
+) {
+  const { id } = yield* accessiblePiece(prisma, pieceId);
+  const source = yield* prisma.projectPiece.findUnique({
+    where: { id },
+    select: {
+      projectId: true,
+      phaseId: true,
+      type: true,
+      description: true,
+      caissonMaterial: true,
+      cladding: true,
+      countertop: true,
+      drawers: true,
+      finish: true,
+      cabinetCount: true,
+    },
+  });
+  if (!source) {
+    return yield* new Forbidden({});
+  }
+  const copy = yield* prisma.projectPiece.create({
+    data: {
+      ...source,
+      type: pieceCopyName(source.type),
+      sortOrder: yield* piecesSortOrder(
+        prisma,
+        source.projectId,
+        source.phaseId,
+      ),
+    },
+    select: { id: true },
+  });
+  yield* Effect.annotateLogsScoped({ createdPieceId: copy.id });
+  yield* bestEffortDropbox(syncPieceFolders(prisma, copy.id));
 });
