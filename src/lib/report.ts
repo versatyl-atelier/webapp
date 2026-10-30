@@ -1,6 +1,11 @@
 import {
   GROUPING_REQUIRED_MESSAGE,
   NO_STATUT_LABEL,
+  PERIOD_ALL_LABEL,
+  PERIOD_FROM_LABEL,
+  PERIOD_RANGE_END_LABEL,
+  PERIOD_RANGE_LABEL,
+  PERIOD_UNTIL_LABEL,
   PROJECT_REQUIRED_REPORT_MESSAGE,
   REPORT_END_PARAM,
   REPORT_GROUPING_PARAM,
@@ -329,4 +334,16 @@ export function parseReportRequest(params: SearchParams): ReportRequestResult {
   return {
     request: { projects, groupings, start: start || null, end: end || null },
   };
+}
+
+export function formatReportPeriod({
+  start,
+  end,
+}: Pick<Report, "start" | "end">): string {
+  if (start && end) {
+    return `${PERIOD_RANGE_LABEL} ${start} ${PERIOD_RANGE_END_LABEL} ${end}`;
+  }
+  if (start) return `${PERIOD_FROM_LABEL} ${start}`;
+  if (end) return `${PERIOD_UNTIL_LABEL} ${end}`;
+  return PERIOD_ALL_LABEL;
 }

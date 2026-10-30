@@ -14,7 +14,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { Button } from "@/components/ui/button";
+import { ACTION_TONE_CLASSES } from "@/constants/actions";
 import { CANCEL_LABEL, DELETE_LABEL } from "@/constants/tasks";
 import { useFormToast, type ToastableState } from "@/hooks/use-form-toast";
 
@@ -57,9 +59,9 @@ export function ConfirmDeleteButton({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger
-        render={
-          triggerText ? (
+      {triggerText ? (
+        <AlertDialogTrigger
+          render={
             <Button
               type="button"
               variant="outline"
@@ -67,19 +69,31 @@ export function ConfirmDeleteButton({
               disabled={pending}
               className="text-destructive w-full rounded-sm text-xs font-semibold uppercase"
             />
-          ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label={label}
-              disabled={pending}
+          }
+        >
+          {triggerText}
+        </AlertDialogTrigger>
+      ) : (
+        <ActionTooltip
+          label={label}
+          render={
+            <AlertDialogTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={label}
+                  disabled={pending}
+                  className={ACTION_TONE_CLASSES.destructive}
+                />
+              }
             />
-          )
-        }
-      >
-        {triggerText ?? icon}
-      </AlertDialogTrigger>
+          }
+        >
+          {icon}
+        </ActionTooltip>
+      )}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

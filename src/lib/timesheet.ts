@@ -1,13 +1,21 @@
 import { DAYS_PER_WEEK } from "@/constants/calendar";
 import {
   DEFAULT_TIMESHEET_PERIOD,
+  PAY_END_PARAM,
   PAY_PERIOD_COUNT,
   PAY_PERIOD_WEEKS,
+  PERIOD_PARAM,
   TIMESHEET_PERIODS,
   WEEK_NUMBER_THURSDAY_OFFSET,
   type TimesheetPeriod,
 } from "@/constants/timesheet";
-import { addDays, mondayOf, toDateKey, type DateKey } from "@/lib/calendar";
+import {
+  addDays,
+  mondayOf,
+  parseDateParam,
+  toDateKey,
+  type DateKey,
+} from "@/lib/calendar";
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
@@ -69,6 +77,16 @@ export function parsePeriod(
     TIMESHEET_PERIODS.find((period) => period === candidate) ??
     DEFAULT_TIMESHEET_PERIOD
   );
+}
+
+export function resolveTimesheetParams(
+  params: { [key: string]: string | string[] | undefined },
+  today: DateKey,
+) {
+  const period = parsePeriod(params[PERIOD_PARAM]);
+  const payEnds = payPeriodEnds(today);
+  const payEnd = parseDateParam(params[PAY_END_PARAM], payEnds[0]);
+  return { period, payEnds, payEnd };
 }
 
 export function payPeriodEnds(today: DateKey): DateKey[] {

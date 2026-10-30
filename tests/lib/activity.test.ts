@@ -203,7 +203,7 @@ describe("buildActivityEvents", () => {
     );
     expect(kinds(events)).toEqual(["weekFrozen"]);
     expect(events[0].at).toEqual(at("2026-10-24T13:00:00Z"));
-    expect(activityDetail(events[0])).toBe("39h 30m sur 40h");
+    expect(activityDetail(events[0])).toBe("39h 30m sur 40h 00m");
   });
 
   it("logs both the freeze and the unfreeze of a thawed week", () => {
@@ -225,8 +225,8 @@ describe("buildActivityEvents", () => {
     const objective = { objective: 38, updatedAt: at("2026-10-26T12:00:00Z") };
     const withoutKm = buildActivityEvents(source({ objective }));
     const withKm = buildActivityEvents(source({ objective, kilometrage: 120 }));
-    expect(activityDetail(withoutKm[0])).toBe("38h");
-    expect(activityDetail(withKm[0])).toBe("38h · 120 km");
+    expect(activityDetail(withoutKm[0])).toBe("38h 00m");
+    expect(activityDetail(withKm[0])).toBe("38h 00m · 120 km");
   });
 
   it("sorts everything newest first", () => {

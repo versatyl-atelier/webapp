@@ -23,7 +23,7 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="none"
-      className="border-r-muted z-20 h-full w-(--sidebar-width-icon) shrink-0 border-r"
+      className="border-r-muted z-20 h-full w-(--sidebar-width-icon) shrink-0 border-r print:hidden"
     >
       <SidebarHeader className="h-12 justify-center">
         <SidebarMenu>

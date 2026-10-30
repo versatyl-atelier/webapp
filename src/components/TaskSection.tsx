@@ -1,9 +1,13 @@
+import { Trash2 } from "lucide-react";
+
 import { deleteTask } from "@/actions/tasks";
+import { DisabledAction } from "@/components/ActionTooltip";
 import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 import { EditTaskDialog } from "@/components/EditTaskDialog";
 import { TaskForm } from "@/components/TaskForm";
 import {
   DELETE_LABEL,
+  LUNCH_TASK_DELETE_REASON,
   LUNCH_TASK_NAME,
   NO_TASKS_LABEL,
   TASKS_SECTION_TITLE,
@@ -38,7 +42,14 @@ export function TaskSection({ tasks }: TaskSectionProps) {
                 {task.name}
               </span>
               <EditTaskDialog task={task} />
-              {task.name !== LUNCH_TASK_NAME && (
+              {task.name === LUNCH_TASK_NAME ? (
+                <DisabledAction
+                  label={`${DELETE_LABEL} ${task.name}`}
+                  reason={LUNCH_TASK_DELETE_REASON}
+                  icon={<Trash2 />}
+                  tone="destructive"
+                />
+              ) : (
                 <ConfirmDeleteButton
                   action={deleteTask}
                   fields={{ taskId: String(task.id) }}

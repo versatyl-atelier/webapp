@@ -5,6 +5,7 @@ export const TIMESHEET_PERIODS = ["current", "last", "last2", "pay"] as const;
 
 export type TimesheetPeriod = (typeof TIMESHEET_PERIODS)[number];
 
+export const PAY_PERIOD: TimesheetPeriod = "pay";
 export const DEFAULT_TIMESHEET_PERIOD: TimesheetPeriod = "current";
 
 export const PERIOD_LABELS: Record<TimesheetPeriod, string> = {
@@ -20,7 +21,6 @@ export const WEEK_NUMBER_THURSDAY_OFFSET = 3;
 
 export const PERIOD_LABEL = "Période";
 export const PAY_END_LABEL = "Période de paie se terminant le";
-export const GENERATE_LABEL = "Générer";
 export const EMPLOYEE_COLUMN_LABEL = "Employé";
 export const TOTAL_COLUMN_LABEL = "Total";
 export const OBJECTIVE_COLUMN_LABEL = "Obj.";

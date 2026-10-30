@@ -2,6 +2,7 @@ import {
   CHANGE_PASSWORD_PATH,
   EMAIL_PARAM,
   LOGIN_PATH,
+  MANAGER_PATH,
   PROTECTED_PATH_PREFIXES,
   REDIRECT_TO_PARAM,
 } from "@/constants/auth";
@@ -92,7 +93,10 @@ function splitHref(href: string): { path: string; params: URLSearchParams } {
 }
 
 export function isToolPath(pathname: string): boolean {
-  return TOOLS.some(({ href }) => isWithinPath(pathname, splitHref(href).path));
+  return (
+    isWithinPath(pathname, MANAGER_PATH) ||
+    TOOLS.some(({ href }) => isWithinPath(pathname, splitHref(href).path))
+  );
 }
 
 export function activeToolHref(

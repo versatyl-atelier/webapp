@@ -1,8 +1,12 @@
+import { Trash2 } from "lucide-react";
+
 import { deleteSubtask } from "@/actions/tasks";
+import { DisabledAction } from "@/components/ActionTooltip";
 import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 import { EditSubtaskDialog } from "@/components/EditSubtaskDialog";
 import { SubtaskForm } from "@/components/SubtaskForm";
 import {
+  DEFAULT_SUBTASK_DELETE_REASON,
   DEFAULT_SUBTASK_ID,
   DELETE_LABEL,
   DELETE_SUBTASK_DESCRIPTION,
@@ -33,7 +37,14 @@ export function SubtaskSection({ subtasks }: SubtaskSectionProps) {
                 {subtask.name}
               </span>
               <EditSubtaskDialog subtask={subtask} />
-              {subtask.id !== DEFAULT_SUBTASK_ID && (
+              {subtask.id === DEFAULT_SUBTASK_ID ? (
+                <DisabledAction
+                  label={`${DELETE_LABEL} ${subtask.name}`}
+                  reason={DEFAULT_SUBTASK_DELETE_REASON}
+                  icon={<Trash2 />}
+                  tone="destructive"
+                />
+              ) : (
                 <ConfirmDeleteButton
                   action={deleteSubtask}
                   fields={{ id: subtask.id }}

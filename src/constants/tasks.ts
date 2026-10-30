@@ -21,6 +21,10 @@ export const SAVE_LABEL = "Sauvegarder";
 export const CANCEL_LABEL = "Annuler";
 export const EDIT_LABEL = "Modifier";
 export const DELETE_LABEL = "Supprimer";
+export const LUNCH_TASK_DELETE_REASON =
+  "Tâche système: elle ne peut pas être supprimée";
+export const DEFAULT_SUBTASK_DELETE_REASON =
+  "Sous-tâche par défaut: elle ne peut pas être supprimée";
 export const EDIT_TASK_TITLE = "Modifier la tâche";
 export const EDIT_SUBTASK_TITLE = "Modifier la sous-tâche";
 export const DELETE_SUBTASK_DESCRIPTION =

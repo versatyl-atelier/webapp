@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PUNCH_MANAGER_PATH } from "@/constants/punch";
+import { MANAGER_PATH } from "@/constants/auth";
 import { ATELIER_TOOL_HREFS, TOOLS } from "@/constants/tools";
 import { Role } from "@/generated/prisma/enums";
 
@@ -37,7 +37,7 @@ export function ToolTiles({ role }: ToolTilesProps) {
       {isManager && (
         <ul className="mt-3 flex flex-wrap gap-3">
           <li>
-            <Link href={PUNCH_MANAGER_PATH}>
+            <Link href={MANAGER_PATH}>
               <Card className="h-36 w-44 shadow-sm transition-shadow hover:shadow-lg">
                 <CardHeader className="text-xl">
                   <Wrench />

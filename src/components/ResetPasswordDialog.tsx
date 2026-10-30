@@ -20,6 +20,7 @@ export function ResetPasswordDialog({
       title={`${RESET_PASSWORD_LABEL} — ${name}`}
       label={`${RESET_PASSWORD_LABEL} ${name}`}
       icon={<KeyRound />}
+      tone="reset"
     >
       {(close) => <ResetPasswordForm userId={userId} onDone={close} />}
     </EditDialog>

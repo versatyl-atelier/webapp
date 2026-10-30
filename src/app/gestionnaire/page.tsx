@@ -3,12 +3,12 @@ import { notFound } from "next/navigation";
 import { getPeople, getStatuts } from "@/actions/accounts";
 import { getEmployeesWithoutAccount } from "@/actions/employees";
 import { PeopleTable } from "@/components/PeopleTable";
-import { PUNCH_MANAGER_PATH } from "@/constants/punch";
+import { MANAGER_PATH } from "@/constants/auth";
 import { Role } from "@/generated/prisma/enums";
 import { requireActiveSession } from "@/lib/session";
 
 export default async function Page() {
-  const session = await requireActiveSession(PUNCH_MANAGER_PATH);
+  const session = await requireActiveSession(MANAGER_PATH);
   if (session.role !== Role.manager) {
     notFound();
   }

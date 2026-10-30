@@ -11,6 +11,7 @@ import {
   parseReportRequest,
   buildReport,
   filterProjects,
+  formatReportPeriod,
   projectKeyOf,
   usedProjects,
   type ReportEntry,
@@ -292,5 +293,22 @@ describe("parseReportRequest", () => {
     expect(
       parseReportRequest({ ...base, du: "2026-10-31", au: "2026-10-01" }),
     ).toHaveProperty("error");
+  });
+});
+
+describe("formatReportPeriod", () => {
+  it("describes closed, open-ended and unbounded periods", () => {
+    expect(formatReportPeriod({ start: "2026-10-01", end: "2026-10-31" })).toBe(
+      "Du 2026-10-01 au 2026-10-31",
+    );
+    expect(formatReportPeriod({ start: "2026-10-01", end: null })).toBe(
+      "À partir du 2026-10-01",
+    );
+    expect(formatReportPeriod({ start: null, end: "2026-10-31" })).toBe(
+      "Jusqu'au 2026-10-31",
+    );
+    expect(formatReportPeriod({ start: null, end: null })).toBe(
+      "Toutes les dates",
+    );
   });
 });

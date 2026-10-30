@@ -1,4 +1,5 @@
 import {
+  WEEK_FROZEN_MANAGER_NOTICE,
   WEEK_FROZEN_MESSAGE,
   WEEK_FROZEN_NOTICE,
 } from "@/schemas/frozenWeeks.schemas";
@@ -114,8 +115,8 @@ export default async function EmployeePage({
   const subtasks = await getSubtasks();
 
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
-  const canToggleFreeze =
-    !weekFrozen || (await getSession())?.role !== Role.atelier;
+  const isManager = (await getSession())?.role === Role.manager;
+  const canToggleFreeze = !weekFrozen || isManager;
 
   const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
   const activePunch = await getActivePunch(employeeId);
@@ -135,7 +136,9 @@ export default async function EmployeePage({
           {weekFrozen && (
             <Alert variant="warning" role="status" className="w-auto flex-1">
               <Info />
-              <AlertDescription>{WEEK_FROZEN_NOTICE}</AlertDescription>
+              <AlertDescription>
+                {isManager ? WEEK_FROZEN_MANAGER_NOTICE : WEEK_FROZEN_NOTICE}
+              </AlertDescription>
             </Alert>
           )}
           {canToggleFreeze && (

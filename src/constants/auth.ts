@@ -17,10 +17,12 @@ export const MIN_PASSWORD_LENGTH = 8;
 
 export const LOGIN_PATH = "/login";
 export const CHANGE_PASSWORD_PATH = "/change-password";
+export const MANAGER_PATH = "/gestionnaire";
 export const REDIRECT_TO_PARAM = "redirectTo";
 export const EMAIL_PARAM = "email";
 export const PROTECTED_PATH_PREFIXES = [
   "/punch",
+  MANAGER_PATH,
   "/calendrier",
   "/projets",
   CHANGE_PASSWORD_PATH,

@@ -66,6 +66,15 @@ export const REPORT_TITLE = "Rapport";
 export const TOTAL_LABEL = "Total";
 export const NO_DATA_LABEL = "Aucune entrée de temps pour cette sélection";
 
+export const SUMMARY_PROJECTS_LABEL = "Projets";
+export const SUMMARY_ENTRIES_LABEL = "Entrées";
+export const PROJECT_NAMES_SEPARATOR = ", ";
+export const PERIOD_RANGE_LABEL = "Du";
+export const PERIOD_RANGE_END_LABEL = "au";
+export const PERIOD_FROM_LABEL = "À partir du";
+export const PERIOD_UNTIL_LABEL = "Jusqu'au";
+export const PERIOD_ALL_LABEL = "Toutes les dates";
+
 export const PROJECT_REQUIRED_REPORT_MESSAGE =
   "Sélectionnez au moins un projet ou une tâche";
 export const GROUPING_REQUIRED_MESSAGE = "Choisissez au moins un regroupement";

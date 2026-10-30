@@ -1,6 +1,7 @@
-import { Archive } from "lucide-react";
+import { Archive, KeyRound } from "lucide-react";
 
 import { archiveEmployee } from "@/actions/accounts";
+import { DisabledAction } from "@/components/ActionTooltip";
 import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 import { CreateAccountDialog } from "@/components/CreateAccountDialog";
 import { EditPersonDialog } from "@/components/EditPersonDialog";
@@ -15,10 +16,14 @@ import {
   ACTIONS_COLUMN_LABEL,
   ARCHIVE_DESCRIPTION,
   ARCHIVE_LABEL,
+  ARCHIVE_NO_EMPLOYEE_REASON,
+  ARCHIVE_SELF_REASON,
   EMAIL_COLUMN_LABEL,
   NAME_COLUMN_LABEL,
   NO_PEOPLE_LABEL,
   NO_VALUE_LABEL,
+  RESET_PASSWORD_LABEL,
+  RESET_PASSWORD_SELF_REASON,
   ROLE_COLUMN_LABEL,
   STATUT_COLUMN_LABEL,
 } from "@/constants/accounts";
@@ -115,21 +120,27 @@ export function PeopleTable({
                           statuts={statuts}
                           isCurrentUser={isCurrentUser}
                         />
-                        {person.employeeId !== null && !person.userId && (
+                        {person.employeeId !== null && !person.userId ? (
                           <CreateAccountDialog
                             employee={{
                               id: person.employeeId,
                               name: person.name,
                             }}
                           />
-                        )}
-                        {person.userId && !isCurrentUser && (
+                        ) : person.userId && !isCurrentUser ? (
                           <ResetPasswordDialog
                             userId={person.userId}
                             name={person.name}
                           />
+                        ) : (
+                          <DisabledAction
+                            label={`${RESET_PASSWORD_LABEL} ${person.name}`}
+                            reason={RESET_PASSWORD_SELF_REASON}
+                            icon={<KeyRound />}
+                            tone="reset"
+                          />
                         )}
-                        {person.employeeId !== null && !isCurrentUser && (
+                        {person.employeeId !== null && !isCurrentUser ? (
                           <ConfirmDeleteButton
                             action={archiveEmployee}
                             fields={{ employeeId: String(person.employeeId) }}
@@ -138,6 +149,17 @@ export function PeopleTable({
                             label={`${ARCHIVE_LABEL} ${person.name}`}
                             confirmLabel={ARCHIVE_LABEL}
                             icon={<Archive />}
+                          />
+                        ) : (
+                          <DisabledAction
+                            label={`${ARCHIVE_LABEL} ${person.name}`}
+                            reason={
+                              isCurrentUser
+                                ? ARCHIVE_SELF_REASON
+                                : ARCHIVE_NO_EMPLOYEE_REASON
+                            }
+                            icon={<Archive />}
+                            tone="destructive"
                           />
                         )}
                       </div>

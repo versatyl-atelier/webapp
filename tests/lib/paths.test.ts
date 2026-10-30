@@ -62,7 +62,10 @@ describe("isProtectedPath", () => {
   it("protects /punch and everything under it", () => {
     expect(isProtectedPath("/punch")).toBe(true);
     expect(isProtectedPath("/punch/employe/1")).toBe(true);
-    expect(isProtectedPath("/punch/gestionnaire")).toBe(true);
+  });
+
+  it("protects the manager interface", () => {
+    expect(isProtectedPath("/gestionnaire")).toBe(true);
   });
 
   it("protects the change-password page", () => {

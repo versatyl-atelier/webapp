@@ -2,7 +2,6 @@ import type { Tool } from "@/constants/tools";
 
 export const PUNCH_PATH = "/punch";
 export const PUNCH_EMPLOYEES_PATH = `${PUNCH_PATH}/employes`;
-export const PUNCH_MANAGER_PATH = `${PUNCH_PATH}/gestionnaire`;
 export const PUNCH_DATA_PATH = `${PUNCH_PATH}/donnees`;
 export const PUNCH_TASKS_PATH = `${PUNCH_DATA_PATH}/taches`;
 export const PUNCH_TIMESHEET_PATH = `${PUNCH_DATA_PATH}/feuille-de-temps`;

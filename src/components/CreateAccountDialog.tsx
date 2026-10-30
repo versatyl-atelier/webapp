@@ -32,6 +32,7 @@ export function CreateAccountDialog({
           : CREATE_ACCOUNT_LABEL
       }
       icon={<UserPlus />}
+      tone="create"
       triggerText={employee ? undefined : CREATE_ACCOUNT_LABEL}
     >
       {(close) => (

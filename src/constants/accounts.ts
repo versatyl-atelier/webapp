@@ -47,6 +47,13 @@ export const ARCHIVE_LABEL = "Archiver";
 export const ARCHIVE_DESCRIPTION =
   "L'employé disparaît des listes et son compte est bloqué. Ses entrées de temps sont conservées.";
 
+export const ARCHIVE_SELF_REASON =
+  "Vous ne pouvez pas archiver votre propre compte";
+export const ARCHIVE_NO_EMPLOYEE_REASON =
+  "Aucun employé n'est associé à ce compte";
+export const RESET_PASSWORD_SELF_REASON =
+  "Changez votre propre mot de passe depuis « Changer le mot de passe »";
+
 export const REMOVE_ACCOUNT_LABEL = "Retirer le compte";
 export const REMOVE_ACCOUNT_DESCRIPTION =
   "Le courriel et le mot de passe sont supprimés et les sessions ouvertes sont fermées. L'employé et ses entrées de temps sont conservés. Un compte retiré ne peut pas être récupéré: il faudra en créer un nouveau.";
