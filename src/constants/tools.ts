@@ -1,3 +1,4 @@
+import { MANAGER_PATH } from "@/constants/auth";
 import { NOTES_TAB, PROJECT_TAB_PARAM } from "@/constants/projects";
 
 export type Tool = {
@@ -25,6 +26,14 @@ export const APPLE_PLATFORM_PATTERN = /mac|iphone|ipad|ipod/i;
 export const SEARCH_COMING_SOON = "Fonction à venir";
 
 export const ATELIER_TOOL_HREFS: readonly string[] = ["/punch"];
+
+export const MANAGER_TOOL: Tool = {
+  href: MANAGER_PATH,
+  icon: "🔧",
+  title: "Interface gestionnaire",
+  description: "Comptes, config, etc.",
+  managerOnly: true,
+};
 
 export const TOOLS: Tool[] = [
   {

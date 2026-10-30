@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/contexts/theme-provider";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { getSession } from "@/lib/session";
 import { isOpen } from "@/lib/sidebar";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -37,6 +38,7 @@ export default async function RootLayout({
   modals: React.ReactNode;
 }>) {
   const isSidebarOpen = await isOpen();
+  const role = (await getSession())?.role ?? null;
 
   return (
     <html
@@ -52,7 +54,7 @@ export default async function RootLayout({
                 defaultOpen={isSidebarOpen}
                 className="h-full print:h-auto"
               >
-                <AppSidebar />
+                <AppSidebar role={role} />
                 <SidebarInset className="min-h-0 min-w-0 print:block">
                   <Header />
                   <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto print:block print:overflow-visible">

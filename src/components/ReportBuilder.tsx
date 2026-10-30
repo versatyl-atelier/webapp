@@ -60,7 +60,6 @@ export function ReportBuilder({ projects }: ReportBuilderProps) {
     <form
       action={PUNCH_REPORT_PRINT_PATH}
       method="get"
-      target="_blank"
       className="flex flex-col gap-3"
     >
       {selectedKeys.map((key) => (

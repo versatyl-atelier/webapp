@@ -13,10 +13,16 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { TOOLS, HOME_LABEL, HOME_PATH } from "@/constants/tools";
+import { HOME_LABEL, HOME_PATH } from "@/constants/tools";
+import type { Role } from "@/generated/prisma/enums";
 import { activeToolHref } from "@/lib/paths";
+import { toolsForRole } from "@/lib/tools";
 
-export function AppSidebar() {
+type AppSidebarProps = {
+  role: Role | null;
+};
+
+export function AppSidebar({ role }: AppSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeHref = activeToolHref(pathname, searchParams);
@@ -48,7 +54,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
-              {TOOLS.map(({ href, icon, title }) => (
+              {toolsForRole(role).map(({ href, icon, title }) => (
                 <SidebarMenuItem key={href}>
                   <SidebarMenuButton
                     render={<Link href={href} />}

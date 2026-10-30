@@ -2,7 +2,6 @@ import {
   CHANGE_PASSWORD_PATH,
   EMAIL_PARAM,
   LOGIN_PATH,
-  MANAGER_PATH,
   PROTECTED_PATH_PREFIXES,
   REDIRECT_TO_PARAM,
 } from "@/constants/auth";
@@ -13,7 +12,7 @@ import {
   PROJECT_TAB_PARAM,
 } from "@/constants/projects";
 import { PUNCH_EMPLOYEES_PATH } from "@/constants/punch";
-import { TOOLS } from "@/constants/tools";
+import { MANAGER_TOOL, TOOLS } from "@/constants/tools";
 import type { DateKey } from "@/lib/calendar";
 import type { ProjectTab } from "@/lib/projectTabs";
 
@@ -87,15 +86,16 @@ export function isProtectedPath(pathname: string): boolean {
   );
 }
 
+const ALL_TOOLS = [...TOOLS, MANAGER_TOOL];
+
 function splitHref(href: string): { path: string; params: URLSearchParams } {
   const [path, query = ""] = href.split("?");
   return { path, params: new URLSearchParams(query) };
 }
 
 export function isToolPath(pathname: string): boolean {
-  return (
-    isWithinPath(pathname, MANAGER_PATH) ||
-    TOOLS.some(({ href }) => isWithinPath(pathname, splitHref(href).path))
+  return ALL_TOOLS.some(({ href }) =>
+    isWithinPath(pathname, splitHref(href).path),
   );
 }
 
@@ -104,7 +104,7 @@ export function activeToolHref(
   currentSearchParams: URLSearchParams,
 ): string | undefined {
   const searchParams = withProjectTab(pathname, currentSearchParams);
-  return TOOLS.map(({ href }) => ({ href, ...splitHref(href) }))
+  return ALL_TOOLS.map(({ href }) => ({ href, ...splitHref(href) }))
     .filter(
       ({ path, params }) =>
         isWithinPath(pathname, path) &&

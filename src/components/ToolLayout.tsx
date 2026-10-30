@@ -18,7 +18,7 @@ export function ToolLayout({ sidebar, breadcrumb, children }: ToolLayoutProps) {
   return (
     <div className="flex min-h-0 w-full flex-1 print:block">
       {sidebar}
-      <SidebarInset className="bg-muted min-h-0 print:block print:bg-white">
+      <SidebarInset className="bg-muted min-h-0 min-w-0 print:block print:bg-white">
         <div className="flex min-h-0 w-full min-w-md flex-1 flex-col print:block print:min-w-0">
           <div className="bg-sidebar border-sidebar-accent h-toolbar shadow-background/50 @container/toolbar relative z-10 flex shrink-0 flex-row items-center gap-2 border-b shadow-sm print:hidden">
             <SidebarTrigger size="icon-lg" />
