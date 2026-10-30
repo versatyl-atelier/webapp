@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 
+import { PUNCH_PATH, PUNCH_REPORT_PATH, PUNCH_TOOLS } from "@/constants/punch";
 import { NOTES_TOOL_PATH, PROJECTS_PATH } from "@/constants/tools";
 import {
+  activeSectionHref,
   activeToolHref,
   changePasswordPath,
   employeePath,
@@ -9,7 +11,6 @@ import {
   loginPath,
   projectNotesPath,
   projectPath,
-  punchHomeHref,
 } from "@/lib/paths";
 
 describe("loginPath", () => {
@@ -37,16 +38,6 @@ describe("loginPath", () => {
 describe("employeePath", () => {
   it("builds the employee page path", () => {
     expect(employeePath(4)).toBe("/punch/employe/4");
-  });
-});
-
-describe("punchHomeHref", () => {
-  it("goes straight to the employee linked to the account", () => {
-    expect(punchHomeHref(4)).toBe("/punch/employe/4");
-  });
-
-  it("falls back to the employee list when no employee is linked", () => {
-    expect(punchHomeHref(null)).toBe("/punch/employes");
   });
 });
 
@@ -87,6 +78,22 @@ describe("projectPath", () => {
   it("points the notes tab to the notes page", () => {
     expect(projectPath("abc", "notes")).toBe("/projets/abc/notes");
     expect(projectNotesPath("abc")).toBe("/projets/abc/notes");
+  });
+});
+
+describe("activeSectionHref", () => {
+  it("keeps the punch section active on employee pages", () => {
+    expect(activeSectionHref(PUNCH_TOOLS, "/punch/employe/4")).toBe(PUNCH_PATH);
+  });
+
+  it("prefers the most specific section", () => {
+    expect(activeSectionHref(PUNCH_TOOLS, "/punch/rapport/imprimable")).toBe(
+      PUNCH_REPORT_PATH,
+    );
+  });
+
+  it("matches nothing outside the sections", () => {
+    expect(activeSectionHref(PUNCH_TOOLS, "/projets")).toBeUndefined();
   });
 });
 

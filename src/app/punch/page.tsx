@@ -1,22 +1,25 @@
-import { ToolTile } from "@/components/ToolTile";
-import { PUNCH_DATA_TILE, PUNCH_PATH, PUNCH_TILE } from "@/constants/punch";
-import { Role } from "@/generated/prisma/enums";
-import { punchHomeHref } from "@/lib/paths";
+import { redirect } from "next/navigation";
+
+import { ALL_EMPLOYEES_ACCESS_ROLES } from "@/constants/auth";
+import { PUNCH_PATH, PUNCH_SELECT_EMPLOYEE_PROMPT } from "@/constants/punch";
+import { employeePath } from "@/lib/paths";
 import { requireActiveSession } from "@/lib/session";
 
 export default async function Page() {
   const session = await requireActiveSession(PUNCH_PATH);
-  const punchTile = { ...PUNCH_TILE, href: punchHomeHref(session.employeeId) };
-  const tiles =
-    session.role === Role.atelier ? [punchTile] : [punchTile, PUNCH_DATA_TILE];
+  if (
+    session.employeeId !== null &&
+    !ALL_EMPLOYEES_ACCESS_ROLES.includes(session.role)
+  ) {
+    redirect(employeePath(session.employeeId));
+  }
 
   return (
-    <ul className="mt-8 flex flex-wrap justify-center gap-3 self-center">
-      {tiles.map((tile) => (
-        <li key={tile.href}>
-          <ToolTile tool={tile} />
-        </li>
-      ))}
-    </ul>
+    <p className="text-muted-foreground m-auto flex items-center gap-3 p-4 text-lg">
+      <span aria-hidden className="text-3xl">
+        ←
+      </span>
+      {PUNCH_SELECT_EMPLOYEE_PROMPT}
+    </p>
   );
 }

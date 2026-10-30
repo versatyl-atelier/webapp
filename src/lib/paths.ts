@@ -11,8 +11,7 @@ import {
   PROJECT_NOTES_PATH_PATTERN,
   PROJECT_TAB_PARAM,
 } from "@/constants/projects";
-import { PUNCH_EMPLOYEES_PATH } from "@/constants/punch";
-import { MANAGER_TOOL, TOOLS } from "@/constants/tools";
+import { MANAGER_TOOL, TOOLS, type Tool } from "@/constants/tools";
 import type { DateKey } from "@/lib/calendar";
 import type { ProjectTab } from "@/lib/projectTabs";
 
@@ -35,10 +34,6 @@ export function loginPath(redirectTo?: string, email?: string): string {
 
 export function employeePath(employeeId: number): string {
   return `/punch/employe/${employeeId}`;
-}
-
-export function punchHomeHref(employeeId: number | null): string {
-  return employeeId === null ? PUNCH_EMPLOYEES_PATH : employeePath(employeeId);
 }
 
 export function employeeWeekPath(
@@ -97,6 +92,15 @@ export function isToolPath(pathname: string): boolean {
   return ALL_TOOLS.some(({ href }) =>
     isWithinPath(pathname, splitHref(href).path),
   );
+}
+
+export function activeSectionHref(
+  tools: readonly Tool[],
+  pathname: string,
+): string | undefined {
+  return tools
+    .filter(({ href }) => isWithinPath(pathname, href))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 }
 
 export function activeToolHref(

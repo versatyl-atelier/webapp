@@ -16,7 +16,7 @@ export default async function TimesheetBreadcrumb({
   );
 
   return (
-    <AppBreadcrumb segments={["punch", "donnees", "feuille-de-temps"]}>
+    <AppBreadcrumb segments={["punch", "feuille-de-temps"]}>
       <PeriodCrumbs period={period} payEnd={payEnd} payEnds={payEnds} />
     </AppBreadcrumb>
   );

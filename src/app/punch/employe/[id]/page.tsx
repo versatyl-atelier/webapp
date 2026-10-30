@@ -10,7 +10,11 @@ import ManualTimeForm from "@/components/ManualTimeForm";
 import MultiPunchForm from "@/components/MultiPunchForm";
 import { DayColumn } from "@/components/DayColumn";
 
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ALL_EMPLOYEES_ACCESS_ROLES } from "@/constants/auth";
+import { PUNCH_FINISH_LABEL, PUNCH_PATH } from "@/constants/punch";
 import { getEmployee } from "@/actions/employees";
 import { getActivePunch } from "@/actions/multiPunch";
 import { getProjects } from "@/actions/projects";
@@ -115,7 +119,10 @@ export default async function EmployeePage({
   const subtasks = await getSubtasks();
 
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
-  const isManager = (await getSession())?.role === Role.manager;
+  const role = (await getSession())?.role;
+  const isManager = role === Role.manager;
+  const canFinish =
+    role !== undefined && ALL_EMPLOYEES_ACCESS_ROLES.includes(role);
   const canToggleFreeze = !weekFrozen || isManager;
 
   const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
@@ -141,15 +148,27 @@ export default async function EmployeePage({
               </AlertDescription>
             </Alert>
           )}
-          {canToggleFreeze && (
-            <FreezeForm
-              employeeId={employee.id}
-              weekStart={weekStart}
-              weekTotal={weekly}
-              objective={objective}
-              weekFrozen={weekFrozen}
-            />
-          )}
+          <div className="flex items-center gap-2">
+            {canToggleFreeze && (
+              <FreezeForm
+                employeeId={employee.id}
+                weekStart={weekStart}
+                weekTotal={weekly}
+                objective={objective}
+                weekFrozen={weekFrozen}
+              />
+            )}
+            {canFinish && (
+              <Button
+                render={<Link href={PUNCH_PATH} />}
+                nativeButton={false}
+                variant="outline"
+                size="xs"
+              >
+                {PUNCH_FINISH_LABEL}
+              </Button>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-2.5">
           <div>
