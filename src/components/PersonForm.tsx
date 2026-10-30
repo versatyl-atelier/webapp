@@ -200,7 +200,7 @@ export function PersonForm({
           type="submit"
           size="sm"
           disabled={pending}
-          className="w-full rounded-sm text-xs font-semibold uppercase"
+          className="mt-3 w-full rounded-sm text-xs font-semibold uppercase"
         >
           {SAVE_LABEL}
         </Button>

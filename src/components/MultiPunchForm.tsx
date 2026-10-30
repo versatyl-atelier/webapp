@@ -174,9 +174,7 @@ export default function MultiPunchForm({
           >
             {startPending ? "..." : "Punch In"}
           </Button>
-          <p className="text-2xs text-muted-foreground mt-1 text-center font-bold italic">
-            {PUNCH_CUTOFF_NOTICE}
-          </p>
+          <PunchCutoffNotice />
         </form>
       ) : (
         <>
@@ -217,9 +215,7 @@ export default function MultiPunchForm({
               </Button>
             </div>
 
-            <div className="text-2xs text-muted-foreground text-center font-bold italic">
-              {PUNCH_CUTOFF_NOTICE}
-            </div>
+            <PunchCutoffNotice />
           </form>
         </>
       )}
@@ -228,6 +224,14 @@ export default function MultiPunchForm({
           <Clock className="bg-transparent text-2xl" />
         </div>
       </div>
+    </div>
+  );
+}
+
+function PunchCutoffNotice() {
+  return (
+    <div className="text-2xs text-muted-foreground mt-2 text-center font-bold italic">
+      {PUNCH_CUTOFF_NOTICE}
     </div>
   );
 }
