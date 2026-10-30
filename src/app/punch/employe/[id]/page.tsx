@@ -128,27 +128,25 @@ export default async function EmployeePage({
       tasksPromise={tasksPromise}
     >
       <div className="relative flex flex-1 flex-col gap-2.5 p-1.5">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
           <h1 className="ml-1 text-2xl font-bold tracking-tight">
             {employee.name}
           </h1>
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
-            {weekFrozen && (
-              <Alert variant="warning" role="status" className="w-auto flex-1">
-                <Info />
-                <AlertDescription>{WEEK_FROZEN_NOTICE}</AlertDescription>
-              </Alert>
-            )}
-            {canToggleFreeze && (
-              <FreezeForm
-                employeeId={employee.id}
-                weekStart={weekStart}
-                weekTotal={weekly}
-                objective={objective}
-                weekFrozen={weekFrozen}
-              />
-            )}
-          </div>
+          {weekFrozen && (
+            <Alert variant="warning" role="status" className="w-auto flex-1">
+              <Info />
+              <AlertDescription>{WEEK_FROZEN_NOTICE}</AlertDescription>
+            </Alert>
+          )}
+          {canToggleFreeze && (
+            <FreezeForm
+              employeeId={employee.id}
+              weekStart={weekStart}
+              weekTotal={weekly}
+              objective={objective}
+              weekFrozen={weekFrozen}
+            />
+          )}
         </div>
         <div className="grid grid-cols-1 gap-2.5">
           <div>
