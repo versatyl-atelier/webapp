@@ -9,7 +9,9 @@ import { Effect, Schema } from "effect";
 import { assertEmployeeAccess, getActiveSession } from "@/effects/auth";
 import { Role } from "@/generated/prisma/enums";
 import {
-  CONTACTS_SAVED_MESSAGE,
+  CONTACT_EMPTY_MESSAGE,
+  CONTACT_NOT_FOUND_MESSAGE,
+  CONTACT_SAVED_MESSAGE,
   NOTE_NOT_FOUND_MESSAGE,
   NOTE_SAVED_MESSAGE,
   PHASE_NOT_FOUND_MESSAGE,
@@ -29,6 +31,7 @@ import {
 import type { NoteRecord } from "@/lib/projectNotes";
 import { Forbidden } from "@/schemas/auth.schemas";
 import {
+  ContactIdSchema,
   NoteIdSchema,
   PhaseIdSchema,
   PhaseNameSchema,
@@ -39,8 +42,10 @@ import {
   type NoteFormState,
   type PieceFormData,
   type PieceFormState,
-  type ProjectContactsFormData,
-  type ProjectContactsFormState,
+  type ContactFormData,
+  type ContactFormState,
+  type ProjectLocationFormData,
+  type ProjectLocationFormState,
   type ProjectHeaderFormData,
   type ProjectHeaderFormState,
 } from "@/schemas/projects.schemas";
@@ -155,6 +160,8 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
       contacts: {
         where: { isDeleted: false },
         select: {
+          id: true,
+          address: true,
           role: true,
           name: true,
           company: true,
@@ -306,34 +313,95 @@ export const saveProjectHeaderEffect = Effect.fn("saveProjectHeader")(
   },
 );
 
-export const saveProjectContactsEffect = Effect.fn("saveProjectContacts")(
+export const saveProjectLocationEffect = Effect.fn("saveProjectLocation")(
   function* (
     prisma: PrismaService,
-    _formState: ProjectContactsFormState,
-    form: ProjectContactsFormData,
+    _formState: ProjectLocationFormState,
+    { projectId, ...data }: ProjectLocationFormData,
   ) {
-    yield* assertProjectAccess(prisma, form.projectId);
-    const contacts = form.contacts.filter(
-      (contact) => !isEmptyContact(contact),
-    );
-    yield* Effect.annotateLogsScoped({ contacts: contacts.length });
-    yield* prisma.$transaction(
-      Effect.all([
-        prisma.projectContact.deleteMany({
-          where: { projectId: form.projectId },
-        }),
-        prisma.projectContact.createMany({
-          data: contacts.map((contact, sortOrder) => ({
-            ...contact,
-            projectId: form.projectId,
-            sortOrder,
-          })),
-        }),
-      ]),
-    );
-    return { message: CONTACTS_SAVED_MESSAGE };
+    yield* assertProjectAccess(prisma, projectId);
+    yield* prisma.project.update({ where: { id: projectId }, data });
+    return { message: PROJECT_SAVED_MESSAGE };
   },
 );
+
+export const saveContactEffect = Effect.fn("saveContact")(function* (
+  prisma: PrismaService,
+  _formState: ContactFormState,
+  { projectId, id, ...fields }: ContactFormData,
+) {
+  yield* assertProjectAccess(prisma, projectId);
+  yield* Effect.annotateLogsScoped({ contactId: id });
+  if (id === undefined) {
+    if (isEmptyContact(fields)) {
+      return { errors: { dataValidation: CONTACT_EMPTY_MESSAGE } };
+    }
+    const siblings = yield* prisma.projectContact.findMany({
+      where: { projectId, isDeleted: false },
+      select: { sortOrder: true },
+    });
+    const contact = yield* prisma.projectContact.create({
+      data: { ...fields, projectId, sortOrder: nextSortOrder(siblings) },
+      select: { id: true },
+    });
+    yield* Effect.annotateLogsScoped({ createdContactId: contact.id });
+    return { message: CONTACT_SAVED_MESSAGE };
+  }
+  const current = yield* prisma.projectContact.count({
+    where: { id, projectId, isDeleted: false },
+  });
+  if (current === 0) {
+    return { errors: { dataValidation: CONTACT_NOT_FOUND_MESSAGE } };
+  }
+  yield* prisma.projectContact.update({ where: { id }, data: fields });
+  return { message: CONTACT_SAVED_MESSAGE };
+});
+
+const accessibleContact = Effect.fn("accessibleContact")(function* (
+  prisma: PrismaService,
+  contactId: unknown,
+) {
+  const id = yield* Schema.decodeUnknown(ContactIdSchema)(contactId);
+  yield* Effect.annotateLogsScoped({ contactId: id });
+  const contact = yield* prisma.projectContact.findUnique({
+    where: { id },
+    select: { id: true, projectId: true, isDeleted: true },
+  });
+  if (!contact) {
+    return yield* new Forbidden({});
+  }
+  yield* assertProjectAccess(prisma, contact.projectId);
+  return contact;
+});
+
+export const deleteContactEffect = Effect.fn("deleteContact")(function* (
+  prisma: PrismaService,
+  contactId: unknown,
+) {
+  const contact = yield* accessibleContact(prisma, contactId);
+  if (contact.isDeleted) {
+    return;
+  }
+  const session = yield* getActiveSession();
+  yield* prisma.projectContact.update({
+    where: { id: contact.id },
+    data: { isDeleted: true, deletedAt: new Date(), deletedBy: session.userId },
+  });
+});
+
+export const restoreContactEffect = Effect.fn("restoreContact")(function* (
+  prisma: PrismaService,
+  contactId: unknown,
+) {
+  const contact = yield* accessibleContact(prisma, contactId);
+  if (!contact.isDeleted) {
+    return;
+  }
+  yield* prisma.projectContact.update({
+    where: { id: contact.id },
+    data: { isDeleted: false, deletedAt: null, deletedBy: null },
+  });
+});
 
 const phaseBelongsTo = Effect.fn("phaseBelongsTo")(function* (
   prisma: PrismaService,

@@ -57,7 +57,7 @@ export const EDIT_LABEL = "Éditer";
 export const SAVE_LABEL = "Enregistrer";
 export const CANCEL_LABEL = "Annuler";
 
-export const CONTACTS_HEADING = "Contacts";
+export const CONTACTS_HEADING = "Coordonnées";
 export const ADD_CONTACT_LABEL = "Ajouter un contact";
 export const REMOVE_CONTACT_LABEL = "Retirer ce contact";
 export const NO_CONTACTS_LABEL = "Aucun contact.";
@@ -69,7 +69,17 @@ export const CONTACT_FIELDS = [
   { key: "company", label: "Compagnie", placeholder: "Compagnie (optionnel)" },
   { key: "phone", label: "Téléphone", placeholder: "Téléphone" },
   { key: "email", label: "Courriel", placeholder: "Courriel" },
+  { key: "address", label: "Adresse", placeholder: "Adresse (optionnel)" },
 ] as const;
+export const NEW_CONTACT_LABEL = "Nouveau contact";
+export const CONTACT_DIALOG_DESCRIPTION =
+  "Coordonnées de la personne ressource";
+export const CONTACT_OPTIONS_LABEL = "Options du contact";
+export const CONTACT_REMOVED_SUFFIX = "supprimé";
+export const PROJECT_CARD_ROLE_LABEL = "Projet";
+export const PROJECT_CARD_DIALOG_DESCRIPTION =
+  "Adresse du chantier et couleur du projet";
+export const PROJECT_CARD_ADDRESS_FALLBACK = "Adresse";
 
 export const PIECES_HEADING = "Pièces";
 export const PIECES_HINT =
@@ -217,7 +227,9 @@ export const SAVED_TOAST_OPTIONS = {
 
 export const PROJECT_SAVED_MESSAGE = "Projet enregistré";
 export const PROJECT_CREATED_MESSAGE = "Projet créé";
-export const CONTACTS_SAVED_MESSAGE = "Contacts enregistrés";
+export const CONTACT_SAVED_MESSAGE = "Contact enregistré";
+export const CONTACT_NOT_FOUND_MESSAGE = "Contact introuvable";
+export const CONTACT_EMPTY_MESSAGE = "Renseignez au moins un champ";
 export const PIECE_SAVED_MESSAGE = "Pièce enregistrée";
 export const PROJECT_NOT_FOUND_MESSAGE = "Projet introuvable";
 export const PIECE_NOT_FOUND_MESSAGE = "Pièce introuvable";

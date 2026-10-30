@@ -29,7 +29,10 @@ import {
   renamePhaseEffect,
   restoreNoteEffect,
   restorePieceEffect,
-  saveProjectContactsEffect,
+  deleteContactEffect,
+  restoreContactEffect,
+  saveContactEffect,
+  saveProjectLocationEffect,
 } from "@/effects/projects";
 import {
   addFileSectionEffect,
@@ -55,7 +58,8 @@ import {
   NoteEditFormSchema,
   NoteFormSchema,
   PieceFormSchema,
-  ProjectContactsFormSchema,
+  ContactFormSchema,
+  ProjectLocationFormSchema,
   ProjectCreateFormSchema,
   ProjectHeaderFormSchema,
   type NoteEditFormErrors,
@@ -64,8 +68,10 @@ import {
   type NoteFormState,
   type PieceFormErrors,
   type PieceFormState,
-  type ProjectContactsFormErrors,
-  type ProjectContactsFormState,
+  type ContactFormErrors,
+  type ContactFormState,
+  type ProjectLocationFormErrors,
+  type ProjectLocationFormState,
   type ProjectCreateFormErrors,
   type ProjectCreateFormState,
   type ProjectHeaderFormErrors,
@@ -140,17 +146,30 @@ export async function createProject(
   return state;
 }
 
-export async function saveProjectContacts(
-  formState: ProjectContactsFormState,
+export async function saveProjectLocation(
+  formState: ProjectLocationFormState,
   formData: FormData,
-): Promise<ProjectContactsFormState> {
+): Promise<ProjectLocationFormState> {
   const state = await runEffectAsFormAction<
-    ProjectContactsFormState,
-    typeof ProjectContactsFormSchema,
-    ProjectContactsFormErrors
-  >(formState, formData, ProjectContactsFormSchema, saveProjectContactsEffect, [
+    ProjectLocationFormState,
+    typeof ProjectLocationFormSchema,
+    ProjectLocationFormErrors
+  >(formState, formData, ProjectLocationFormSchema, saveProjectLocationEffect, [
     Role.employee,
   ]);
+  refresh();
+  return state;
+}
+
+export async function saveContact(
+  formState: ContactFormState,
+  formData: FormData,
+): Promise<ContactFormState> {
+  const state = await runEffectAsFormAction<
+    ContactFormState,
+    typeof ContactFormSchema,
+    ContactFormErrors
+  >(formState, formData, ContactFormSchema, saveContactEffect, [Role.employee]);
   refresh();
   return state;
 }
@@ -253,6 +272,16 @@ export async function deletePiece(pieceId: number): Promise<void> {
   refresh();
 }
 
+const deleteContactMutation = protectedEffect(
+  deleteContactEffect,
+  [Role.employee],
+  "mutation",
+);
+const restoreContactMutation = protectedEffect(
+  restoreContactEffect,
+  [Role.employee],
+  "mutation",
+);
 const restorePieceMutation = protectedEffect(
   restorePieceEffect,
   [Role.employee],
@@ -288,6 +317,16 @@ const restoreFileSectionMutation = protectedEffect(
   [Role.employee],
   "mutation",
 );
+
+export async function deleteContact(contactId: number): Promise<void> {
+  await deleteContactMutation(contactId);
+  refresh();
+}
+
+export async function restoreContact(contactId: number): Promise<void> {
+  await restoreContactMutation(contactId);
+  refresh();
+}
 
 export async function restorePiece(pieceId: number): Promise<void> {
   await restorePieceMutation(pieceId);

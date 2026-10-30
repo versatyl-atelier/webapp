@@ -9,14 +9,8 @@ import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import { PinButton } from "@/components/PinButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -29,9 +23,6 @@ import {
   EDIT_LABEL,
   NO_PROJECT_STAGE_LABEL,
   NO_PROJECT_STAGE_VALUE,
-  PROJECT_ADDRESS_LABEL,
-  PROJECT_ADDRESS_PLACEHOLDER,
-  PROJECT_COLOR_LABEL,
   PROJECT_STAGE_LABEL,
   PROJECT_STAGE_LABELS,
   PROJECT_STAGES,
@@ -40,12 +31,7 @@ import {
   SAVE_LABEL,
   SAVED_TOAST_OPTIONS,
 } from "@/constants/projects";
-import {
-  projectColorLabel,
-  projectColorOptions,
-  projectColorStyle,
-  type ProjectFiche,
-} from "@/lib/projects";
+import type { ProjectFiche } from "@/lib/projects";
 import type { ProjectHeaderFormState } from "@/schemas/projects.schemas";
 
 const STAGE_ITEMS = {
@@ -54,17 +40,13 @@ const STAGE_ITEMS = {
 };
 
 type ProjectHeaderProps = {
-  project: Pick<
-    ProjectFiche,
-    "id" | "name" | "stage" | "color" | "address" | "isManual"
-  >;
+  project: Pick<ProjectFiche, "id" | "name" | "stage" | "isManual">;
   pinned: boolean;
 };
 
 export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
   const formId = useId();
   const [editing, setEditing] = useState(false);
-  const [color, setColor] = useState(project.color);
   const [stage, setStage] = useState<string>(
     project.stage ?? NO_PROJECT_STAGE_VALUE,
   );
@@ -82,7 +64,6 @@ export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
   const errors = state?.errors;
 
   const startEditing = () => {
-    setColor(project.color);
     setStage(project.stage ?? NO_PROJECT_STAGE_VALUE);
     setEditing(true);
   };
@@ -95,15 +76,6 @@ export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
             <h1 className="text-2xl font-bold tracking-tight">
               {project.name}
             </h1>
-            <span
-              aria-hidden
-              title={projectColorLabel(project.color)}
-              style={projectColorStyle(project.color)}
-              className="size-3 shrink-0 rounded-full bg-(--project-color)"
-            />
-            <span className="sr-only">
-              {PROJECT_COLOR_LABEL} : {projectColorLabel(project.color)}
-            </span>
             {project.stage && (
               <Badge variant="secondary">
                 <span className="sr-only">{PROJECT_STAGE_LABEL} : </span>
@@ -111,11 +83,6 @@ export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
               </Badge>
             )}
           </div>
-          {project.address && (
-            <p className="text-muted-foreground mt-1 text-sm">
-              {project.address}
-            </p>
-          )}
         </div>
         <PinButton projectId={project.id} pinned={pinned} variant="outline" />
         <Button variant="outline" onClick={startEditing}>
@@ -133,7 +100,6 @@ export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
     >
       <FormValidationAlerts errors={errors} />
       <input type="hidden" name="projectId" value={project.id} />
-      <input type="hidden" name="color" value={color} />
       <input type="hidden" name="stage" value={stage} />
       <Field>
         <FieldLabel htmlFor={`${formId}-name`}>
@@ -182,38 +148,6 @@ export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
           </SelectContent>
         </Select>
         <FieldErrors errors={errors?.stage} />
-      </Field>
-      <FieldSet>
-        <FieldLegend variant="label">{PROJECT_COLOR_LABEL}</FieldLegend>
-        <RadioGroup
-          value={color}
-          onValueChange={setColor}
-          className="flex flex-wrap gap-2"
-        >
-          {projectColorOptions(project.color).map(({ value, label }) => (
-            <RadioGroupItem
-              key={value}
-              value={value}
-              aria-label={label}
-              title={label}
-              style={projectColorStyle(value)}
-              className="data-checked:ring-foreground data-checked:ring-offset-background size-6 border-0 bg-(--project-color) text-white data-checked:bg-(--project-color) data-checked:ring-2 data-checked:ring-offset-2 dark:bg-(--project-color) dark:data-checked:bg-(--project-color)"
-            />
-          ))}
-        </RadioGroup>
-        <FieldErrors errors={errors?.color} />
-      </FieldSet>
-      <Field className="max-w-md">
-        <FieldLabel htmlFor={`${formId}-address`}>
-          {PROJECT_ADDRESS_LABEL}
-        </FieldLabel>
-        <Input
-          id={`${formId}-address`}
-          name="address"
-          defaultValue={project.address}
-          placeholder={PROJECT_ADDRESS_PLACEHOLDER}
-        />
-        <FieldErrors errors={errors?.address} />
       </Field>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={() => setEditing(false)}>

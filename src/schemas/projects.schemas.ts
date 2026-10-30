@@ -42,13 +42,61 @@ const EmailSchema = Schema.Trim.pipe(
   ),
 );
 
-export const ContactSchema = Schema.Struct({
+export const ContactFormSchema = Schema.Struct({
+  projectId: Schema.String,
+  id: Schema.optional(IdFromFormSchema),
   role: Schema.Trim,
   name: Schema.Trim,
   company: Schema.Trim,
   phone: Schema.Trim,
   email: EmailSchema,
+  address: Schema.Trim,
 });
+
+export type ContactFormData = typeof ContactFormSchema.Type;
+
+export type ContactFormErrors = {
+  projectId?: string[];
+  id?: string[];
+  role?: string[];
+  name?: string[];
+  company?: string[];
+  phone?: string[];
+  email?: string[];
+  address?: string[];
+  dataValidation?: string;
+  schemaValidation?: string;
+};
+
+export type ContactFormState =
+  | (FormState & {
+      errors?: ContactFormErrors;
+    })
+  | undefined;
+
+export const ProjectLocationFormSchema = Schema.Struct({
+  projectId: Schema.String,
+  color: Schema.String.pipe(
+    Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
+  ),
+  address: Schema.Trim,
+});
+
+export type ProjectLocationFormData = typeof ProjectLocationFormSchema.Type;
+
+export type ProjectLocationFormErrors = {
+  projectId?: string[];
+  color?: string[];
+  address?: string[];
+  dataValidation?: string;
+  schemaValidation?: string;
+};
+
+export type ProjectLocationFormState =
+  | (FormState & {
+      errors?: ProjectLocationFormErrors;
+    })
+  | undefined;
 
 export const ProjectHeaderFormSchema = Schema.Struct({
   projectId: Schema.String,
@@ -56,10 +104,6 @@ export const ProjectHeaderFormSchema = Schema.Struct({
     Schema.minLength(1, { message: () => PROJECT_NAME_REQUIRED_MESSAGE }),
   ),
   stage: Schema.Union(NoStageAsNullSchema, Schema.Enums(ProjectStage)),
-  color: Schema.String.pipe(
-    Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
-  ),
-  address: Schema.Trim,
 });
 
 export type ProjectHeaderFormData = typeof ProjectHeaderFormSchema.Type;
@@ -68,8 +112,6 @@ export type ProjectHeaderFormErrors = {
   projectId?: string[];
   name?: string[];
   stage?: string[];
-  color?: string[];
-  address?: string[];
   dataValidation?: string;
   schemaValidation?: string;
 };
@@ -79,11 +121,6 @@ export type ProjectHeaderFormState =
       errors?: ProjectHeaderFormErrors;
     })
   | undefined;
-
-export const ProjectContactsFormSchema = Schema.Struct({
-  projectId: Schema.String,
-  contacts: Schema.parseJson(Schema.Array(ContactSchema)),
-});
 
 export const ProjectCreateFormSchema = Schema.Struct({
   name: Schema.Trim.pipe(
@@ -103,22 +140,6 @@ export type ProjectCreateFormState =
   | (FormState & {
       errors?: ProjectCreateFormErrors;
       projectId?: string;
-    })
-  | undefined;
-
-export type ProjectContactsFormData = typeof ProjectContactsFormSchema.Type;
-
-export type ProjectContactsFormErrors = {
-  projectId?: string[];
-  contacts?: string[];
-  [contactField: `contacts.${number}.${string}`]: string[] | undefined;
-  dataValidation?: string;
-  schemaValidation?: string;
-};
-
-export type ProjectContactsFormState =
-  | (FormState & {
-      errors?: ProjectContactsFormErrors;
     })
   | undefined;
 
@@ -226,3 +247,4 @@ export const FileSectionIdSchema = Schema.Int;
 export const FileSectionNameSchema = Schema.Trim.pipe(Schema.minLength(1));
 export const ProjectIdSchema = Schema.String.pipe(Schema.minLength(1));
 export const ProjectIdsSchema = Schema.Array(ProjectIdSchema);
+export const ContactIdSchema = Schema.Int;

@@ -44,6 +44,7 @@ export default async function Page({ params }: ProjectPageProps) {
       />
       <ProjectContacts
         projectId={project.id}
+        project={{ color: project.color, address: project.address }}
         contacts={project.contacts}
         suggestions={suggestions}
       />
