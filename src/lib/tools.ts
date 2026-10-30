@@ -4,6 +4,7 @@ import {
   EMPLOYEE_TOOLS,
   type Tool,
 } from "@/constants/tools";
+import { PUNCH_TOOLS } from "@/constants/punch";
 import { Role } from "@/generated/prisma/enums";
 
 export function toolsForRole(role: Role | null): Tool[] {
@@ -19,4 +20,13 @@ export function toolsForRole(role: Role | null): Tool[] {
     default:
       return [];
   }
+}
+
+export function punchToolsForRole(role: Role | null): Tool[] {
+  if (role === null || role === Role.atelier) {
+    return [];
+  }
+  return PUNCH_TOOLS.filter(
+    ({ managerOnly }) => !managerOnly || role === Role.manager,
+  );
 }
