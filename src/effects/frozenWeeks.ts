@@ -108,7 +108,7 @@ export const freezeWeekEffect = Effect.fn("freezeWeek")(function* (
   if (isDeleted) {
     yield* verifySession([Role.manager]);
   } else {
-    yield* verifySession([Role.employee]);
+    yield* verifySession([Role.atelier]);
   }
   const result = yield* prisma.frozenWeek.upsert(args);
   if (!result) {

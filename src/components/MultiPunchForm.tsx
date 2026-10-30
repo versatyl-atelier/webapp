@@ -6,15 +6,12 @@ import { toast } from "sonner";
 import { startMultiPunch, endMultiPunch } from "@/actions/multiPunch";
 import { Button } from "@/components/ui/button";
 import ProjectSelect from "@/components/ProjectSelect";
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-} from "@/components/ui/sidebar";
 import { Field, FieldError } from "./ui/field";
+import Clock from "@/components/Clock";
 import { formatTimeDisplay } from "@/lib/time";
 
 const CUTOFF_HOUR = 16;
+const PUNCH_CUTOFF_NOTICE = `Les punchs s'arrêtent automatiquement à ${CUTOFF_HOUR}h00`;
 const MAX_SELECTIONS = 3;
 const PUNCH_START_MESSAGE = "Punch démarré";
 const PUNCH_END_MESSAGE = "Punch terminé";
@@ -156,83 +153,85 @@ export default function MultiPunchForm({
     : "";
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel className="border-accent-foreground text-accent-foreground mb-2 rounded-none border-b-3 font-bold">
+    <div className="bg-card flex flex-col rounded-lg border-2 p-2">
+      <div className="border-primary mb-2 border-b-2 pb-1 text-center text-xs font-bold">
         Pointage Multiple
-      </SidebarGroupLabel>
-      <SidebarGroupContent>
-        {!activePunch ? (
-          <form action={startAction}>
-            <Field>
-              <input type="hidden" name="employeeId" value={employeeId} />
-            </Field>
-            <ProjectSelect
-              multiple
-              maxSelections={MAX_SELECTIONS}
-              className="bg-muted p-1.5"
-            />
-            {startState?.errors?.projectIds?.map((error: string) => (
-              <FieldError key={error}>- {error}</FieldError>
-            ))}
-            <Button
-              type="submit"
-              disabled={startPending || !!disabled}
-              className="mt-2 w-full rounded-sm py-2 text-xs font-semibold uppercase"
-            >
-              {startPending ? "..." : "Punch In"}
-            </Button>
-            <p className="text-2xs text-muted-foreground mt-1 text-center font-bold italic">
-              Tous les punchs s'arrêtent automatiquement à {CUTOFF_HOUR}h00
-            </p>
+      </div>
+      {!activePunch ? (
+        <form action={startAction}>
+          <Field>
+            <input type="hidden" name="employeeId" value={employeeId} />
+          </Field>
+          <ProjectSelect multiple maxSelections={MAX_SELECTIONS} />
+          {startState?.errors?.projectIds?.map((error: string) => (
+            <FieldError key={error}>- {error}</FieldError>
+          ))}
+          <Button
+            size="sm"
+            type="submit"
+            disabled={startPending || !!disabled}
+            className="mt-2 w-full rounded-sm text-xs font-semibold uppercase"
+          >
+            {startPending ? "..." : "Punch In"}
+          </Button>
+          <PunchCutoffNotice />
+        </form>
+      ) : (
+        <>
+          <dl className="bg-muted rounded border-2 p-2">
+            <dt className="text-2xs mr-2 inline-block font-bold">En cours:</dt>
+            <dd className="text-2xs inline-block">{projectNames}</dd>
+            <br />
+            <dt className="text-2xs mr-2 inline-block font-bold">Durée:</dt>
+            <dd className="text-2xs inline-block">
+              {formatTimeDisplay(displayTime.hours + displayTime.minutes / 60)}
+            </dd>
+          </dl>
+
+          <form action={endAction} className="mt-1.5 space-y-1.5">
+            <input type="hidden" name="employeeId" value={employeeId} />
+            <div className="flex gap-2.5">
+              <Button
+                size="sm"
+                type="submit"
+                name="command"
+                value="end"
+                disabled={endPending || !!disabled}
+                className="flex-1 rounded-sm font-semibold"
+              >
+                {endPending ? "..." : "Punch Out"}
+              </Button>
+              <Button
+                size="sm"
+                type="submit"
+                name="command"
+                value="cancel"
+                onClick={handleCancelClick}
+                disabled={endPending || !!disabled}
+                variant="outline"
+                className="flex-1 rounded-sm font-semibold"
+              >
+                {endPending ? "..." : "Annuler"}
+              </Button>
+            </div>
+
+            <PunchCutoffNotice />
           </form>
-        ) : (
-          <>
-            <dl className="bg-muted rounded border-2 p-2">
-              <dt className="text-2xs mr-2 inline-block font-bold">
-                En cours:
-              </dt>
-              <dd className="text-2xs inline-block">{projectNames}</dd>
-              <br />
-              <dt className="text-2xs mr-2 inline-block font-bold">Durée:</dt>
-              <dd className="text-2xs inline-block">
-                {formatTimeDisplay(
-                  displayTime.hours + displayTime.minutes / 60,
-                )}
-              </dd>
-            </dl>
+        </>
+      )}
+      <div className="mt-auto pt-2">
+        <div className="bg-muted flex h-12 items-center justify-center rounded border-2">
+          <Clock className="bg-transparent text-2xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            <form action={endAction} className="mt-2.5 space-y-2.5">
-              <input type="hidden" name="employeeId" value={employeeId} />
-              <div className="flex gap-2.5">
-                <Button
-                  type="submit"
-                  name="command"
-                  value="end"
-                  disabled={endPending || !!disabled}
-                  className="flex-1 rounded-sm py-2 font-semibold"
-                >
-                  {endPending ? "..." : "Punch Out"}
-                </Button>
-                <Button
-                  type="submit"
-                  name="command"
-                  value="cancel"
-                  onClick={handleCancelClick}
-                  disabled={endPending || !!disabled}
-                  variant="outline"
-                  className="flex-1 rounded-sm py-2 font-semibold"
-                >
-                  {endPending ? "..." : "Annuler"}
-                </Button>
-              </div>
-
-              <div className="text-2xs text-muted-foreground text-center font-bold italic">
-                Punch s'arrête automatiquement à {CUTOFF_HOUR}h00
-              </div>
-            </form>
-          </>
-        )}
-      </SidebarGroupContent>
-    </SidebarGroup>
+function PunchCutoffNotice() {
+  return (
+    <div className="text-2xs text-muted-foreground mt-2 text-center font-bold italic">
+      {PUNCH_CUTOFF_NOTICE}
+    </div>
   );
 }

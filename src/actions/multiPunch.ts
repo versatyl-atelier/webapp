@@ -28,7 +28,7 @@ export async function startMultiPunch(
     typeof StartMultiPunchSchema,
     StartMultiPunchFormErrors
   >(formState, formData, StartMultiPunchSchema, startMultiPunchEffect, [
-    Role.employee,
+    Role.atelier,
   ]);
 }
 
@@ -41,10 +41,10 @@ export async function endMultiPunch(
     typeof EndMultiPunchSchema,
     EndMultiPunchFormErrors
   >(formState, formData, EndMultiPunchSchema, endMultiPunchEffect, [
-    Role.employee,
+    Role.atelier,
   ]);
 }
 
 export const getActivePunch = cachedGetter(getActivePunchEffect, [
-  Role.employee,
+  Role.atelier,
 ]);

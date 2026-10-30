@@ -7,7 +7,9 @@ import {
   employeePath,
   isProtectedPath,
   loginPath,
+  projectNotesPath,
   projectPath,
+  punchHomeHref,
 } from "@/lib/paths";
 
 describe("loginPath", () => {
@@ -38,6 +40,16 @@ describe("employeePath", () => {
   });
 });
 
+describe("punchHomeHref", () => {
+  it("goes straight to the employee linked to the account", () => {
+    expect(punchHomeHref(4)).toBe("/punch/employe/4");
+  });
+
+  it("falls back to the employee list when no employee is linked", () => {
+    expect(punchHomeHref(null)).toBe("/punch/employes");
+  });
+});
+
 describe("changePasswordPath", () => {
   it("carries the redirect target", () => {
     expect(changePasswordPath("/punch")).toBe(
@@ -50,7 +62,10 @@ describe("isProtectedPath", () => {
   it("protects /punch and everything under it", () => {
     expect(isProtectedPath("/punch")).toBe(true);
     expect(isProtectedPath("/punch/employe/1")).toBe(true);
-    expect(isProtectedPath("/punch/gestionnaire")).toBe(true);
+  });
+
+  it("protects the manager interface", () => {
+    expect(isProtectedPath("/gestionnaire")).toBe(true);
   });
 
   it("protects the change-password page", () => {
@@ -69,8 +84,9 @@ describe("projectPath", () => {
     expect(projectPath("abc")).toBe("/projets/abc");
   });
 
-  it("carries the tab", () => {
-    expect(projectPath("abc", "notes")).toBe("/projets/abc?tab=notes");
+  it("points the notes tab to the notes page", () => {
+    expect(projectPath("abc", "notes")).toBe("/projets/abc/notes");
+    expect(projectNotesPath("abc")).toBe("/projets/abc/notes");
   });
 });
 
@@ -85,6 +101,12 @@ describe("activeToolHref", () => {
     expect(
       activeToolHref("/projets/abc", new URLSearchParams("tab=notes")),
     ).toBe(NOTES_TOOL_PATH);
+  });
+
+  it("treats the notes page as the notes tool", () => {
+    expect(activeToolHref("/projets/abc/notes", new URLSearchParams())).toBe(
+      NOTES_TOOL_PATH,
+    );
   });
 
   it("matches nothing outside the tools", () => {

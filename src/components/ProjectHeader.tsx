@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { saveProjectHeader } from "@/actions/projects";
 import { FieldErrors } from "@/components/FieldErrors";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
+import { PinButton } from "@/components/PinButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,10 +54,14 @@ const STAGE_ITEMS = {
 };
 
 type ProjectHeaderProps = {
-  project: Pick<ProjectFiche, "id" | "name" | "stage" | "color" | "address">;
+  project: Pick<
+    ProjectFiche,
+    "id" | "name" | "stage" | "color" | "address" | "isManual"
+  >;
+  pinned: boolean;
 };
 
-export function ProjectHeader({ project }: ProjectHeaderProps) {
+export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
   const formId = useId();
   const [editing, setEditing] = useState(false);
   const [color, setColor] = useState(project.color);
@@ -112,6 +117,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
             </p>
           )}
         </div>
+        <PinButton projectId={project.id} pinned={pinned} variant="outline" />
         <Button variant="outline" onClick={startEditing}>
           {EDIT_LABEL}
         </Button>
@@ -137,6 +143,7 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
           id={`${formId}-name`}
           name="name"
           defaultValue={project.name}
+          readOnly={!project.isManual}
           placeholder={PROJECT_TITLE_PLACEHOLDER}
           aria-invalid={!!errors?.name}
           className="h-10 text-lg font-semibold md:text-lg"

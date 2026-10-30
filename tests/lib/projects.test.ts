@@ -20,6 +20,7 @@ import {
   isEmptyContact,
   mergeSuggestions,
   nextSortOrder,
+  pieceCopyName,
   pieceReadFields,
   piecesByPhase,
   projectColorLabel,
@@ -34,13 +35,18 @@ const piece = (overrides: Partial<PieceRecord>): PieceRecord => ({
   id: 1,
   phaseId: null,
   type: "",
+  description: "",
   caissonMaterial: "",
-  cladding: "",
-  doors: "",
+  cladding: [],
+  countertop: "",
   drawers: "",
-  hardware: "",
   finish: "",
   cabinetCount: null,
+  coverFileId: null,
+  coverX: 50,
+  coverY: 50,
+  coverZoom: 1,
+  noteCount: 0,
   ...overrides,
 });
 
@@ -58,6 +64,23 @@ describe("mergeSuggestions", () => {
 describe("buildSuggestions", () => {
   it("falls back to defaults when nothing was saved yet", () => {
     expect(buildSuggestions([], []).type).toEqual(DEFAULT_SUGGESTIONS.type);
+  });
+
+  it("collects every cladding of every piece", () => {
+    const suggestions = buildSuggestions(
+      [
+        piece({ cladding: ["Marbre", "Placage noyer"] }),
+        piece({ cladding: ["Marbre"] }),
+      ],
+      [],
+    );
+    expect(suggestions.cladding.slice(0, 2)).toEqual([
+      "Marbre",
+      "Placage noyer",
+    ]);
+    expect(
+      suggestions.cladding.filter((value) => value === "Marbre"),
+    ).toHaveLength(1);
   });
 
   it("uses saved contact companies", () => {
@@ -99,11 +122,29 @@ describe("isEmptyContact", () => {
 describe("pieceReadFields", () => {
   it("lists only filled fields, including a zero cabinet count", () => {
     expect(
-      pieceReadFields(piece({ doors: "Shaker", cabinetCount: 0 })),
+      pieceReadFields(piece({ countertop: "Quartz blanc", cabinetCount: 0 })),
     ).toEqual([
-      { label: "Portes et façades", value: "Shaker" },
+      { label: "Comptoir", value: "Quartz blanc" },
       { label: CABINET_COUNT_READ_LABEL, value: "0" },
     ]);
+  });
+
+  it("joins several claddings and puts them first", () => {
+    expect(
+      pieceReadFields(
+        piece({ cladding: ["Placage noyer", "Laque blanche"], finish: "Mat" }),
+      ),
+    ).toEqual([
+      { label: "Habillage", value: "Placage noyer · Laque blanche" },
+      { label: "Finition", value: "Mat" },
+    ]);
+  });
+});
+
+describe("pieceCopyName", () => {
+  it("suffixes a name and leaves an empty name empty", () => {
+    expect(pieceCopyName("Cuisine")).toBe("Cuisine (copie)");
+    expect(pieceCopyName("")).toBe("");
   });
 });
 

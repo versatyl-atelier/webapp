@@ -6,8 +6,13 @@ import {
   REDIRECT_TO_PARAM,
 } from "@/constants/auth";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
-import { PROJECT_TAB_PARAM } from "@/constants/projects";
-import { TOOLS } from "@/constants/tools";
+import {
+  NOTES_TAB,
+  PROJECT_NOTES_PATH_PATTERN,
+  PROJECT_TAB_PARAM,
+} from "@/constants/projects";
+import { PUNCH_EMPLOYEES_PATH } from "@/constants/punch";
+import { MANAGER_TOOL, TOOLS } from "@/constants/tools";
 import type { DateKey } from "@/lib/calendar";
 import type { ProjectTab } from "@/lib/projectTabs";
 
@@ -32,6 +37,10 @@ export function employeePath(employeeId: number): string {
   return `/punch/employe/${employeeId}`;
 }
 
+export function punchHomeHref(employeeId: number | null): string {
+  return employeeId === null ? PUNCH_EMPLOYEES_PATH : employeePath(employeeId);
+}
+
 export function employeeWeekPath(
   employeeId: number,
   weekStart: DateKey,
@@ -40,13 +49,27 @@ export function employeeWeekPath(
   return `${employeePath(employeeId)}?${params.toString()}`;
 }
 
+export function projectNotesPath(projectId: string): string {
+  return `/projets/${projectId}/notes`;
+}
+
 export function projectPath(projectId: string, tab?: ProjectTab): string {
-  const path = `/projets/${projectId}`;
-  if (!tab) {
-    return path;
+  if (tab === NOTES_TAB) {
+    return projectNotesPath(projectId);
   }
-  const params = new URLSearchParams({ [PROJECT_TAB_PARAM]: tab });
-  return `${path}?${params.toString()}`;
+  return `/projets/${projectId}`;
+}
+
+export function withProjectTab(
+  pathname: string,
+  searchParams: URLSearchParams,
+): URLSearchParams {
+  if (!PROJECT_NOTES_PATH_PATTERN.test(pathname)) {
+    return searchParams;
+  }
+  const params = new URLSearchParams(searchParams);
+  params.set(PROJECT_TAB_PARAM, NOTES_TAB);
+  return params;
 }
 
 export function changePasswordPath(redirectTo?: string): string {
@@ -63,20 +86,25 @@ export function isProtectedPath(pathname: string): boolean {
   );
 }
 
+const ALL_TOOLS = [...TOOLS, MANAGER_TOOL];
+
 function splitHref(href: string): { path: string; params: URLSearchParams } {
   const [path, query = ""] = href.split("?");
   return { path, params: new URLSearchParams(query) };
 }
 
 export function isToolPath(pathname: string): boolean {
-  return TOOLS.some(({ href }) => isWithinPath(pathname, splitHref(href).path));
+  return ALL_TOOLS.some(({ href }) =>
+    isWithinPath(pathname, splitHref(href).path),
+  );
 }
 
 export function activeToolHref(
   pathname: string,
-  searchParams: URLSearchParams,
+  currentSearchParams: URLSearchParams,
 ): string | undefined {
-  return TOOLS.map(({ href }) => ({ href, ...splitHref(href) }))
+  const searchParams = withProjectTab(pathname, currentSearchParams);
+  return ALL_TOOLS.map(({ href }) => ({ href, ...splitHref(href) }))
     .filter(
       ({ path, params }) =>
         isWithinPath(pathname, path) &&

@@ -3,6 +3,7 @@
 import "server-only";
 
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { Role } from "@/generated/prisma/enums";
 import {
@@ -27,15 +28,35 @@ import {
   movePieceEffect,
   renamePhaseEffect,
   restoreNoteEffect,
+  restorePieceEffect,
   saveProjectContactsEffect,
-  saveProjectHeaderEffect,
-  savePieceEffect,
 } from "@/effects/projects";
+import {
+  addFileSectionEffect,
+  createProjectEffect,
+  deleteFileSectionEffect,
+  duplicatePieceEffect,
+  ensurePieceFoldersEffect,
+  renameFileSectionEffect,
+  restoreFileSectionEffect,
+  savePieceWithFoldersEffect,
+  saveProjectHeaderWithFoldersEffect,
+} from "@/effects/projectFolders";
+import {
+  getProjectHomeEffect,
+  isProjectPinnedEffect,
+  pinProjectEffect,
+  recordProjectViewEffect,
+  reorderPinsEffect,
+  unpinProjectEffect,
+} from "@/effects/projectHome";
+import { projectPath } from "@/lib/paths";
 import {
   NoteEditFormSchema,
   NoteFormSchema,
   PieceFormSchema,
   ProjectContactsFormSchema,
+  ProjectCreateFormSchema,
   ProjectHeaderFormSchema,
   type NoteEditFormErrors,
   type NoteEditFormState,
@@ -45,11 +66,13 @@ import {
   type PieceFormState,
   type ProjectContactsFormErrors,
   type ProjectContactsFormState,
+  type ProjectCreateFormErrors,
+  type ProjectCreateFormState,
   type ProjectHeaderFormErrors,
   type ProjectHeaderFormState,
 } from "@/schemas/projects.schemas";
 
-export const getProjects = cachedGetter(getProjectsEffect, [Role.employee]);
+export const getProjects = cachedGetter(getProjectsEffect, [Role.atelier]);
 
 export const getAllProjects = cachedGetter(getAllProjectsEffect, [
   Role.manager,
@@ -62,6 +85,14 @@ export const getProjectNotes = cachedGetter(getProjectNotesEffect, [
 ]);
 
 export const getFicheSuggestions = cachedGetter(getFicheSuggestionsEffect, [
+  Role.employee,
+]);
+
+export const getProjectHome = cachedGetter(getProjectHomeEffect, [
+  Role.employee,
+]);
+
+export const isProjectPinned = cachedGetter(isProjectPinnedEffect, [
   Role.employee,
 ]);
 
@@ -81,10 +112,31 @@ export async function saveProjectHeader(
     ProjectHeaderFormState,
     typeof ProjectHeaderFormSchema,
     ProjectHeaderFormErrors
-  >(formState, formData, ProjectHeaderFormSchema, saveProjectHeaderEffect, [
+  >(
+    formState,
+    formData,
+    ProjectHeaderFormSchema,
+    saveProjectHeaderWithFoldersEffect,
+    [Role.employee],
+  );
+  refresh();
+  return state;
+}
+
+export async function createProject(
+  formState: ProjectCreateFormState,
+  formData: FormData,
+): Promise<ProjectCreateFormState> {
+  const state = await runEffectAsFormAction<
+    ProjectCreateFormState,
+    typeof ProjectCreateFormSchema,
+    ProjectCreateFormErrors
+  >(formState, formData, ProjectCreateFormSchema, createProjectEffect, [
     Role.employee,
   ]);
-  refresh();
+  if (state?.projectId) {
+    redirect(projectPath(state.projectId));
+  }
   return state;
 }
 
@@ -111,7 +163,9 @@ export async function savePiece(
     PieceFormState,
     typeof PieceFormSchema,
     PieceFormErrors
-  >(formState, formData, PieceFormSchema, savePieceEffect, [Role.employee]);
+  >(formState, formData, PieceFormSchema, savePieceWithFoldersEffect, [
+    Role.employee,
+  ]);
   refresh();
   return state;
 }
@@ -199,6 +253,84 @@ export async function deletePiece(pieceId: number): Promise<void> {
   refresh();
 }
 
+const restorePieceMutation = protectedEffect(
+  restorePieceEffect,
+  [Role.employee],
+  "mutation",
+);
+const duplicatePieceMutation = protectedEffect(
+  duplicatePieceEffect,
+  [Role.employee],
+  "mutation",
+);
+const ensurePieceFoldersMutation = protectedEffect(
+  ensurePieceFoldersEffect,
+  [Role.employee],
+  "mutation",
+);
+const addFileSectionMutation = protectedEffect(
+  addFileSectionEffect,
+  [Role.employee],
+  "mutation",
+);
+const renameFileSectionMutation = protectedEffect(
+  renameFileSectionEffect,
+  [Role.employee],
+  "mutation",
+);
+const deleteFileSectionMutation = protectedEffect(
+  deleteFileSectionEffect,
+  [Role.employee],
+  "mutation",
+);
+const restoreFileSectionMutation = protectedEffect(
+  restoreFileSectionEffect,
+  [Role.employee],
+  "mutation",
+);
+
+export async function restorePiece(pieceId: number): Promise<void> {
+  await restorePieceMutation(pieceId);
+  refresh();
+}
+
+export async function duplicatePiece(pieceId: number): Promise<void> {
+  await duplicatePieceMutation(pieceId);
+  refresh();
+}
+
+export async function ensurePieceFolders(pieceId: number): Promise<void> {
+  await ensurePieceFoldersMutation(pieceId);
+  refresh();
+}
+
+export async function addFileSection(
+  projectId: string,
+  pieceId: number | null,
+  name: string,
+): Promise<void> {
+  await addFileSectionMutation(projectId, pieceId, name);
+  refresh();
+}
+
+export async function renameFileSection(
+  sectionId: number,
+  name: string,
+): Promise<void> {
+  await renameFileSectionMutation(sectionId, name);
+  refresh();
+}
+
+export async function deleteFileSection(sectionId: number): Promise<void> {
+  await deleteFileSectionMutation(sectionId);
+  refresh();
+}
+
+export async function restoreFileSection(sectionId: number): Promise<void> {
+  await restoreFileSectionMutation(sectionId);
+  refresh();
+}
+
 const deleteNoteMutation = protectedEffect(
   deleteNoteEffect,
   [Role.employee],
@@ -217,5 +349,45 @@ export async function deleteNote(noteId: number): Promise<void> {
 
 export async function restoreNote(noteId: number): Promise<void> {
   await restoreNoteMutation(noteId);
+  refresh();
+}
+
+const recordProjectViewMutation = protectedEffect(
+  recordProjectViewEffect,
+  [Role.employee],
+  "mutation",
+);
+const pinProjectMutation = protectedEffect(
+  pinProjectEffect,
+  [Role.employee],
+  "mutation",
+);
+const unpinProjectMutation = protectedEffect(
+  unpinProjectEffect,
+  [Role.employee],
+  "mutation",
+);
+const reorderPinsMutation = protectedEffect(
+  reorderPinsEffect,
+  [Role.employee],
+  "mutation",
+);
+
+export async function recordProjectView(projectId: string): Promise<void> {
+  await recordProjectViewMutation(projectId);
+}
+
+export async function pinProject(projectId: string): Promise<void> {
+  await pinProjectMutation(projectId);
+  refresh();
+}
+
+export async function unpinProject(projectId: string): Promise<void> {
+  await unpinProjectMutation(projectId);
+  refresh();
+}
+
+export async function reorderPins(projectIds: string[]): Promise<void> {
+  await reorderPinsMutation(projectIds);
   refresh();
 }

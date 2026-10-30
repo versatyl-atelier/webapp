@@ -1,4 +1,5 @@
 import {
+  WEEK_FROZEN_MANAGER_NOTICE,
   WEEK_FROZEN_MESSAGE,
   WEEK_FROZEN_NOTICE,
 } from "@/schemas/frozenWeeks.schemas";
@@ -6,12 +7,14 @@ import { getWeeklyKilometrage } from "@/actions/weeklyKilometrage";
 
 import { ObjectivesAndKilometrageForm } from "@/components/ObjectivesAndKilometrageForm";
 import ManualTimeForm from "@/components/ManualTimeForm";
-import FillDayForm from "@/components/FillDayForm";
+import MultiPunchForm from "@/components/MultiPunchForm";
+import { DayColumn } from "@/components/DayColumn";
 
 import { notFound } from "next/navigation";
 import { getEmployee } from "@/actions/employees";
+import { getActivePunch } from "@/actions/multiPunch";
 import { getProjects } from "@/actions/projects";
-import { getTasks } from "@/actions/tasks";
+import { getSubtasks, getTasks } from "@/actions/tasks";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
 import { mondayOf, parseWeekParam, toLocalDateKey } from "@/lib/calendar";
 import {
@@ -19,6 +22,8 @@ import {
   DEFAULT_WEEKLY_TARGET,
   getEmployeeWeek,
 } from "@/lib/employee-week";
+import { Role } from "@/generated/prisma/enums";
+import { getSession } from "@/lib/session";
 import { formatTimeDisplay, isSameDay } from "@/lib/time";
 import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
 import { Info } from "lucide-react";
@@ -104,16 +109,17 @@ export default async function EmployeePage({
   }));
   const todayIso = today.toISOString().split("T")[0];
   const defaultDate = isCurrentWeek ? todayIso : dateOptions[0]?.value;
-  const dailyHours = Object.fromEntries(
-    daysData.map((day, i) => [dateOptions[i].value, day.total]),
-  );
 
   const projectsPromise = getProjects(employeeId);
   const tasksPromise = getTasks();
+  const subtasks = await getSubtasks();
 
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
+  const isManager = (await getSession())?.role === Role.manager;
+  const canToggleFreeze = !weekFrozen || isManager;
 
   const weeklyKilometrage = await getWeeklyKilometrage(employeeId, weekStart);
+  const activePunch = await getActivePunch(employeeId);
 
   const colsTemplate = "grid-cols-[repeat(5,16.8%)_repeat(2,8%)]";
 
@@ -130,16 +136,20 @@ export default async function EmployeePage({
           {weekFrozen && (
             <Alert variant="warning" role="status" className="w-auto flex-1">
               <Info />
-              <AlertDescription>{WEEK_FROZEN_NOTICE}</AlertDescription>
+              <AlertDescription>
+                {isManager ? WEEK_FROZEN_MANAGER_NOTICE : WEEK_FROZEN_NOTICE}
+              </AlertDescription>
             </Alert>
           )}
-          <FreezeForm
-            employeeId={employee.id}
-            weekStart={weekStart}
-            weekTotal={weekly}
-            objective={objective}
-            weekFrozen={weekFrozen}
-          />
+          {canToggleFreeze && (
+            <FreezeForm
+              employeeId={employee.id}
+              weekStart={weekStart}
+              weekTotal={weekly}
+              objective={objective}
+              weekFrozen={weekFrozen}
+            />
+          )}
         </div>
         <div className="grid grid-cols-1 gap-2.5">
           <div>
@@ -174,13 +184,15 @@ export default async function EmployeePage({
 
                 {/* Day Content */}
                 <div className={cn("bg-muted grid gap-px p-px", colsTemplate)}>
-                  {daysData.map((day) => {
+                  {daysData.map((day, i) => {
                     const isToday =
                       new Date(day.dateStr).toDateString() ===
                       new Date().toDateString();
                     return (
-                      <div
+                      <DayColumn
                         key={day.dateStr}
+                        date={dateOptions[i].value}
+                        disabled={disabledReason}
                         className={`min-h-48 min-w-0 p-0.5 sm:min-h-64 sm:p-1 ${
                           isToday ? "bg-warning" : "bg-card"
                         }`}
@@ -190,11 +202,14 @@ export default async function EmployeePage({
                             <EditTimeEntryForm
                               key={entry.id}
                               entry={entry}
+                              date={dateOptions[i].value}
+                              dateOptions={dateOptions}
+                              subtasks={subtasks}
                               disabled={disabledReason}
                             />
                           );
                         })}
-                      </div>
+                      </DayColumn>
                     );
                   })}
                 </div>
@@ -223,13 +238,9 @@ export default async function EmployeePage({
           </div>
         </div>
         <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
-          <ObjectivesAndKilometrageForm
+          <MultiPunchForm
             employeeId={employeeId}
-            weekStart={weekStart}
-            currentObjective={objective}
-            currentKilometrage={weeklyKilometrage?.kilometrage ?? 0}
-            weekly={weekly}
-            hoursDifference={hoursDifference}
+            activePunch={activePunch}
             disabled={disabledReason}
           />
           <ManualTimeForm
@@ -238,11 +249,13 @@ export default async function EmployeePage({
             defaultDate={defaultDate}
             disabled={disabledReason}
           />
-          <FillDayForm
+          <ObjectivesAndKilometrageForm
             employeeId={employeeId}
-            dateOptions={dateOptions}
-            defaultDate={defaultDate}
-            dailyHours={dailyHours}
+            weekStart={weekStart}
+            currentObjective={objective}
+            currentKilometrage={weeklyKilometrage?.kilometrage ?? 0}
+            weekly={weekly}
+            hoursDifference={hoursDifference}
             disabled={disabledReason}
           />
         </div>

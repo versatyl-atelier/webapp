@@ -85,6 +85,27 @@ export const ProjectContactsFormSchema = Schema.Struct({
   contacts: Schema.parseJson(Schema.Array(ContactSchema)),
 });
 
+export const ProjectCreateFormSchema = Schema.Struct({
+  name: Schema.Trim.pipe(
+    Schema.minLength(1, { message: () => PROJECT_NAME_REQUIRED_MESSAGE }),
+  ),
+});
+
+export type ProjectCreateFormData = typeof ProjectCreateFormSchema.Type;
+
+export type ProjectCreateFormErrors = {
+  name?: string[];
+  dataValidation?: string;
+  schemaValidation?: string;
+};
+
+export type ProjectCreateFormState =
+  | (FormState & {
+      errors?: ProjectCreateFormErrors;
+      projectId?: string;
+    })
+  | undefined;
+
 export type ProjectContactsFormData = typeof ProjectContactsFormSchema.Type;
 
 export type ProjectContactsFormErrors = {
@@ -106,11 +127,17 @@ export const PieceFormSchema = Schema.Struct({
   id: Schema.optional(IdFromFormSchema),
   phaseId: OptionalIdFromFormSchema,
   type: Schema.Trim,
+  description: Schema.Trim,
   caissonMaterial: Schema.Trim,
-  cladding: Schema.Trim,
-  doors: Schema.Trim,
+  cladding: Schema.parseJson(Schema.mutable(Schema.Array(Schema.Trim))).pipe(
+    Schema.transform(Schema.mutable(Schema.Array(Schema.String)), {
+      strict: true,
+      decode: (values) => values.filter(Boolean),
+      encode: (values) => values,
+    }),
+  ),
+  countertop: Schema.Trim,
   drawers: Schema.Trim,
-  hardware: Schema.Trim,
   finish: Schema.Trim,
   cabinetCount: Schema.Union(
     EmptyAsNullSchema,
@@ -127,11 +154,11 @@ export type PieceFormErrors = {
   id?: string[];
   phaseId?: string[];
   type?: string[];
+  description?: string[];
   caissonMaterial?: string[];
   cladding?: string[];
-  doors?: string[];
+  countertop?: string[];
   drawers?: string[];
-  hardware?: string[];
   finish?: string[];
   cabinetCount?: string[];
   dataValidation?: string;
@@ -141,6 +168,7 @@ export type PieceFormErrors = {
 export type PieceFormState =
   | (FormState & {
       errors?: PieceFormErrors;
+      pieceId?: number;
     })
   | undefined;
 
@@ -194,3 +222,7 @@ export const PhaseIdSchema = Schema.Int;
 export const PieceIdSchema = Schema.Int;
 export const NoteIdSchema = Schema.Int;
 export const PhaseNameSchema = Schema.Trim.pipe(Schema.minLength(1));
+export const FileSectionIdSchema = Schema.Int;
+export const FileSectionNameSchema = Schema.Trim.pipe(Schema.minLength(1));
+export const ProjectIdSchema = Schema.String.pipe(Schema.minLength(1));
+export const ProjectIdsSchema = Schema.Array(ProjectIdSchema);

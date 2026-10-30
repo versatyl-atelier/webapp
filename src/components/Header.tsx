@@ -21,7 +21,7 @@ import {
 export async function Header() {
   const session = await getSession();
   return (
-    <header className="bg-background z-30 flex h-12 w-full shrink-0 justify-between px-4">
+    <header className="bg-background z-30 flex h-12 w-full shrink-0 justify-between px-4 print:hidden">
       <div className="flex items-center gap-3">
         <h1 className="inline-block font-bold">
           <Link href={HOME_PATH}>{APP_NAME}</Link>

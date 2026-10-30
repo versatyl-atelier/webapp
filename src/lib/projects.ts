@@ -3,11 +3,14 @@ import {
   ACTIVE_PROJECT_PLURAL_LABEL,
   ACTIVE_PROJECT_SINGULAR_LABEL,
   CABINET_COUNT_READ_LABEL,
+  CLADDING_SEPARATOR,
   CONTACT_DETAIL_SEPARATOR,
   CURRENT_COLOR_LABEL,
   DEFAULT_SUGGESTIONS,
   DONE_PROJECT_STAGE,
   PHASE_NAME_PREFIX,
+  PIECE_CLADDING_READ_LABEL,
+  PIECE_COPY_SUFFIX,
   PIECE_TEXT_FIELDS,
   PROJECT_COLOR_SWATCHES,
   PROJECT_COLOR_VAR,
@@ -54,14 +57,18 @@ export type PieceRecord = Pick<
   | "id"
   | "phaseId"
   | "type"
+  | "description"
   | "caissonMaterial"
   | "cladding"
-  | "doors"
+  | "countertop"
   | "drawers"
-  | "hardware"
   | "finish"
   | "cabinetCount"
->;
+  | "coverFileId"
+  | "coverX"
+  | "coverY"
+  | "coverZoom"
+> & { noteCount: number };
 
 export type ProjectFiche = {
   id: string;
@@ -69,6 +76,7 @@ export type ProjectFiche = {
   stage: ProjectStage | null;
   color: string;
   address: string;
+  isManual: boolean;
   contacts: ContactRecord[];
   phases: PhaseRecord[];
   pieces: PieceRecord[];
@@ -115,6 +123,10 @@ export function isEmptyContact(contact: ContactRecord): boolean {
 export function pieceReadFields(
   piece: PieceRecord,
 ): { label: string; value: string }[] {
+  const cladding = {
+    label: PIECE_CLADDING_READ_LABEL,
+    value: piece.cladding.join(CLADDING_SEPARATOR),
+  };
   const fields = PIECE_TEXT_FIELDS.map(({ key, label }) => ({
     label,
     value: piece[key],
@@ -128,7 +140,11 @@ export function pieceReadFields(
             value: String(piece.cabinetCount),
           },
         ];
-  return [...fields, ...count].filter(({ value }) => value);
+  return [cladding, ...fields, ...count].filter(({ value }) => value);
+}
+
+export function pieceCopyName(name: string): string {
+  return name ? `${name}${PIECE_COPY_SUFFIX}` : name;
 }
 
 export function piecesByPhase(
@@ -158,9 +174,8 @@ export function buildSuggestions(
     | "type"
     | "caissonMaterial"
     | "cladding"
-    | "doors"
+    | "countertop"
     | "drawers"
-    | "hardware"
     | "finish"
   >[],
   contacts: readonly Pick<ContactRecord, "role" | "company">[],
@@ -176,10 +191,12 @@ export function buildSuggestions(
   return {
     type: from(pieces, "type"),
     caissonMaterial: from(pieces, "caissonMaterial"),
-    cladding: from(pieces, "cladding"),
-    doors: from(pieces, "doors"),
+    cladding: mergeSuggestions(
+      pieces.flatMap(({ cladding }) => cladding),
+      DEFAULT_SUGGESTIONS.cladding,
+    ),
+    countertop: from(pieces, "countertop"),
     drawers: from(pieces, "drawers"),
-    hardware: from(pieces, "hardware"),
     finish: from(pieces, "finish"),
     role: from(contacts, "role"),
     company: from(contacts, "company"),

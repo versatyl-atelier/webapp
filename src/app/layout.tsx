@@ -10,8 +10,9 @@ import { ThemeProvider } from "@/contexts/theme-provider";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { getSession } from "@/lib/session";
 import { isOpen } from "@/lib/sidebar";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default async function RootLayout({
   modals: React.ReactNode;
 }>) {
   const isSidebarOpen = await isOpen();
+  const role = (await getSession())?.role ?? null;
 
   return (
     <html
@@ -44,15 +46,18 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full font-sans antialiased`}
     >
-      <body className="bg-background text-foreground flex h-full flex-col overflow-hidden">
+      <body className="bg-background text-foreground flex h-full flex-col overflow-hidden print:block print:h-auto print:overflow-visible">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthEventsProvider>
             <TooltipProvider>
-              <SidebarProvider defaultOpen={isSidebarOpen} className="h-full">
-                <AppSidebar />
-                <SidebarInset className="min-h-0 min-w-0">
+              <SidebarProvider
+                defaultOpen={isSidebarOpen}
+                className="h-full print:h-auto"
+              >
+                <AppSidebar role={role} />
+                <SidebarInset className="min-h-0 min-w-0 print:block">
                   <Header />
-                  <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto print:block print:overflow-visible">
                     {children}
                     <OutsideTools>
                       <Footer />

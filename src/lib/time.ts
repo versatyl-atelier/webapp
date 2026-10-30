@@ -55,11 +55,8 @@ export function secondsToHours(seconds: number): number {
   return seconds / 3600;
 }
 
-export function calculateHoursNeeded(
-  targetHours: number,
-  existingHours: number,
-): number {
-  return Math.round((targetHours - existingHours) * 60) / 60;
+export function formatDecimalHours(decimal: number): string {
+  return `${(Number.isFinite(decimal) ? decimal : 0).toFixed(2)} h`;
 }
 
 export function formatTimeDisplay(decimal: number): string {
@@ -100,6 +97,16 @@ export function getMondayOfDate(date: Date): Date {
   const diff = result.getDate() - day + (day === 0 ? -6 : 1);
   result.setDate(diff);
   result.setHours(0, 0, 0, 0);
+  return result;
+}
+export function shiftToDay(instant: Date, day: Date): Date {
+  const result = new Date(day);
+  result.setHours(
+    instant.getHours(),
+    instant.getMinutes(),
+    instant.getSeconds(),
+    instant.getMilliseconds(),
+  );
   return result;
 }
 export function isSameDay(a: Date, b: Date) {

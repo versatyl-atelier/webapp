@@ -9,11 +9,11 @@ import {
   type EditTimeEntryFormErrors,
   type AddManualTimeFormState,
   type AddManualTimeFormErrors,
-  type FillDayFormState,
-  type FillDayFormErrors,
+  type MoveTimeEntryFormState,
+  type MoveTimeEntryFormErrors,
   EditTimeEntryFormSchema,
   AddManualTimeFormSchema,
-  FillDayFormSchema,
+  MoveTimeEntryFormSchema,
 } from "@/schemas/timeEntries.schemas";
 import { Role } from "@/generated/prisma/client";
 import { cachedGetter, protectedEffect } from "@/lib/effect";
@@ -21,13 +21,13 @@ import {
   addManualTimeEffect,
   deleteTimeEntryEffect,
   editTimeEntryEffect,
-  fillDayEffect,
   getTimeEntriesEffect,
+  moveTimeEntryEffect,
   putTimeEntryEffect,
 } from "@/effects/timeEntries";
 
 export const getTimeEntries = cachedGetter(getTimeEntriesEffect, [
-  Role.employee,
+  Role.atelier,
 ]);
 
 export async function editTimeEntry(
@@ -39,18 +39,18 @@ export async function editTimeEntry(
     typeof EditTimeEntryFormSchema,
     EditTimeEntryFormErrors
   >(formState, formData, EditTimeEntryFormSchema, editTimeEntryEffect, [
-    Role.employee,
+    Role.atelier,
   ]);
 }
 export const putTimeEntry = protectedEffect(
   putTimeEntryEffect,
-  [Role.employee],
+  [Role.atelier],
   "mutation",
 );
 
 export const deleteTimeEntry = protectedEffect(
   deleteTimeEntryEffect,
-  [Role.employee],
+  [Role.atelier],
   "mutation",
 );
 
@@ -63,17 +63,19 @@ export async function addManualTime(
     typeof AddManualTimeFormSchema,
     AddManualTimeFormErrors
   >(formState, formData, AddManualTimeFormSchema, addManualTimeEffect, [
-    Role.employee,
+    Role.atelier,
   ]);
 }
 
-export async function fillDay(
-  formState: FillDayFormState,
+export async function moveTimeEntry(
+  formState: MoveTimeEntryFormState,
   formData: FormData,
-): Promise<FillDayFormState> {
+): Promise<MoveTimeEntryFormState> {
   return runEffectAsFormAction<
-    FillDayFormState,
-    typeof FillDayFormSchema,
-    FillDayFormErrors
-  >(formState, formData, FillDayFormSchema, fillDayEffect, [Role.employee]);
+    MoveTimeEntryFormState,
+    typeof MoveTimeEntryFormSchema,
+    MoveTimeEntryFormErrors
+  >(formState, formData, MoveTimeEntryFormSchema, moveTimeEntryEffect, [
+    Role.atelier,
+  ]);
 }

@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import { COPY_COMMAND, MOVE_COMMAND } from "@/constants/timeEntries";
 import { FormState } from "@/schemas/forms.schemas";
 import { TimeEntryGetPayload } from "@/generated/prisma/models";
 
@@ -7,6 +8,8 @@ export const EditTimeEntryFormSchema = Schema.Struct({
   projectId: Schema.String,
   startTime: Schema.String,
   hours: Schema.String,
+  date: Schema.optional(Schema.String),
+  subtaskId: Schema.optional(Schema.String),
   command: Schema.Literal("save", "delete"),
 });
 
@@ -15,6 +18,8 @@ export type EditTimeEntryFormErrors = {
   projectId?: string[];
   startTime?: string[];
   hours?: string[];
+  date?: string[];
+  subtaskId?: string[];
   command?: string[];
 };
 
@@ -46,23 +51,21 @@ export type AddManualTimeFormState =
     })
   | undefined;
 
-export const FillDayFormSchema = Schema.Struct({
-  employeeId: Schema.String,
-  projectId: Schema.String,
-  target: Schema.String,
+export const MoveTimeEntryFormSchema = Schema.Struct({
+  timeEntryId: Schema.String,
   date: Schema.String,
+  command: Schema.Literal(MOVE_COMMAND, COPY_COMMAND),
 });
 
-export type FillDayFormErrors = {
-  employeeId?: string[];
-  projectId?: string[];
-  target?: string[];
+export type MoveTimeEntryFormErrors = {
+  timeEntryId?: string[];
   date?: string[];
+  command?: string[];
 };
 
-export type FillDayFormState =
+export type MoveTimeEntryFormState =
   | (FormState & {
-      errors?: FillDayFormErrors;
+      errors?: MoveTimeEntryFormErrors;
     })
   | undefined;
 
@@ -78,6 +81,9 @@ export type DateRange = {
 };
 
 export const timeEntryInclude = {
+  subtask: {
+    select: { name: true },
+  },
   projects: {
     include: {
       project: {

@@ -1,9 +1,15 @@
 import { Role } from "@/generated/prisma/enums";
 
 export const ROLE_RANK: Record<Role, number> = {
-  [Role.employee]: 1,
-  [Role.manager]: 2,
+  [Role.atelier]: 1,
+  [Role.employee]: 2,
+  [Role.manager]: 3,
 };
+
+export const ALL_EMPLOYEES_ACCESS_ROLES: readonly Role[] = [
+  Role.manager,
+  Role.atelier,
+];
 
 export const SESSION_EXPIRES_IN_SECONDS = 365 * 24 * 60 * 60;
 export const SESSION_UPDATE_AGE_SECONDS = 24 * 60 * 60;
@@ -11,10 +17,12 @@ export const MIN_PASSWORD_LENGTH = 8;
 
 export const LOGIN_PATH = "/login";
 export const CHANGE_PASSWORD_PATH = "/change-password";
+export const MANAGER_PATH = "/gestionnaire";
 export const REDIRECT_TO_PARAM = "redirectTo";
 export const EMAIL_PARAM = "email";
 export const PROTECTED_PATH_PREFIXES = [
   "/punch",
+  MANAGER_PATH,
   "/calendrier",
   "/projets",
   CHANGE_PASSWORD_PATH,
@@ -45,6 +53,8 @@ export const EMPLOYEE_REQUIRED_MESSAGE =
   "Un compte employé doit être lié à un employé";
 export const EMPLOYEE_UNAVAILABLE_MESSAGE =
   "Employé introuvable ou déjà lié à un compte";
+export const ATELIER_EMPLOYEE_MESSAGE =
+  "Un compte Atelier ne peut pas être lié à un employé";
 export const NAME_REQUIRED_MESSAGE = "Le nom est requis sans employé";
 export const CREATE_USER_FAILED_MESSAGE = "Impossible de créer le compte";
 export const NO_EMPLOYEE_LINKED_MESSAGE =
@@ -56,4 +66,5 @@ export const NO_EMPLOYEE_LABEL = "Aucun employé";
 export const ROLE_LABELS: Record<Role, string> = {
   [Role.employee]: "Employé",
   [Role.manager]: "Gestionnaire",
+  [Role.atelier]: "Atelier",
 };

@@ -49,11 +49,11 @@ export function ObjectivesAndKilometrageForm({
   }, [state]);
 
   return (
-    <div className="bg-card rounded-lg border-2 p-2.5">
+    <div className="bg-card rounded-lg border-2 p-2">
       <div className="border-primary mb-2 border-b-2 pb-1 text-center text-xs font-bold">
         Objectifs
       </div>
-      <form action={action} className="space-y-2.5">
+      <form action={action} className="space-y-1.5">
         <input type="hidden" name="employeeId" value={employeeId} />
         <input type="hidden" name="weekStart" value={weekStart.toString()} />
         <FormValidationAlerts errors={state?.errors} />
@@ -115,17 +115,19 @@ export function ObjectivesAndKilometrageForm({
           />
         </Field>
         <Button
+          size="sm"
           type="submit"
           disabled={pending || !!disabled}
-          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
+          className="w-full rounded-sm text-xs font-semibold uppercase"
         >
           Sauver
         </Button>
         <Button
+          size="sm"
           type="reset"
           variant="secondary"
           disabled={pending || !!disabled}
-          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
+          className="w-full rounded-sm text-xs font-semibold uppercase"
         >
           Annuler
         </Button>
