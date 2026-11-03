@@ -35,7 +35,7 @@ export const MANAGER_TOOL: Tool = {
   managerOnly: true,
 };
 
-export const TOOLS: Tool[] = [
+export const EMPLOYEE_TOOLS: Tool[] = [
   {
     href: "/calendrier",
     icon: "🗓",
