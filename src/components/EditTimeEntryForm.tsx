@@ -23,6 +23,7 @@ import {
   TIME_ENTRY_SOURCE_DATE_DRAG_TYPE,
 } from "@/constants/timeEntries";
 
+import { useIsCopyModifierPressed } from "@/hooks/use-copy-modifier";
 import { formatTimeDisplay } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -48,6 +49,7 @@ export default function EditTimeEntryForm({
   const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const canDrag = !disabled && !!entry.end;
+  const isCopyModifierPressed = useIsCopyModifierPressed();
   const [state, action, pending] = useActionState(editTimeEntry, undefined);
   useEffect(() => {
     if (state?.message) {
@@ -100,7 +102,11 @@ export default function EditTimeEntryForm({
             key={entry.id}
             className={cn(
               "hover:shadow-primary/50 mb-0.5 rounded p-0.5 text-center text-white transition-all hover:scale-110 hover:shadow-lg sm:mb-1 sm:p-1",
-              canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+              !canDrag && "cursor-pointer",
+              canDrag && isCopyModifierPressed && "cursor-copy",
+              canDrag &&
+                !isCopyModifierPressed &&
+                "cursor-grab active:cursor-grabbing",
             )}
             style={{
               backgroundColor: getProjectColor(projectName),
@@ -115,7 +121,7 @@ export default function EditTimeEntryForm({
             <div className="text-xs">{formatTimeDisplay(calculateHours())}</div>
           </div>
         </DialogTrigger>
-        <DialogContent className="border-2">
+        <DialogContent className="border-2 sm:w-max sm:max-w-[calc(100%-2rem)] sm:min-w-sm">
           <DialogHeader className="border-primary mb-4 border-b-4 pb-2.5 text-center">
             <DialogTitle className="text-lg font-bold">
               {"Modifier l'entrée de temps"}
@@ -152,7 +158,7 @@ export default function EditTimeEntryForm({
                 disabled={pending || !!disabled}
               />
             </FieldGroup>
-            <DialogFooter className="mt-5 flex justify-center gap-2.5 border-t-0 bg-transparent">
+            <DialogFooter className="mt-5 flex flex-row flex-wrap justify-center gap-2.5 border-t-0 bg-transparent sm:justify-center">
               <Button
                 type="submit"
                 disabled={pending || !!disabled}
