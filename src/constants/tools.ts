@@ -70,3 +70,4 @@ export const EMPLOYEE_TOOLS: Tool[] = [
     description: "Notes des projets",
   },
 ];
+export const KBD_CLASSES = "bg-muted text-2xs rounded-sm border px-1 font-sans";

@@ -11,14 +11,21 @@ export type ToastableState =
     }
   | undefined;
 
+type FormToastAction = {
+  label: string;
+  onClick: () => void;
+};
+
 type FormToastOptions = {
   toastErrors?: boolean;
   onSuccess?: () => void;
+  action?: FormToastAction;
+  duration?: number;
 };
 
 export function useFormToast(
   state: ToastableState,
-  { toastErrors = true, onSuccess }: FormToastOptions = {},
+  { toastErrors = true, onSuccess, action, duration }: FormToastOptions = {},
 ) {
   const router = useRouter();
 
@@ -26,7 +33,12 @@ export function useFormToast(
     if (state?.message) {
       onSuccess?.();
       router.refresh();
-      toast.success(state.message, { position: "top-left", icon: "✅" });
+      toast.success(state.message, {
+        position: "top-left",
+        icon: "✅",
+        action,
+        duration,
+      });
       return;
     }
     if (!toastErrors) return;

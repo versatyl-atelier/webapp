@@ -16,7 +16,12 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import type { ProjectOrTask } from "@/components/ProjectSelect";
 import TimeEntryFields, { type DateOption } from "@/components/TimeEntryFields";
 import { DEFAULT_SUBTASK_ID } from "@/constants/tasks";
-import { TIME_ENTRY_DRAG_TYPE } from "@/constants/timeEntries";
+import {
+  COPY_COMMAND,
+  DUPLICATE_ENTRY_LABEL,
+  TIME_ENTRY_DRAG_TYPE,
+  TIME_ENTRY_SOURCE_DATE_DRAG_TYPE,
+} from "@/constants/timeEntries";
 
 import { formatTimeDisplay } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -45,10 +50,7 @@ export default function EditTimeEntryForm({
   const canDrag = !disabled && !!entry.end;
   const [state, action, pending] = useActionState(editTimeEntry, undefined);
   useEffect(() => {
-    if (
-      state &&
-      (state.message === "Supprimé" || state.message === "Sauvegardé")
-    ) {
+    if (state?.message) {
       router.refresh();
       setIsOpen(false);
     }
@@ -76,6 +78,7 @@ export default function EditTimeEntryForm({
     if (event.target !== event.currentTarget) return;
     event.dataTransfer.effectAllowed = "copyMove";
     event.dataTransfer.setData(TIME_ENTRY_DRAG_TYPE, String(entry.id));
+    event.dataTransfer.setData(TIME_ENTRY_SOURCE_DATE_DRAG_TYPE, date);
     setIsDragging(true);
   }
 
@@ -95,11 +98,13 @@ export default function EditTimeEntryForm({
         <DialogTrigger className="block w-full">
           <div
             key={entry.id}
-            className="hover:shadow-primary/50 mb-0.5 cursor-pointer rounded p-0.5 text-center text-white transition-all hover:scale-110 hover:shadow-lg sm:mb-1 sm:p-1"
+            className={cn(
+              "hover:shadow-primary/50 mb-0.5 rounded p-0.5 text-center text-white transition-all hover:scale-110 hover:shadow-lg sm:mb-1 sm:p-1",
+              canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+            )}
             style={{
               backgroundColor: getProjectColor(projectName),
             }}
-            title={`${projectName} - ${formatTimeDisplay(calculateHours())}`}
           >
             <div className="text-xs font-bold wrap-anywhere">{projectName}</div>
             {entry.subtaskId !== DEFAULT_SUBTASK_ID && (
@@ -157,6 +162,16 @@ export default function EditTimeEntryForm({
                 className="rounded-sm px-5 py-2.5 text-xs font-bold"
               >
                 Sauvegarder
+              </Button>
+              <Button
+                type="submit"
+                disabled={pending || !!disabled}
+                name="command"
+                value={COPY_COMMAND}
+                variant="secondary"
+                className="rounded-sm px-5 py-2.5 text-xs font-bold"
+              >
+                {DUPLICATE_ENTRY_LABEL}
               </Button>
               <Button
                 type="submit"
