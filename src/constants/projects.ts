@@ -9,8 +9,6 @@ export const PROJECT_TABS = [
   { value: "notes", label: "Notes" },
 ] as const;
 
-export const DEFAULT_PROJECT_TAB = PROJECT_TABS[0].value;
-export const STRUCTURE_TAB = PROJECT_TABS[0].value;
 export const NOTES_TAB = PROJECT_TABS[2].value;
 
 export const PROJECT_TAB_PARAM = "tab";
@@ -18,6 +16,10 @@ export const PROJECT_NOTES_PATH_PATTERN = /^\/projets\/[^/]+\/notes\/?$/;
 
 export const PROJECT_TITLE_PLACEHOLDER = "Nom du projet (nom du client)";
 export const PROJECT_TITLE_LABEL = "Nom du projet";
+export const NEW_PROJECT_LABEL = "Nouveau projet";
+export const CREATE_PROJECT_LABEL = "Créer le projet";
+export const NEW_PROJECT_DIALOG_DESCRIPTION =
+  "Le dossier Dropbox du projet est créé en même temps.";
 export const PROJECT_COLOR_LABEL = "Couleur du projet";
 export const CURRENT_COLOR_LABEL = "Couleur actuelle";
 export const PROJECT_COLOR_VAR = "--project-color";
@@ -60,7 +62,6 @@ export const CANCEL_LABEL = "Annuler";
 export const CONTACTS_HEADING = "Coordonnées";
 export const ADD_CONTACT_LABEL = "Ajouter un contact";
 export const REMOVE_CONTACT_LABEL = "Retirer ce contact";
-export const NO_CONTACTS_LABEL = "Aucun contact.";
 export const UNNAMED_CONTACT_LABEL = "Contact sans nom";
 export const CONTACT_DETAIL_SEPARATOR = " · ";
 export const CONTACT_FIELDS = [
@@ -82,9 +83,14 @@ export const PROJECT_CARD_DIALOG_DESCRIPTION =
 export const PROJECT_CARD_ADDRESS_FALLBACK = "Adresse";
 
 export const PIECES_HEADING = "Pièces";
-export const PIECES_HINT =
-  "Par défaut, les pièces sont listées directement — pas besoin de phase pour un projet simple. « Ajouter une phase » ne devient utile que si le projet se divise en plusieurs livraisons, ou si le client revient plus tard pour un nouveau projet.";
 export const ADD_PHASE_LABEL = "Ajouter une phase";
+export const ADD_PHASE_SHORT_LABEL = "Phase";
+export const ADD_PIECE_SHORT_LABEL = "Pièce";
+export const ADD_CONTACT_SHORT_LABEL = "Contact";
+export const NOTES_HEADING = "Notes";
+export const NOTES_EMOJI = "📝";
+export const PIECE_COUNT_SINGULAR_LABEL = "pièce";
+export const PIECE_COUNT_PLURAL_LABEL = "pièces";
 export const REMOVE_PHASE_LABEL = "Supprimer cette phase";
 export const PHASE_NAME_LABEL = "Nom de la phase";
 export const PHASE_NAME_PREFIX = "Phase";
@@ -116,7 +122,6 @@ export const CLADDING_FORM_FIELD = "cladding";
 export const CLADDING_COMMIT_KEYS = ["Enter", ","] as const;
 export const CLADDING_REMOVE_KEY = "Backspace";
 export const NOTES_LINK_LABEL = "Notes générales";
-export const PIECE_GRID_MIN_WIDTH_VAR = "--container-3xs";
 export const TOAST_UNDO_DURATION_MS = 5000;
 export const PIECE_TYPE_PLACEHOLDER = "Ex. Cuisine, Salle de bain…";
 export const PIECE_PHASE_LABEL = "Phase";

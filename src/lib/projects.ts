@@ -27,6 +27,7 @@ import { ProjectType, type ProjectStage } from "@/generated/prisma/enums";
 import type { CSSProperties } from "react";
 import { daysBetween, toDateKey, type DateKey } from "@/lib/calendar";
 import { parseItemKey } from "@/lib/itemKey";
+import type { FileSectionRecord } from "@/lib/projectFiles";
 
 export function projectIdsToProjectData(projectIds: string[]) {
   return projectIds.map((projectId) => {
@@ -66,11 +67,11 @@ export type PieceRecord = Pick<
   | "drawers"
   | "finish"
   | "cabinetCount"
-  | "coverFileId"
+  | "coverUpdatedAt"
   | "coverX"
   | "coverY"
   | "coverZoom"
-> & { noteCount: number };
+> & { noteCount: number; dropboxLinked: boolean };
 
 export type ProjectFiche = {
   id: string;
@@ -79,6 +80,8 @@ export type ProjectFiche = {
   color: string;
   address: string;
   isManual: boolean;
+  dropboxLinked: boolean;
+  fileSections: FileSectionRecord[];
   contacts: ContactRecord[];
   phases: PhaseRecord[];
   pieces: PieceRecord[];

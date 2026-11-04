@@ -1,6 +1,21 @@
 import { Schema } from "effect";
 
 import {
+  DROPBOX_FILE_ID_PATTERN,
+  FILE_NAME_REQUIRED_MESSAGE,
+} from "@/constants/dropbox";
+import {
+  COVER_IMAGE_FIELD,
+  COVER_INVALID_TYPE_MESSAGE,
+  COVER_MAX_BYTES,
+  COVER_MIME_TYPE,
+  COVER_PIECE_FIELD,
+  COVER_TOO_LARGE_MESSAGE,
+  COVER_ZOOM_MAX,
+  COVER_ZOOM_MIN,
+  PERCENT,
+} from "@/constants/projectFiles";
+import {
   EMAIL_PATTERN,
   HEX_COLOR_PATTERN,
   INVALID_COLOR_MESSAGE,
@@ -248,3 +263,47 @@ export const FileSectionNameSchema = Schema.Trim.pipe(Schema.minLength(1));
 export const ProjectIdSchema = Schema.String.pipe(Schema.minLength(1));
 export const ProjectIdsSchema = Schema.Array(ProjectIdSchema);
 export const ContactIdSchema = Schema.Int;
+export const DropboxFileIdSchema = Schema.String.pipe(
+  Schema.pattern(DROPBOX_FILE_ID_PATTERN),
+);
+export const FileNameSchema = Schema.Trim.pipe(
+  Schema.minLength(1, { message: () => FILE_NAME_REQUIRED_MESSAGE }),
+);
+export const FileSizeSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.nonNegative(),
+);
+export const CoverFramingSchema = Schema.Struct({
+  x: Schema.Number.pipe(Schema.between(0, PERCENT)),
+  y: Schema.Number.pipe(Schema.between(0, PERCENT)),
+  zoom: Schema.Number.pipe(Schema.between(COVER_ZOOM_MIN, COVER_ZOOM_MAX)),
+});
+
+export const CoverImageFormSchema = Schema.Struct({
+  [COVER_PIECE_FIELD]: IdFromFormSchema,
+  [COVER_IMAGE_FIELD]: Schema.instanceOf(File).pipe(
+    Schema.filter(
+      (file) => file.type === COVER_MIME_TYPE || COVER_INVALID_TYPE_MESSAGE,
+    ),
+    Schema.filter(
+      (file) =>
+        (file.size > 0 && file.size <= COVER_MAX_BYTES) ||
+        COVER_TOO_LARGE_MESSAGE,
+    ),
+  ),
+});
+
+export type CoverImageFormData = typeof CoverImageFormSchema.Type;
+
+export type CoverImageFormErrors = {
+  [COVER_PIECE_FIELD]?: string[];
+  [COVER_IMAGE_FIELD]?: string[];
+  dataValidation?: string;
+  schemaValidation?: string;
+};
+
+export type CoverImageFormState =
+  | (FormState & {
+      errors?: CoverImageFormErrors;
+    })
+  | undefined;

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  coverUrl,
   mergePinOrder,
   movePinBefore,
   movePinBy,
@@ -76,13 +75,5 @@ describe("mergePinOrder", () => {
 
   it("drops unknown and duplicate ids", () => {
     expect(mergePinOrder(["x", "b", "b"], ["a", "b"])).toEqual(["b", "a"]);
-  });
-});
-
-describe("coverUrl", () => {
-  it("versions the url with the encoded file id", () => {
-    expect(coverUrl("p1", "id:AB/c")).toBe(
-      "/projets/p1/couverture?v=id%3AAB%2Fc",
-    );
   });
 });

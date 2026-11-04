@@ -157,6 +157,12 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
       color: true,
       address: true,
       isManual: true,
+      dropboxFolderId: true,
+      fileSections: {
+        where: { isDeleted: false },
+        select: { id: true, pieceId: true, name: true, isCustom: true },
+        orderBy: [{ sortOrder: SortOrder.asc }, { id: SortOrder.asc }],
+      },
       contacts: {
         where: { isDeleted: false },
         select: {
@@ -188,10 +194,11 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
           drawers: true,
           finish: true,
           cabinetCount: true,
-          coverFileId: true,
+          coverUpdatedAt: true,
           coverX: true,
           coverY: true,
           coverZoom: true,
+          dropboxFolderId: true,
           _count: { select: { notes: { where: { isDeleted: false } } } },
         },
         orderBy: [{ sortOrder: SortOrder.asc }, { id: SortOrder.asc }],
@@ -201,12 +208,17 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
   if (!project) {
     return null;
   }
+  const { dropboxFolderId, pieces, ...rest } = project;
   const fiche: ProjectFiche = {
-    ...project,
-    pieces: project.pieces.map(({ _count, ...piece }) => ({
-      ...piece,
-      noteCount: _count.notes,
-    })),
+    ...rest,
+    dropboxLinked: dropboxFolderId !== null,
+    pieces: pieces.map(
+      ({ _count, dropboxFolderId: pieceFolderId, ...piece }) => ({
+        ...piece,
+        noteCount: _count.notes,
+        dropboxLinked: pieceFolderId !== null,
+      }),
+    ),
   };
   return fiche;
 });

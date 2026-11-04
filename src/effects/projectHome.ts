@@ -1,7 +1,6 @@
 import { Effect, Schema } from "effect";
 
 import { getActiveSession } from "@/effects/auth";
-import { getDropboxThumbnail } from "@/effects/dropbox";
 import {
   accessibleProjectsWhere,
   assertProjectAccess,
@@ -11,7 +10,7 @@ import type { PrismaService } from "@/generated/effect-prisma";
 import type { ProjectSelect } from "@/generated/prisma/models";
 import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
 import { mergePinOrder, type HomeProject } from "@/lib/projectHome";
-import { DropboxError } from "@/schemas/dropbox.schemas";
+import { DEFAULT_COVER_FRAMING } from "@/lib/projectFiles";
 import { ProjectIdSchema, ProjectIdsSchema } from "@/schemas/projects.schemas";
 
 const homeProjectSelect = {
@@ -21,8 +20,14 @@ const homeProjectSelect = {
   stage: true,
   address: true,
   pieces: {
-    where: { isDeleted: false, coverFileId: { not: null } },
-    select: { coverFileId: true },
+    where: { isDeleted: false, coverUpdatedAt: { not: null } },
+    select: {
+      id: true,
+      coverUpdatedAt: true,
+      coverX: true,
+      coverY: true,
+      coverZoom: true,
+    },
     orderBy: [{ sortOrder: SortOrder.asc }, { id: SortOrder.asc }],
     take: 1,
   },
@@ -37,10 +42,17 @@ const toHomeProject = ({
   color: string;
   stage: HomeProject["stage"];
   address: string;
-  pieces: { coverFileId: string | null }[];
+  pieces: ({ id: number } & Pick<
+    HomeProject,
+    "coverUpdatedAt" | "coverX" | "coverY" | "coverZoom"
+  >)[];
 }): HomeProject => ({
   ...project,
-  coverFileId: pieces[0]?.coverFileId ?? null,
+  coverPieceId: pieces[0]?.id ?? null,
+  coverUpdatedAt: pieces[0]?.coverUpdatedAt ?? null,
+  coverX: pieces[0]?.coverX ?? DEFAULT_COVER_FRAMING.x,
+  coverY: pieces[0]?.coverY ?? DEFAULT_COVER_FRAMING.y,
+  coverZoom: pieces[0]?.coverZoom ?? DEFAULT_COVER_FRAMING.zoom,
 });
 
 export const getProjectHomeEffect = Effect.fn("getProjectHome")(function* (
@@ -162,26 +174,3 @@ export const reorderPinsEffect = Effect.fn("reorderPins")(function* (
     ),
   );
 });
-
-export const getProjectCoverImageEffect = Effect.fn("getProjectCoverImage")(
-  function* (prisma: PrismaService, projectId: string) {
-    yield* assertProjectAccess(prisma, projectId);
-    const piece = yield* prisma.projectPiece.findFirst({
-      where: { projectId, isDeleted: false, coverFileId: { not: null } },
-      select: { coverFileId: true },
-      orderBy: [{ sortOrder: SortOrder.asc }, { id: SortOrder.asc }],
-    });
-    if (!piece?.coverFileId) {
-      return null;
-    }
-    return yield* getDropboxThumbnail(piece.coverFileId).pipe(
-      Effect.catchIf(
-        (error) => error instanceof DropboxError,
-        (error) =>
-          Effect.logWarning("Cover thumbnail unavailable", error).pipe(
-            Effect.as(null),
-          ),
-      ),
-    );
-  },
-);

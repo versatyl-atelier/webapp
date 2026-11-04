@@ -5,9 +5,11 @@ import { useId, useState } from "react";
 
 import { ContactDialog } from "@/components/ContactDialog";
 import { ProjectLocationDialog } from "@/components/ProjectLocationDialog";
+import { RowTitle } from "@/components/RowTitle";
 import { Button } from "@/components/ui/button";
 import {
   ADD_CONTACT_LABEL,
+  ADD_CONTACT_SHORT_LABEL,
   CONTACTS_HEADING,
   PROJECT_CARD_ADDRESS_FALLBACK,
   PROJECT_CARD_ROLE_LABEL,
@@ -24,8 +26,9 @@ import { cn } from "@/lib/utils";
 type OpenDialog = "project" | "new" | { contactId: number } | null;
 
 const CARD_CLASS =
-  "bg-card focus-within:ring-ring/50 relative flex flex-col gap-1 rounded-xl border p-4 shadow-xs transition-shadow focus-within:ring-3 hover:shadow-md";
-const CARD_BUTTON_CLASS = "text-left outline-none after:absolute after:inset-0";
+  "bg-card focus-within:ring-ring/50 relative flex flex-col gap-1 rounded-xl border p-4 shadow-xs transition-[box-shadow,transform] focus-within:ring-3 hover:-translate-y-px hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0";
+const CARD_BUTTON_CLASS =
+  "text-left outline-hidden after:absolute after:inset-0";
 const CARD_LINK_CLASS =
   "hover:text-primary relative z-10 flex min-w-0 items-center gap-2 truncate";
 
@@ -52,10 +55,8 @@ export function ProjectContacts({
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h2 id={headingId} className="text-base font-semibold tracking-tight">
-        {CONTACTS_HEADING}
-      </h2>
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(var(--container-3xs),1fr))] gap-3.5">
+      <RowTitle id={headingId}>{CONTACTS_HEADING}</RowTitle>
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(var(--container-contact),1fr))] gap-3.5">
         <li className={CARD_CLASS}>
           <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
             <span
@@ -132,11 +133,12 @@ export function ProjectContacts({
           <Button
             type="button"
             variant="outline"
+            aria-label={ADD_CONTACT_LABEL}
             onClick={() => setDialog("new")}
-            className="text-muted-foreground min-h-24 w-full flex-1 border-dashed"
+            className="text-muted-foreground border-input min-h-24 w-full flex-1 rounded-xl border-2 border-dashed bg-transparent"
           >
             <Plus />
-            {ADD_CONTACT_LABEL}
+            {ADD_CONTACT_SHORT_LABEL}
           </Button>
         </li>
       </ul>

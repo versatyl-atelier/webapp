@@ -25,6 +25,8 @@ Project files live in Dropbox. Set these variables in `.env`, `.env.staging` and
 - The Dropbox app needs the `files.content.read`, `files.content.write`, `files.metadata.read` and `files.metadata.write` permissions
 - The refresh token is not the "Generate access token" button, which gives a 4-hour access token. Authorize the app at `https://www.dropbox.com/oauth2/authorize?client_id=<APP_KEY>&response_type=code&token_access_type=offline`, then exchange the returned code at `https://api.dropbox.com/oauth2/token` (`grant_type=authorization_code`, with the app key and secret as basic auth)
 - Never put real values in `.env.example`, it is committed
+- The app only creates Dropbox folders for projects created in the app. Imported (Trello) projects are never linked: `npm run db:unlinkNonManualDropbox` (also `:staging`/`:prod`) clears any link left on them, in the database only
+- Folders are tracked by Dropbox id. After deploying the id migration, run `npm run db:backfillDropboxFolderIds` (also `:staging`/`:prod`) once to fill the ids of existing app-created projects
 
 ### Day-to-day dev
 

@@ -14,16 +14,6 @@ export const NO_PINNED_PROJECTS_LABEL =
 
 export const PIN_PROJECT_LABEL = "Épingler";
 export const UNPIN_PROJECT_LABEL = "Retirer l’épingle";
-export const REORDER_PIN_HINT = "Alt + ← ou → pour déplacer";
-export const REORDER_BACK_KEY = "ArrowLeft";
-export const REORDER_FORWARD_KEY = "ArrowRight";
+export const REORDER_PIN_HINT_DEFAULT = "Alt + ← ou → pour déplacer";
+export const REORDER_PIN_HINT_APPLE = "⌥ + ← ou → pour déplacer";
 export const PROJECT_DRAG_TYPE = "application/x-versatyl-pin";
-
-export const COVER_PATH_SEGMENT = "couverture";
-export const COVER_VERSION_PARAM = "v";
-export const COVER_THUMBNAIL_SIZE = "w640h480";
-export const COVER_THUMBNAIL_FORMAT = "jpeg";
-export const COVER_THUMBNAIL_MODE = "fitone_bestfit";
-export const COVER_CONTENT_TYPE = "image/jpeg";
-export const COVER_CACHE_CONTROL = "private, max-age=86400";
-export const NOT_FOUND_STATUS = 404;

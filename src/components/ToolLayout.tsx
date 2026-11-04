@@ -16,7 +16,7 @@ export type ToolLayoutProps = ToolLayoutSlots & {
 
 export function ToolLayout({ sidebar, breadcrumb, children }: ToolLayoutProps) {
   return (
-    <div className="flex min-h-0 w-full flex-1 print:block">
+    <div className="flex min-h-0 w-full flex-1 overflow-hidden print:block print:overflow-visible">
       {sidebar}
       <SidebarInset className="bg-muted min-h-0 min-w-0 print:block print:bg-white">
         <div className="flex min-h-0 w-full min-w-md flex-1 flex-col print:block print:min-w-0">

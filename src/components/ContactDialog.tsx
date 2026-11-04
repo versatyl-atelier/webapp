@@ -35,8 +35,6 @@ import {
   REMOVE_CONTACT_LABEL,
   SAVE_LABEL,
   SAVED_TOAST_OPTIONS,
-  TOAST_UNDO_DURATION_MS,
-  UNDO_LABEL,
 } from "@/constants/projects";
 import {
   contactHeadline,
@@ -44,6 +42,7 @@ import {
   type FicheSuggestions,
 } from "@/lib/projects";
 import type { ContactFormState } from "@/schemas/projects.schemas";
+import { undoToast } from "@/lib/undoToast";
 
 type ContactField = (typeof CONTACT_FIELDS)[number]["key"];
 
@@ -87,18 +86,14 @@ export function ContactDialog({
     startTransition(async () => {
       await deleteContact(target.id);
       onClose();
-      toast(`${contactHeadline(target)} ${CONTACT_REMOVED_SUFFIX}`, {
-        duration: TOAST_UNDO_DURATION_MS,
-        action: {
-          label: UNDO_LABEL,
-          onClick: () => startTransition(() => restoreContact(target.id)),
-        },
-      });
+      undoToast(`${contactHeadline(target)} ${CONTACT_REMOVED_SUFFIX}`, () =>
+        startTransition(() => restoreContact(target.id)),
+      );
     });
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-11/12 overflow-y-auto sm:max-w-lg">
         <DialogHeader className="pr-20">
           <DialogTitle className="text-lg">{title}</DialogTitle>
           <DialogDescription className="sr-only">

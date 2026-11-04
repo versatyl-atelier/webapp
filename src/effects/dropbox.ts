@@ -1,29 +1,38 @@
 import { Config, Duration, Effect, Option, Redacted, Schema } from "effect";
 
 import {
-  COVER_CONTENT_TYPE,
-  COVER_THUMBNAIL_FORMAT,
-  COVER_THUMBNAIL_MODE,
-  COVER_THUMBNAIL_SIZE,
-} from "@/constants/projectHome";
-import {
   DROPBOX_API_ARG_HEADER,
   DROPBOX_API_URL,
   DROPBOX_ENDPOINTS,
   DROPBOX_FOLDER_CONFLICT_PREFIX,
   DROPBOX_FOLDER_TAG,
+  FILE_THUMBNAIL_TILE_SIZE,
   DROPBOX_LIST_LIMIT,
+  DROPBOX_NOT_FOLDER_PREFIX,
+  DROPBOX_NOT_FOUND_PREFIX,
   DROPBOX_PATH_RESOURCE_TAG,
   DROPBOX_REFRESH_GRANT,
   DROPBOX_THUMBNAIL_URL,
   DROPBOX_TOKEN_TTL_HOURS,
+  DROPBOX_UPLOAD_LINK_DURATION_SECONDS,
+  DROPBOX_UPLOAD_MODE,
+  THUMBNAIL_CONTENT_TYPE,
+  THUMBNAIL_FORMAT,
+  THUMBNAIL_MODE,
   DROPBOX_TOKEN_URL,
 } from "@/constants/dropbox";
 import {
   DropboxError,
+  DropboxDeleteSchema,
+  DropboxEntrySchema,
   DropboxErrorBodySchema,
+  DropboxFolderMissing,
+  DropboxFolderResultSchema,
+  DropboxFolderSchema,
   DropboxListSchema,
+  DropboxRestoreSchema,
   DropboxTemporaryLinkSchema,
+  DropboxUploadLinkSchema,
   DropboxTokenSchema,
   type DropboxEntry,
 } from "@/schemas/dropbox.schemas";
@@ -121,23 +130,45 @@ const dropboxRpc = <A, I>(
     return yield* Schema.decodeUnknown(Schema.parseJson(schema))(body);
   });
 
+export const isDropboxNotFound = (error: unknown): boolean =>
+  error instanceof DropboxError &&
+  ((error.summary?.startsWith(DROPBOX_NOT_FOUND_PREFIX) ?? false) ||
+    (error.summary?.startsWith(DROPBOX_NOT_FOLDER_PREFIX) ?? false));
+
 export const createDropboxFolder = Effect.fn("createDropboxFolder")(function* (
   path: string,
 ) {
   yield* Effect.annotateLogsScoped({ dropboxPath: path });
-  yield* dropboxRpc(
+  const created = yield* dropboxRpc(
     DROPBOX_ENDPOINTS.createFolder,
     { path, autorename: false },
-    Schema.Unknown,
+    DropboxFolderResultSchema,
   ).pipe(
+    Effect.map(({ metadata }) => metadata),
     Effect.catchIf(
       (error) =>
         error instanceof DropboxError &&
         (error.summary?.startsWith(DROPBOX_FOLDER_CONFLICT_PREFIX) ?? false),
-      () => Effect.void,
+      () =>
+        dropboxRpc(DROPBOX_ENDPOINTS.metadata, { path }, DropboxFolderSchema),
     ),
   );
+  return created;
 });
+
+export const resolveDropboxFolder = Effect.fn("resolveDropboxFolder")(
+  function* (folderId: string) {
+    return yield* dropboxRpc(
+      DROPBOX_ENDPOINTS.metadata,
+      { path: folderId },
+      DropboxFolderSchema,
+    ).pipe(
+      Effect.catchIf(isDropboxNotFound, () =>
+        Effect.fail(new DropboxFolderMissing({ folderId })),
+      ),
+    );
+  },
+);
 
 export const listDropboxFolder = Effect.fn("listDropboxFolder")(function* (
   path: string,
@@ -169,16 +200,41 @@ export const listDropboxSubfolders = Effect.fn("listDropboxSubfolders")(
   },
 );
 
+export const listDropboxChildFolders = Effect.fn("listDropboxChildFolders")(
+  function* (path: string) {
+    const entries = yield* listDropboxFolder(path);
+    return entries
+      .filter((entry) => entry[".tag"] === DROPBOX_FOLDER_TAG)
+      .map(({ id, name }) => ({ id, name }));
+  },
+);
+
 export const moveDropboxFolder = Effect.fn("moveDropboxFolder")(function* (
   from: string,
   to: string,
 ) {
   yield* Effect.annotateLogsScoped({ dropboxFrom: from, dropboxTo: to });
-  yield* dropboxRpc(
+  const { metadata } = yield* dropboxRpc(
     DROPBOX_ENDPOINTS.move,
     { from_path: from, to_path: to, autorename: false },
-    Schema.Unknown,
+    DropboxFolderResultSchema,
   );
+  return metadata;
+});
+
+export const renameDropboxFolder = Effect.fn("renameDropboxFolder")(function* (
+  folderId: string,
+  name: string,
+) {
+  const folder = yield* resolveDropboxFolder(folderId);
+  const parent = folder.path_display.slice(
+    0,
+    folder.path_display.length - folder.name.length,
+  );
+  if (folder.name.toLowerCase() === name.toLowerCase()) {
+    return folder;
+  }
+  return yield* moveDropboxFolder(folder.path_display, `${parent}${name}`);
 });
 
 export const dropboxTemporaryLink = Effect.fn("dropboxTemporaryLink")(
@@ -194,6 +250,7 @@ export const dropboxTemporaryLink = Effect.fn("dropboxTemporaryLink")(
 
 export const getDropboxThumbnail = Effect.fn("getDropboxThumbnail")(function* (
   fileId: string,
+  size: string = FILE_THUMBNAIL_TILE_SIZE,
 ) {
   const token = yield* cachedAccessToken;
   const response = yield* Effect.tryPromise({
@@ -204,9 +261,9 @@ export const getDropboxThumbnail = Effect.fn("getDropboxThumbnail")(function* (
           Authorization: `Bearer ${token}`,
           [DROPBOX_API_ARG_HEADER]: JSON.stringify({
             resource: { ".tag": DROPBOX_PATH_RESOURCE_TAG, path: fileId },
-            format: COVER_THUMBNAIL_FORMAT,
-            size: COVER_THUMBNAIL_SIZE,
-            mode: COVER_THUMBNAIL_MODE,
+            format: THUMBNAIL_FORMAT,
+            size,
+            mode: THUMBNAIL_MODE,
           }),
         },
       }),
@@ -225,5 +282,59 @@ export const getDropboxThumbnail = Effect.fn("getDropboxThumbnail")(function* (
     catch: (cause) =>
       new DropboxError({ endpoint: DROPBOX_THUMBNAIL_URL, cause }),
   });
-  return { bytes, contentType: COVER_CONTENT_TYPE };
+  return { bytes, contentType: THUMBNAIL_CONTENT_TYPE };
 });
+
+export const getDropboxMetadata = Effect.fn("getDropboxMetadata")(function* (
+  path: string,
+) {
+  return yield* dropboxRpc(
+    DROPBOX_ENDPOINTS.metadata,
+    { path },
+    DropboxEntrySchema,
+  );
+});
+
+export const deleteDropboxPath = Effect.fn("deleteDropboxPath")(function* (
+  path: string,
+) {
+  yield* Effect.annotateLogsScoped({ dropboxPath: path });
+  const { metadata } = yield* dropboxRpc(
+    DROPBOX_ENDPOINTS.delete,
+    { path },
+    DropboxDeleteSchema,
+  );
+  return metadata;
+});
+
+export const restoreDropboxFile = Effect.fn("restoreDropboxFile")(function* (
+  path: string,
+  rev: string,
+) {
+  yield* Effect.annotateLogsScoped({ dropboxPath: path });
+  return yield* dropboxRpc(
+    DROPBOX_ENDPOINTS.restore,
+    { path, rev },
+    DropboxRestoreSchema,
+  );
+});
+
+export const createDropboxUploadLink = Effect.fn("createDropboxUploadLink")(
+  function* (path: string) {
+    yield* Effect.annotateLogsScoped({ dropboxPath: path });
+    const { link } = yield* dropboxRpc(
+      DROPBOX_ENDPOINTS.uploadLink,
+      {
+        commit_info: {
+          path,
+          mode: DROPBOX_UPLOAD_MODE,
+          autorename: true,
+          mute: false,
+        },
+        duration: DROPBOX_UPLOAD_LINK_DURATION_SECONDS,
+      },
+      DropboxUploadLinkSchema,
+    );
+    return link;
+  },
+);
