@@ -81,7 +81,7 @@ export function FreezeForm({
       <Input type="hidden" name="frozen" value={weekFrozen ? 1 : 0} />
       <FormValidationAlerts
         errors={state?.errors}
-        className="absolute top-16 left-4 w-5/6"
+        className="absolute top-16 left-4 z-1 w-5/6"
       />
 
       <Button type="submit" size="xs" disabled={pending}>
