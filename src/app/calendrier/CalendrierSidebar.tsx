@@ -20,7 +20,7 @@ export async function CalendrierSidebar() {
   const canEdit = session !== null && hasRole(session.role, Role.manager);
 
   return (
-    <ToolSidebar glyph="🗓" title={CALENDAR_TITLE} href={CALENDAR_PATH}>
+    <ToolSidebar glyph="📅" title={CALENDAR_TITLE} href={CALENDAR_PATH}>
       <SidebarContent>
         <CalendarSearch />
       </SidebarContent>

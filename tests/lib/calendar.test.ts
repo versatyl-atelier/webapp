@@ -29,6 +29,7 @@ import {
   isDateKey,
   isFilterVisible,
   isOneOf,
+  isWeekend,
   linkableProjects,
   matchesSearch,
   mondayOf,
@@ -81,6 +82,15 @@ describe("isDateKey", () => {
     expect(isDateKey("2026-02-30")).toBe(false);
     expect(isDateKey("2026-7-14")).toBe(false);
     expect(isDateKey(undefined)).toBe(false);
+  });
+});
+
+describe("isWeekend", () => {
+  it("is true for saturday and sunday only", () => {
+    expect(isWeekend("2026-11-06")).toBe(false);
+    expect(isWeekend("2026-11-07")).toBe(true);
+    expect(isWeekend("2026-11-08")).toBe(true);
+    expect(isWeekend("2026-11-09")).toBe(false);
   });
 });
 
@@ -291,13 +301,28 @@ describe("formatting", () => {
 
   it("uses the subcategory and detail, or the hour, as subtitle", () => {
     expect(
-      occurrenceSubtitle({ subcategory: "", detail: "Quai 2", hour: 9 }),
+      occurrenceSubtitle({
+        subcategory: "",
+        detail: "Quai 2",
+        hour: 9,
+        allDay: false,
+      }),
     ).toBe("Quai 2");
-    expect(occurrenceSubtitle({ subcategory: "", detail: "", hour: 9 })).toBe(
-      "9 h",
-    );
     expect(
-      occurrenceSubtitle({ subcategory: "RH", detail: "Bureau", hour: 9 }),
+      occurrenceSubtitle({
+        subcategory: "",
+        detail: "",
+        hour: 9,
+        allDay: false,
+      }),
+    ).toBe("9 h");
+    expect(
+      occurrenceSubtitle({
+        subcategory: "RH",
+        detail: "Bureau",
+        hour: 9,
+        allDay: false,
+      }),
     ).toBe("RH · Bureau");
   });
 
@@ -307,6 +332,7 @@ describe("formatting", () => {
       detail: "Salle de pause",
       hour: 9,
       title: "SIMDUT",
+      allDay: false,
     };
     expect(occurrenceMeta(occurrence)).toBe("9 h · Formation · Salle de pause");
     expect(occurrenceDescription(occurrence)).toBe(
@@ -315,6 +341,21 @@ describe("formatting", () => {
     expect(
       occurrenceDescription({ ...occurrence, subcategory: "", detail: "" }),
     ).toBe("9 h — SIMDUT");
+  });
+
+  it("leaves out the hour of an all-day lanceur occurrence", () => {
+    const occurrence = {
+      subcategory: "(lanceur de dates)",
+      detail: "",
+      hour: 0,
+      title: "Peter Rose · PDM",
+      allDay: true,
+    };
+    expect(occurrenceMeta(occurrence)).toBe("(lanceur de dates)");
+    expect(occurrenceSubtitle(occurrence)).toBe("(lanceur de dates)");
+    expect(occurrenceDescription(occurrence)).toBe(
+      "Peter Rose · PDM · (lanceur de dates)",
+    );
   });
 
   it("formats labels in Québec French", () => {

@@ -9,8 +9,8 @@ import {
   LANCEUR_IMPORT_RERUN_HINT,
   LANCEUR_IMPORT_USAGE,
   LANCEUR_IMPORT_WRITE_LABEL,
-  LANCEUR_SETTING_KEYS,
 } from "@/constants/lanceur";
+import { PLAN_SETTING_KEYS } from "@/constants/lanceurPlan";
 import { LanceurOptionField } from "@/generated/prisma/enums";
 import { toDbDate, type DateKey } from "@/lib/calendar";
 import {
@@ -41,6 +41,8 @@ type OptionRecord = {
   sortOrder: number;
 };
 
+const SETTING_KEYS = Object.values(PLAN_SETTING_KEYS);
+
 const GROUPS_SQL = `
   SELECT g.id, g.name, g.color, g.etape, g.installateur, g.sortOrder,
          g.livraisonComment, p.submissionPrice AS price,
@@ -54,7 +56,7 @@ const OPTIONS_SQL = `
   SELECT field, value, sortOrder FROM chronoFieldOptions
   WHERE field IN ('etape', 'installateur')`;
 const CLOSURES_SQL = "SELECT closureDate, reason FROM shopClosures";
-const SETTINGS_SQL = `SELECT key, value, type FROM generalSettings WHERE key IN (${LANCEUR_SETTING_KEYS.map(() => "?").join(", ")})`;
+const SETTINGS_SQL = `SELECT key, value, type FROM generalSettings WHERE key IN (${SETTING_KEYS.map(() => "?").join(", ")})`;
 const COLOR_LABELS_SQL = "SELECT color, label FROM chronoColorLabels";
 const DATE_KEY_LENGTH = 10;
 
@@ -79,7 +81,7 @@ function readLegacy(path: string) {
   const closures = db.prepare(CLOSURES_SQL).all() as unknown as LegacyClosure[];
   const settings = db
     .prepare(SETTINGS_SQL)
-    .all(...LANCEUR_SETTING_KEYS) as unknown as LegacySetting[];
+    .all(...SETTING_KEYS) as unknown as LegacySetting[];
   const colorLabels = db
     .prepare(COLOR_LABELS_SQL)
     .all() as unknown as LegacyColorLabel[];

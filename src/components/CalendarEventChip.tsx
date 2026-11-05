@@ -1,10 +1,11 @@
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
 import {
-  eventColorClass,
+  occurrenceColorClass,
   occurrenceDescription,
   occurrenceSubtitle,
   type CalendarOccurrence,
 } from "@/lib/calendar";
+import { occurrenceColorStyle } from "@/lib/projects";
 import { cn } from "@/lib/utils";
 
 export type ChipHighlight = "none" | "match" | "dim";
@@ -27,14 +28,16 @@ export function CalendarEventChip({
   highlight,
 }: CalendarEventChipProps) {
   const description = occurrenceDescription(occurrence);
+  const chipStyle = occurrenceColorStyle(occurrence);
 
   if (compact) {
     return (
       <li
         title={description}
+        style={chipStyle}
         className={cn(
           "h-1.5 w-4/5 shrink-0 rounded-full",
-          eventColorClass(occurrence.color),
+          occurrenceColorClass(occurrence),
           HIGHLIGHT_CLASSES[highlight],
         )}
       >
@@ -46,9 +49,10 @@ export function CalendarEventChip({
   return (
     <li
       title={description}
+      style={chipStyle}
       className={cn(
-        "shrink-0 overflow-hidden rounded-sm px-1.5 pt-0.5 pb-1 text-white",
-        eventColorClass(occurrence.color),
+        "shrink-0 overflow-hidden rounded-sm px-1.5 pt-0.5 pb-1",
+        occurrenceColorClass(occurrence),
         HIGHLIGHT_CLASSES[highlight],
       )}
     >

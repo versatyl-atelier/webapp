@@ -6,6 +6,7 @@ import {
   LANCEUR_PHASE_SEPARATOR,
 } from "@/constants/lanceur";
 import { toDateKey, type DateKey } from "@/lib/calendar";
+import type { PlanItem } from "@/lib/lanceurPlan";
 import type { LanceurPatch } from "@/schemas/lanceur.schemas";
 
 export type LanceurRow = {
@@ -61,14 +62,16 @@ export function phaseLabel({
     : projectName;
 }
 
+const shortDateFormatter = new Intl.DateTimeFormat(
+  LANCEUR_LOCALE,
+  LANCEUR_DAY_MONTH_OPTIONS,
+);
+
 export function formatShortDate(date: DateKey | null): string {
   if (date === null) {
     return LANCEUR_NO_VALUE_LABEL;
   }
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString(
-    LANCEUR_LOCALE,
-    LANCEUR_DAY_MONTH_OPTIONS,
-  );
+  return shortDateFormatter.format(new Date(`${date}T00:00:00Z`));
 }
 
 export function formatPrice(price: number | null): string {
@@ -133,4 +136,16 @@ export function applyPatch(
     next.responsibleColor = employee?.color ?? null;
   }
   return next;
+}
+
+export function toPlanItem(row: LanceurRow): PlanItem {
+  return {
+    id: row.phaseId,
+    label: phaseLabel(row),
+    color: row.responsibleColor,
+    pdmDate: row.pdmDate,
+    approvalDate: row.approvalDate,
+    deliveryDate: row.deliveryDate,
+    price: row.price,
+  };
 }

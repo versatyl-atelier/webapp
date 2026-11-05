@@ -1,10 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useOptimistic, useTransition } from "react";
-import { toast } from "sonner";
 
-import { removeLanceurPhase, updateLanceurPhase } from "@/actions/lanceur";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -21,16 +18,18 @@ import {
   LANCEUR_COLUMNS,
   LANCEUR_COLUMN_ABBREVIATIONS,
   LANCEUR_NONE_VALUE,
+  LANCEUR_PRINT_CHECK,
+  LANCEUR_PRINT_COLUMN_WIDTH_CLASSES,
   LANCEUR_NO_RESPONSIBLE_LABEL,
   LANCEUR_REMOVE_PHASE_LABEL,
-  LANCEUR_SAVE_ERROR_MESSAGE,
   LANCEUR_SIGNED_FIELD_LABEL,
   LANCEUR_TABLE_EMPTY_LABEL,
   LANCEUR_TABLE_TITLE,
 } from "@/constants/lanceur";
-import { notifyLanceurChange } from "@/hooks/use-lanceur-sync";
+import { useLanceurRows } from "@/hooks/use-lanceur-rows";
 import {
-  applyPatch,
+  formatPrice,
+  formatShortDate,
   isApproved,
   mergeOptionValue,
   phaseLabel,
@@ -39,13 +38,14 @@ import {
 } from "@/lib/lanceur";
 import { projectColorStyle } from "@/lib/projects";
 import { cn } from "@/lib/utils";
-import type { LanceurPatch } from "@/schemas/lanceur.schemas";
 
 const HEADER_CELL_CLASS =
-  "bg-primary text-primary-foreground px-1.5 py-1.5 text-left text-2xs font-semibold tracking-wide uppercase";
+  "bg-primary text-primary-foreground px-1.5 py-1.5 text-left text-2xs font-semibold tracking-wide uppercase print:bg-foreground print:px-1 print:py-1 print:text-print print:text-background";
 const CELL_CLASS = "border px-0.5 py-0.5 align-middle";
+const PRINT_ONLY_CLASS = "hidden print:block";
+const PRINT_TEXT_CLASS = cn(PRINT_ONLY_CLASS, "px-1 text-print leading-tight");
 const BARE_CONTROL_CLASS =
-  "w-full rounded-sm border-transparent bg-transparent px-1 text-xs shadow-none md:text-xs dark:bg-transparent hover:bg-muted focus-visible:bg-muted dark:hover:bg-muted dark:focus-visible:bg-muted print:p-0 print:hover:bg-transparent";
+  "w-full rounded-sm border-transparent bg-transparent px-1 text-xs shadow-none md:text-xs dark:bg-transparent hover:bg-muted focus-visible:bg-muted dark:hover:bg-muted dark:focus-visible:bg-muted print:p-0 print:text-print print:hover:bg-transparent md:print:text-print";
 const CONTROL_CLASS = cn("h-7", BARE_CONTROL_CLASS);
 const SELECT_CLASS = cn(
   CONTROL_CLASS,
@@ -113,8 +113,6 @@ type LanceurTableProps = {
   today: string;
 };
 
-type RowUpdate = { phaseId: number; patch: LanceurPatch };
-
 export function LanceurTable({
   rows,
   employees,
@@ -122,37 +120,11 @@ export function LanceurTable({
   installateurs,
   today,
 }: LanceurTableProps) {
-  const [optimisticRows, applyOptimistic] = useOptimistic(
-    rows,
-    (current, { phaseId, patch }: RowUpdate) =>
-      current.map((row) =>
-        row.phaseId === phaseId ? applyPatch(row, patch, employees) : row,
-      ),
-  );
-  const [, startTransition] = useTransition();
-
-  function save(phaseId: number, patch: LanceurPatch) {
-    startTransition(async () => {
-      applyOptimistic({ phaseId, patch });
-      try {
-        const result = await updateLanceurPhase(phaseId, patch);
-        if (result?.error) {
-          toast.error(result.error);
-          return;
-        }
-        notifyLanceurChange();
-      } catch {
-        toast.error(LANCEUR_SAVE_ERROR_MESSAGE);
-      }
-    });
-  }
-
-  function remove(phaseId: number) {
-    startTransition(async () => {
-      await removeLanceurPhase(phaseId);
-      notifyLanceurChange();
-    });
-  }
+  const {
+    rows: optimisticRows,
+    save,
+    remove,
+  } = useLanceurRows(rows, employees);
 
   if (optimisticRows.length === 0) {
     return (
@@ -164,11 +136,17 @@ export function LanceurTable({
 
   return (
     <div className="overflow-x-auto print:overflow-visible">
-      <table className="w-full min-w-(--container-lanceur-table) table-fixed border-collapse text-xs print:min-w-0">
+      <table className="print-exact print:text-print w-full min-w-(--container-lanceur-table) table-fixed border-collapse text-xs print:min-w-0">
         <caption className="sr-only">{LANCEUR_TABLE_TITLE}</caption>
         <colgroup>
           {COLUMN_WIDTH_CLASSES.map((widthClass, index) => (
-            <col key={index} className={widthClass} />
+            <col
+              key={index}
+              className={cn(
+                widthClass,
+                LANCEUR_PRINT_COLUMN_WIDTH_CLASSES[index],
+              )}
+            />
           ))}
           <col className="w-9 print:hidden" />
         </colgroup>
@@ -194,7 +172,10 @@ export function LanceurTable({
         </thead>
         <tbody>
           {optimisticRows.map((row) => (
-            <tr key={row.phaseId} className="hover:bg-muted/50">
+            <tr
+              key={row.phaseId}
+              className="hover:bg-muted/50 print:break-inside-avoid"
+            >
               <td className={CELL_CLASS}>
                 <Input
                   key={row.priority}
@@ -224,23 +205,41 @@ export function LanceurTable({
               </td>
               <td className={CHECKBOX_CELL_CLASS}>
                 <Checkbox
-                  className="mx-auto"
+                  className="mx-auto print:hidden"
                   aria-label={LANCEUR_SIGNED_FIELD_LABEL}
                   checked={row.isSigned}
                   onCheckedChange={(checked) =>
                     save(row.phaseId, { isSigned: checked })
                   }
                 />
+                <span
+                  aria-hidden
+                  className={cn(
+                    PRINT_ONLY_CLASS,
+                    "text-punch-pos-diff text-print font-bold",
+                  )}
+                >
+                  {row.isSigned ? LANCEUR_PRINT_CHECK : ""}
+                </span>
               </td>
               <td className={CHECKBOX_CELL_CLASS}>
                 <Checkbox
-                  className="mx-auto"
+                  className="mx-auto print:hidden"
                   aria-label={LANCEUR_APPROVED_FIELD_LABEL}
                   checked={isApproved(row, today)}
                   onCheckedChange={(checked) =>
                     save(row.phaseId, { approvedOverride: checked })
                   }
                 />
+                <span
+                  aria-hidden
+                  className={cn(
+                    PRINT_ONLY_CLASS,
+                    "text-info text-print font-bold",
+                  )}
+                >
+                  {isApproved(row, today) ? LANCEUR_PRINT_CHECK : ""}
+                </span>
               </td>
               <td className={CELL_CLASS}>
                 <Select
@@ -283,7 +282,7 @@ export function LanceurTable({
                 >
                   <span
                     aria-hidden
-                    className="size-2.5 shrink-0 rounded-full bg-(--project-color)"
+                    className="print-exact size-2.5 shrink-0 rounded-full bg-(--project-color)"
                   />
                   <span className="leading-tight font-medium">
                     {phaseLabel(row)}
@@ -297,7 +296,7 @@ export function LanceurTable({
                   min={0}
                   step={100}
                   aria-label={LANCEUR_COLUMNS.price}
-                  className={cn(CONTROL_CLASS, "text-right")}
+                  className={cn(CONTROL_CLASS, "text-right print:hidden")}
                   defaultValue={row.price ?? ""}
                   onBlur={(event) => {
                     const price =
@@ -309,6 +308,9 @@ export function LanceurTable({
                     }
                   }}
                 />
+                <span className={cn(PRINT_TEXT_CLASS, "text-right")}>
+                  {row.price === null ? "" : formatPrice(row.price)}
+                </span>
               </td>
               <td className={CELL_CLASS}>
                 <OptionSelect
@@ -381,14 +383,19 @@ type DateCellProps = {
 
 function DateCell({ label, value, onChange }: DateCellProps) {
   return (
-    <Input
-      type="date"
-      aria-label={label}
-      className={DATE_CLASS}
-      value={value ?? ""}
-      onClick={(event) => event.currentTarget.showPicker?.()}
-      onChange={(event) => onChange(event.target.value || null)}
-    />
+    <>
+      <Input
+        type="date"
+        aria-label={label}
+        className={cn(DATE_CLASS, "print:hidden")}
+        value={value ?? ""}
+        onClick={(event) => event.currentTarget.showPicker?.()}
+        onChange={(event) => onChange(event.target.value || null)}
+      />
+      <span className={PRINT_TEXT_CLASS}>
+        {value === null ? "" : formatShortDate(value)}
+      </span>
+    </>
   );
 }
 

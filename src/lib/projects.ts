@@ -25,7 +25,12 @@ import type {
 } from "@/generated/prisma/client";
 import { ProjectType, type ProjectStage } from "@/generated/prisma/enums";
 import type { CSSProperties } from "react";
-import { daysBetween, toDateKey, type DateKey } from "@/lib/calendar";
+import {
+  daysBetween,
+  toDateKey,
+  type CalendarOccurrence,
+  type DateKey,
+} from "@/lib/calendar";
 import { parseItemKey } from "@/lib/itemKey";
 import type { FileSectionRecord } from "@/lib/projectFiles";
 
@@ -236,6 +241,14 @@ export function projectColorOptions(current: string): ColorOption[] {
 
 export function projectColorStyle(color: string): CSSProperties {
   return { [PROJECT_COLOR_VAR]: color } as CSSProperties;
+}
+
+export function occurrenceColorStyle(
+  occurrence: Pick<CalendarOccurrence, "customColor">,
+): CSSProperties | undefined {
+  return occurrence.customColor
+    ? projectColorStyle(occurrence.customColor)
+    : undefined;
 }
 
 export type PipelineProject = Pick<Project, "id" | "name" | "stage" | "color">;
