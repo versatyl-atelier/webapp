@@ -83,6 +83,7 @@ model User {
   noteVersions   ProjectNoteVersion[]
   projectViews   ProjectView[]
   projectPins    ProjectPin[]
+  lanceurLogs    LanceurLog[]
   calendarEvents CalendarEvent[]
 
   @@map("users")
@@ -398,10 +399,34 @@ model LanceurPhase {
 
   phase       ProjectPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
   responsible Employee?    @relation(fields: [responsibleId], references: [id], onDelete: SetNull)
+  logs        LanceurLog[]
 
   @@index([priority])
   @@index([responsibleId])
   @@map("lanceurPhases")
+}
+
+enum LanceurLogField {
+  price
+  pdmDate
+  approvalDate
+  deliveryDate
+}
+
+model LanceurLog {
+  id        Int             @id @default(autoincrement())
+  phaseId   Int
+  field     LanceurLogField
+  oldValue  String?
+  newValue  String?
+  userId    String?
+  createdAt DateTime        @default(now())
+
+  phase LanceurPhase @relation(fields: [phaseId], references: [phaseId], onDelete: Cascade)
+  user  User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([phaseId, createdAt])
+  @@map("lanceurLogs")
 }
 
 model LanceurOption {

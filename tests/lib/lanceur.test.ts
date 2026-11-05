@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   applyPatch,
   formatPrice,
+  groupLogEntries,
   formatShortDate,
   isApproved,
   mergeOptionValue,
@@ -145,5 +146,37 @@ describe("applyPatch", () => {
   it("leaves untouched fields alone", () => {
     const original = row({ etape: "a" });
     expect(applyPatch(original, { isSigned: true }, employees).etape).toBe("a");
+  });
+});
+
+describe("groupLogEntries", () => {
+  it("groups consecutive entries saved together by the same user", () => {
+    const groups = groupLogEntries([
+      {
+        id: 3,
+        field: "price",
+        oldValue: "1",
+        newValue: "2",
+        createdAt: "t2",
+        userName: "Luc",
+      },
+      {
+        id: 2,
+        field: "pdmDate",
+        oldValue: null,
+        newValue: "d",
+        createdAt: "t2",
+        userName: "Luc",
+      },
+      {
+        id: 1,
+        field: "price",
+        oldValue: null,
+        newValue: "1",
+        createdAt: "t1",
+        userName: "Luc",
+      },
+    ]);
+    expect(groups.map((group) => group.entries.length)).toEqual([2, 1]);
   });
 });

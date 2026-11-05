@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { LanceurProjectDialog } from "@/components/LanceurProjectDialog";
 import {
   LanceurSettingsDialog,
   type ClosureRecord,
@@ -39,15 +40,11 @@ import {
   EDIT_CANCEL_TITLE,
   EDIT_NO_CHANGE_CANCELLED_MESSAGE,
   EDIT_NO_CHANGE_SAVED_MESSAGE,
-  EDIT_REPORT_DATE_OPTIONS,
-  EDIT_REPORT_FILE_PREFIX,
-  EDIT_REPORT_MIME_TYPE,
   EDIT_SESSION_STORAGE_KEY,
   EDIT_STARTED_MESSAGE,
   editCancelDescription,
   editSavedMessage,
 } from "@/constants/lanceurEdit";
-import { LANCEUR_LOCALE } from "@/constants/lanceur";
 import {
   GANTT_DEFAULT_DAY_WIDTH,
   GANTT_JUMP_LABEL,
@@ -81,9 +78,12 @@ import {
   rangeDays,
   rangeIncluding,
 } from "@/lib/lanceurGantt";
-import { toPlanItem, type LanceurRow } from "@/lib/lanceur";
 import {
-  buildChangeReport,
+  toPlanItem,
+  type LanceurEmployee,
+  type LanceurRow,
+} from "@/lib/lanceur";
+import {
   computeEditChanges,
   snapshotRows,
   type EditSession,
@@ -100,13 +100,15 @@ import type { LanceurPatch } from "@/schemas/lanceur.schemas";
 
 const SEPARATOR_CLASS = "bg-border mx-1 h-5 w-px";
 const SWATCH_CLASS = "h-2.5 w-3.5 shrink-0 rounded-xs";
-const FILE_TIME_END = 16;
 
 type LanceurPlannerProps = {
   rows: LanceurRow[];
   settings: PlanSettings;
   today: DateKey;
   closures: ClosureRecord[] | null;
+  etapes: string[];
+  installateurs: string[];
+  employees: LanceurEmployee[];
 };
 
 function availabilityText(
@@ -144,30 +146,20 @@ function storeSession(session: EditSession | null) {
   }
 }
 
-function downloadReport(html: string, savedAt: Date) {
-  const stamp = savedAt
-    .toISOString()
-    .slice(0, FILE_TIME_END)
-    .replace(":", "")
-    .replace("T", "-");
-  const url = URL.createObjectURL(
-    new Blob([html], { type: EDIT_REPORT_MIME_TYPE }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${EDIT_REPORT_FILE_PREFIX}-${stamp}.html`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
 export function LanceurPlanner({
   rows,
   settings,
   today,
   closures,
+  etapes,
+  installateurs,
+  employees,
 }: LanceurPlannerProps) {
-  const { rows: currentRows, save, saveMany } = useLanceurRows(rows);
+  const { rows: currentRows, save, saveMany, remove } = useLanceurRows(rows);
+  const [dialogPhaseId, setDialogPhaseId] = useState<number | null>(null);
   const items = useMemo(() => currentRows.map(toPlanItem), [currentRows]);
+  const dialogRow =
+    currentRows.find(({ phaseId }) => phaseId === dialogPhaseId) ?? null;
   const [dayWidth, setDayWidth] = useState(GANTT_DEFAULT_DAY_WIDTH);
   const [range, setRange] = useState(() => initialRange(today));
   const [scrollRequest, setScrollRequest] = useState<GanttScrollRequest | null>(
@@ -247,14 +239,6 @@ export function LanceurPlanner({
       toast(EDIT_NO_CHANGE_SAVED_MESSAGE);
       return;
     }
-    const savedAt = new Date();
-    downloadReport(
-      buildChangeReport(
-        changes,
-        savedAt.toLocaleString(LANCEUR_LOCALE, EDIT_REPORT_DATE_OPTIONS),
-      ),
-      savedAt,
-    );
     updateSession(null);
     toast.success(editSavedMessage(changes.length));
   }
@@ -416,7 +400,20 @@ export function LanceurPlanner({
         scrollRequest={scrollRequest}
         onDatesChange={handleDatesChange}
         onExtend={handleExtend}
+        onOpenProject={setDialogPhaseId}
       />
+      {dialogRow && (
+        <LanceurProjectDialog
+          key={dialogRow.phaseId}
+          row={dialogRow}
+          etapes={etapes}
+          installateurs={installateurs}
+          employees={employees}
+          onClose={() => setDialogPhaseId(null)}
+          onSave={(patch) => save(dialogRow.phaseId, patch)}
+          onRemove={() => remove(dialogRow.phaseId)}
+        />
+      )}
       <div className="bg-card text-muted-foreground flex shrink-0 flex-wrap items-center gap-4 border-t px-4 py-1.5 text-xs print:hidden">
         <span className="flex items-center gap-1.5">
           <span
