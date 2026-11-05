@@ -141,6 +141,7 @@
   --container-file-tile-sm: 5.75rem;
   --container-file-section: 23.75rem;
   --container-contact: 13.75rem;
+  --container-lanceur-table: 82rem;
 
   --spacing-toolbar: calc(var(--spacing) * 10);
   --spacing-note-meta: calc(var(--spacing) * 49);
