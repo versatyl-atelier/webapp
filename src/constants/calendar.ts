@@ -4,6 +4,10 @@ import {
   RecurrenceEnd,
   RecurrenceFrequency,
 } from "@/generated/prisma/enums";
+import {
+  LANCEUR_DATE_KINDS,
+  type LanceurDateKind,
+} from "@/constants/lanceurCalendar";
 
 export const CALENDAR_PATH = "/calendrier";
 export const CALENDAR_EVENTS_PATH = `${CALENDAR_PATH}/evenements`;
@@ -39,7 +43,10 @@ export const REPEATS_VALUE = "on";
 
 export const RECURRENT_CATEGORY = "recurrent";
 
-export type EventCategory = CalendarEventType | typeof RECURRENT_CATEGORY;
+export const LANCEUR_CATEGORY = "lanceur";
+
+export type EventCategory =
+  CalendarEventType | typeof RECURRENT_CATEGORY | typeof LANCEUR_CATEGORY;
 
 export const EVENT_CATEGORIES: readonly EventCategory[] = [
   CalendarEventType.livraison,
@@ -50,6 +57,21 @@ export const EVENT_CATEGORIES: readonly EventCategory[] = [
   CalendarEventType.personnel,
 ];
 
+export type LanceurFilterKey = `${typeof LANCEUR_CATEGORY}:${LanceurDateKind}`;
+
+export type CalendarFilterKey = EventCategory | LanceurFilterKey;
+
+export const LANCEUR_FILTER_KEYS: Record<LanceurDateKind, LanceurFilterKey> = {
+  pdm: "lanceur:pdm",
+  approval: "lanceur:approval",
+  delivery: "lanceur:delivery",
+};
+
+export const CALENDAR_FILTER_KEYS: readonly CalendarFilterKey[] = [
+  ...EVENT_CATEGORIES,
+  ...LANCEUR_DATE_KINDS.map((kind) => LANCEUR_FILTER_KEYS[kind]),
+];
+
 export const EVENT_CATEGORY_LABELS: Record<EventCategory, string> = {
   livraison: "Livraison",
   installation: "Installation",
@@ -57,11 +79,13 @@ export const EVENT_CATEGORY_LABELS: Record<EventCategory, string> = {
   manuel: "Manuel",
   divers: "Divers",
   personnel: "Personnel",
+  lanceur: "Lanceur de dates",
 };
 
 export const EVENT_TYPE_EMOJIS: Partial<Record<EventCategory, string>> = {
   livraison: "🚚",
   installation: "🔨",
+  lanceur: "☄️",
 };
 
 export const LANCEUR_EVENT_TYPES: readonly CalendarEventType[] = [

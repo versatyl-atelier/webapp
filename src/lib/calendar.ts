@@ -21,8 +21,16 @@ import {
   REPEATABLE_EVENT_TYPES,
   WEEK_LABEL_RANGE_SEPARATOR,
   WORK_DAYS_PER_WEEK,
+  type CalendarFilterKey,
   type EventCategory,
 } from "@/constants/calendar";
+import {
+  CUSTOM_EVENT_BG_CLASS,
+  DARK_EVENT_TEXT_CLASS,
+  LIGHT_EVENT_TEXT_CLASS,
+} from "@/constants/lanceurCalendar";
+import { isLightColor } from "@/lib/color";
+import { cn } from "@/lib/utils";
 import {
   CalendarEventType,
   RecurrenceEnd,
@@ -61,6 +69,10 @@ export type CalendarOccurrence = {
   detail: string;
   hour: number;
   color: CalendarEventColor;
+  allDay: boolean;
+  customColor: string | null;
+  href: string | null;
+  filterKey: CalendarFilterKey;
 };
 
 export type CalendarDay = {
@@ -167,6 +179,12 @@ export function daysBetween(from: DateKey, to: DateKey): number {
 
 export function weekdayOf(date: DateKey): number {
   return fromDateKey(date).getUTCDay();
+}
+
+export function isWeekend(date: DateKey): boolean {
+  return (
+    (weekdayOf(date) + DAYS_PER_WEEK - 1) % DAYS_PER_WEEK >= WORK_DAYS_PER_WEEK
+  );
 }
 
 export function mondayOf(date: DateKey): DateKey {
@@ -339,7 +357,11 @@ export function expandOccurrences(
         title: event.title,
         detail: event.detail,
         hour: event.hour,
+        allDay: false,
         color: event.color,
+        customColor: null,
+        href: null,
+        filterKey: eventCategory(event),
       })),
     )
     .toSorted(compareOccurrences);
@@ -390,31 +412,44 @@ function occurrenceDetails(
   return [occurrence.subcategory, occurrence.detail].filter(Boolean);
 }
 
+function occurrenceHour(
+  occurrence: Pick<CalendarOccurrence, "hour" | "allDay">,
+): string | null {
+  return occurrence.allDay ? null : formatHour(occurrence.hour);
+}
+
 export function occurrenceSubtitle(
-  occurrence: Pick<CalendarOccurrence, "subcategory" | "detail" | "hour">,
+  occurrence: Pick<
+    CalendarOccurrence,
+    "subcategory" | "detail" | "hour" | "allDay"
+  >,
 ): string {
   return (
     occurrenceDetails(occurrence).join(OCCURRENCE_DETAIL_SEPARATOR) ||
-    formatHour(occurrence.hour)
+    (occurrenceHour(occurrence) ?? "")
   );
 }
 
 export function occurrenceMeta(
-  occurrence: Pick<CalendarOccurrence, "subcategory" | "detail" | "hour">,
+  occurrence: Pick<
+    CalendarOccurrence,
+    "subcategory" | "detail" | "hour" | "allDay"
+  >,
 ): string {
-  return [formatHour(occurrence.hour), ...occurrenceDetails(occurrence)].join(
-    OCCURRENCE_DETAIL_SEPARATOR,
-  );
+  return [occurrenceHour(occurrence), ...occurrenceDetails(occurrence)]
+    .filter(Boolean)
+    .join(OCCURRENCE_DETAIL_SEPARATOR);
 }
 
 export function occurrenceDescription(
   occurrence: Pick<
     CalendarOccurrence,
-    "subcategory" | "detail" | "hour" | "title"
+    "subcategory" | "detail" | "hour" | "title" | "allDay"
   >,
 ): string {
+  const hour = occurrenceHour(occurrence);
   return [
-    `${formatHour(occurrence.hour)} — ${occurrence.title}`,
+    hour ? `${hour} — ${occurrence.title}` : occurrence.title,
     ...occurrenceDetails(occurrence),
   ].join(OCCURRENCE_DETAIL_SEPARATOR);
 }
@@ -481,6 +516,26 @@ export function matchesSearch(
   return `${occurrence.title} ${occurrence.subcategory} ${occurrence.detail}`
     .toLocaleLowerCase(CALENDAR_LOCALE)
     .includes(needle);
+}
+
+export function isOccurrenceVisible(
+  occurrence: Pick<CalendarOccurrence, "filterKey">,
+  activeFilters: ReadonlySet<CalendarFilterKey>,
+): boolean {
+  return isFilterVisible(occurrence.filterKey, activeFilters);
+}
+
+export function occurrenceColorClass(
+  occurrence: Pick<CalendarOccurrence, "color" | "customColor">,
+): string {
+  return occurrence.customColor
+    ? cn(
+        CUSTOM_EVENT_BG_CLASS,
+        isLightColor(occurrence.customColor)
+          ? LIGHT_EVENT_TEXT_CLASS
+          : DARK_EVENT_TEXT_CLASS,
+      )
+    : cn(EVENT_COLOR_BG_CLASSES[occurrence.color], DARK_EVENT_TEXT_CLASS);
 }
 
 export function isFilterVisible<T>(value: T, active: ReadonlySet<T>): boolean {

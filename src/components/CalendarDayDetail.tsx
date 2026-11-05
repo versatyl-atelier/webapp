@@ -10,10 +10,11 @@ import {
   EDIT_EVENT_LABEL,
   EMPTY_DAY_LABEL,
 } from "@/constants/calendar";
+import { LANCEUR_EVENT_OPEN_LABEL } from "@/constants/lanceurCalendar";
 import { Role } from "@/generated/prisma/enums";
 import {
   calendarEventPath,
-  eventColorClass,
+  occurrenceColorClass,
   formatDayLabel,
   newCalendarEventPath,
   occurrenceMeta,
@@ -22,6 +23,7 @@ import {
 } from "@/lib/calendar";
 import { hasRole } from "@/lib/permissions";
 import { getSession } from "@/lib/session";
+import { occurrenceColorStyle } from "@/lib/projects";
 import { cn } from "@/lib/utils";
 
 type CalendarDayDetailProps = {
@@ -30,7 +32,9 @@ type CalendarDayDetailProps = {
 };
 
 const ROW_CLASS =
-  "flex items-center gap-2.5 rounded-md px-3 py-2 text-white overflow-hidden";
+  "flex items-center gap-2.5 rounded-md px-3 py-2 overflow-hidden";
+const ROW_LINK_CLASS =
+  "focus-visible:ring-ring transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none";
 
 function OccurrenceRowContent({
   occurrence,
@@ -91,29 +95,39 @@ export async function CalendarDayDetail({
         </p>
       ) : (
         <ul className="flex min-h-0 flex-col gap-2 overflow-y-auto pt-4">
-          {occurrences.map((occurrence) => (
-            <li key={occurrence.key}>
-              {canEdit ? (
-                <Link
-                  href={calendarEventPath(occurrence.eventId)}
-                  title={EDIT_EVENT_LABEL}
-                  className={cn(
-                    ROW_CLASS,
-                    "focus-visible:ring-ring transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-                    eventColorClass(occurrence.color),
-                  )}
-                >
-                  <OccurrenceRowContent occurrence={occurrence} />
-                </Link>
-              ) : (
-                <div
-                  className={cn(ROW_CLASS, eventColorClass(occurrence.color))}
-                >
-                  <OccurrenceRowContent occurrence={occurrence} />
-                </div>
-              )}
-            </li>
-          ))}
+          {occurrences.map((occurrence) => {
+            const href =
+              occurrence.href ??
+              (canEdit ? calendarEventPath(occurrence.eventId) : null);
+            return (
+              <li key={occurrence.key}>
+                {href ? (
+                  <Link
+                    href={href}
+                    title={
+                      occurrence.href
+                        ? LANCEUR_EVENT_OPEN_LABEL
+                        : EDIT_EVENT_LABEL
+                    }
+                    style={occurrenceColorStyle(occurrence)}
+                    className={cn(
+                      ROW_CLASS,
+                      ROW_LINK_CLASS,
+                      occurrenceColorClass(occurrence),
+                    )}
+                  >
+                    <OccurrenceRowContent occurrence={occurrence} />
+                  </Link>
+                ) : (
+                  <div
+                    className={cn(ROW_CLASS, occurrenceColorClass(occurrence))}
+                  >
+                    <OccurrenceRowContent occurrence={occurrence} />
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

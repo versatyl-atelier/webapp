@@ -10,7 +10,7 @@ import {
   MIN_WEEK_ROW_HEIGHT_PX,
   WEEKDAY_LABELS,
   WORK_DAYS_PER_WEEK,
-  type EventCategory,
+  type CalendarFilterKey,
 } from "@/constants/calendar";
 import { useCalendarFilters } from "@/contexts/calendar-filters-provider";
 import {
@@ -19,7 +19,7 @@ import {
   fittingWeekCount,
   formatDayLabel,
   formatDayNumber,
-  isFilterVisible,
+  isOccurrenceVisible,
   matchesSearch,
   type CalendarDay,
   type CalendarWeek,
@@ -56,7 +56,7 @@ function useFittingWeekCount(maxWeeks: number) {
 }
 
 export function CalendarView({ weeks }: CalendarViewProps) {
-  const { query, activeCategories } = useCalendarFilters();
+  const { query, activeFilters } = useCalendarFilters();
   const { containerRef, weekCount } = useFittingWeekCount(weeks.length);
   const visibleWeeks = weeks.slice(0, weekCount);
 
@@ -96,7 +96,7 @@ export function CalendarView({ weeks }: CalendarViewProps) {
                   key={day.date}
                   day={day}
                   query={query}
-                  activeCategories={activeCategories}
+                  activeFilters={activeFilters}
                 />
               ))}
             </ol>
@@ -110,16 +110,12 @@ export function CalendarView({ weeks }: CalendarViewProps) {
 type CalendarDayCellProps = {
   day: CalendarDay;
   query: string;
-  activeCategories: ReadonlySet<EventCategory>;
+  activeFilters: ReadonlySet<CalendarFilterKey>;
 };
 
-function CalendarDayCell({
-  day,
-  query,
-  activeCategories,
-}: CalendarDayCellProps) {
-  const occurrences = day.occurrences.filter(({ category }) =>
-    isFilterVisible(category, activeCategories),
+function CalendarDayCell({ day, query, activeFilters }: CalendarDayCellProps) {
+  const occurrences = day.occurrences.filter((occurrence) =>
+    isOccurrenceVisible(occurrence, activeFilters),
   );
   const hasQuery = query.trim().length > 0;
 

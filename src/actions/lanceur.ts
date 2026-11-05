@@ -13,6 +13,7 @@ import {
   getLanceurEmployeesEffect,
   getLanceurOptionsEffect,
   getLanceurRowsEffect,
+  getPlanSettingsEffect,
   removeLanceurPhaseEffect,
   updateLanceurPhaseEffect,
 } from "@/effects/lanceur";
@@ -31,6 +32,10 @@ export const getLanceurOptions = cachedGetter(getLanceurOptionsEffect, [
 ]);
 
 export const getLanceurEmployees = cachedGetter(getLanceurEmployeesEffect, [
+  Role.employee,
+]);
+
+export const getPlanSettings = cachedGetter(getPlanSettingsEffect, [
   Role.employee,
 ]);
 

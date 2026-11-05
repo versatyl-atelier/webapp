@@ -18,7 +18,14 @@ import type {
   ProjectPhaseFindManyArgs,
 } from "@/generated/prisma/models";
 import { toDateKey, toDbDate } from "@/lib/calendar";
+import {
+  PLAN_DEFAULT_CAPACITY_RATIO,
+  PLAN_DEFAULT_MAX_WEEK_SHARE,
+  PLAN_DEFAULT_MIN_PROD_DAYS,
+  PLAN_SETTING_KEYS,
+} from "@/constants/lanceurPlan";
 import type { LanceurRow } from "@/lib/lanceur";
+import type { PlanSettings } from "@/lib/lanceurPlan";
 import { normalizeStoredRichText } from "@/lib/richText";
 import {
   LanceurOptionInputSchema,
@@ -251,3 +258,41 @@ export const deleteLanceurOptionEffect = Effect.fn("deleteLanceurOption")(
     yield* prisma.lanceurOption.deleteMany({ where: { id: optionId } });
   },
 );
+
+function positiveSetting(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+export const getPlanSettingsEffect = Effect.fn("getPlanSettings")(function* (
+  prisma: PrismaService,
+) {
+  const [settings, closures] = yield* Effect.all(
+    [
+      prisma.setting.findMany({
+        where: { key: { in: Object.values(PLAN_SETTING_KEYS) } },
+      }),
+      prisma.shopClosure.findMany({
+        select: { closureDate: true },
+        orderBy: { closureDate: SortOrder.asc },
+      }),
+    ],
+    { concurrency: "unbounded" },
+  );
+  const values = new Map(settings.map(({ key, value }) => [key, value]));
+  return {
+    capacityRatio: positiveSetting(
+      values.get(PLAN_SETTING_KEYS.capacityRatio),
+      PLAN_DEFAULT_CAPACITY_RATIO,
+    ),
+    minProdDays: positiveSetting(
+      values.get(PLAN_SETTING_KEYS.minProdDays),
+      PLAN_DEFAULT_MIN_PROD_DAYS,
+    ),
+    maxWeekShare: positiveSetting(
+      values.get(PLAN_SETTING_KEYS.maxWeekShare),
+      PLAN_DEFAULT_MAX_WEEK_SHARE,
+    ),
+    closures: closures.map(({ closureDate }) => toDateKey(closureDate)),
+  } satisfies PlanSettings;
+});

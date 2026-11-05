@@ -6,7 +6,7 @@ import { LANCEUR_PATH } from "@/constants/tools";
 
 export async function LanceurSidebar() {
   return (
-    <ToolSidebar glyph="📅" title={LANCEUR_LABEL} href={LANCEUR_PATH}>
+    <ToolSidebar glyph="☄️" title={LANCEUR_LABEL} href={LANCEUR_PATH}>
       <SidebarContent>
         <LanceurNav />
       </SidebarContent>
