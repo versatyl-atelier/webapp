@@ -58,7 +58,10 @@ import {
   type PlanSettings,
 } from "@/lib/lanceurPlan";
 import { projectColorStyle } from "@/lib/projects";
+import { DIALOG_EDIT_LABEL } from "@/constants/lanceurDialog";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
 
 const SECTION_HEADER_CLASS =
   "text-muted-foreground bg-sidebar flex h-7.5 shrink-0 items-center border-b px-3 text-3xs font-bold tracking-widest uppercase";
@@ -93,6 +96,7 @@ type LanceurGanttProps = {
   scrollRequest: GanttScrollRequest | null;
   onDatesChange: (itemId: number, patch: Partial<PlanDates>) => void;
   onExtend: (side: GanttSide) => void;
+  onOpenProject: (itemId: number) => void;
 };
 
 function markOf(dates: PlanDates | null, day: DateKey): LanceurDateKind | null {
@@ -123,6 +127,7 @@ export const LanceurGantt = memo(function LanceurGantt({
   scrollRequest,
   onDatesChange,
   onExtend,
+  onOpenProject,
 }: LanceurGanttProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -430,24 +435,40 @@ export const LanceurGantt = memo(function LanceurGantt({
               </p>
             )}
             {items.map((item) => (
-              <button
+              <div
                 key={item.id}
-                type="button"
-                aria-pressed={item.id === selectedId}
-                title={item.label}
-                onClick={() => toggleSelected(item.id)}
                 style={projectColorStyle(item.color ?? LANCEUR_FALLBACK_COLOR)}
                 className={cn(
-                  "bg-card hover:bg-accent flex h-7 w-full items-center gap-2 border-b px-3 text-left text-xs font-medium",
+                  "bg-card hover:bg-accent group flex h-7 w-full items-center border-b",
                   item.id === selectedId && "bg-info/10 hover:bg-info/15",
                 )}
               >
-                <span
-                  aria-hidden
-                  className="size-2.5 shrink-0 rounded-xs bg-(--project-color)"
-                />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              </button>
+                <button
+                  type="button"
+                  aria-pressed={item.id === selectedId}
+                  title={item.label}
+                  onClick={() => toggleSelected(item.id)}
+                  onDoubleClick={() => onOpenProject(item.id)}
+                  className="flex h-full min-w-0 flex-1 items-center gap-2 pl-3 text-left text-xs font-medium"
+                >
+                  <span
+                    aria-hidden
+                    className="size-2.5 shrink-0 rounded-xs bg-(--project-color)"
+                  />
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`${DIALOG_EDIT_LABEL}: ${item.label}`}
+                  title={DIALOG_EDIT_LABEL}
+                  onClick={() => onOpenProject(item.id)}
+                  className="mr-1 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+                >
+                  <Pencil />
+                </Button>
+              </div>
             ))}
           </div>
 

@@ -15,6 +15,8 @@ import { richTextPlainLength } from "@/lib/richText";
 
 const IdSchema = Schema.Number.pipe(Schema.int());
 
+export const PhaseIdSchema = IdSchema;
+
 const DateKeySchema = Schema.String.pipe(
   Schema.pattern(DATE_KEY_PATTERN, {
     message: () => LANCEUR_INVALID_DATE_MESSAGE,
@@ -69,3 +71,27 @@ export type LanceurPatch = typeof LanceurPatchSchema.Type;
 export type LanceurOptionInput = typeof LanceurOptionInputSchema.Type;
 
 export type LanceurMutationResult = { error?: string };
+
+export const LanceurAddTargetSchema = Schema.Struct({
+  projectId: Schema.String,
+  phaseId: Schema.NullOr(IdSchema),
+});
+
+export const LanceurImportEntrySchema = Schema.Struct({
+  projectId: Schema.String,
+  phaseId: Schema.NullOr(IdSchema),
+  price: Schema.Number.pipe(Schema.positive()),
+  pdmDate: NullableDateSchema,
+  approvalDate: NullableDateSchema,
+  deliveryDate: NullableDateSchema,
+  etape: OptionSelectionSchema,
+  installateur: OptionSelectionSchema,
+  responsibleId: Schema.NullOr(IdSchema),
+});
+
+export const LanceurImportSchema = Schema.Array(LanceurImportEntrySchema).pipe(
+  Schema.minItems(1),
+);
+
+export type LanceurAddTarget = typeof LanceurAddTargetSchema.Type;
+export type LanceurImportEntry = typeof LanceurImportEntrySchema.Type;
