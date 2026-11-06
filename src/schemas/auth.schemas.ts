@@ -66,7 +66,6 @@ export type ChangePasswordFormState =
 
 export const CreateUserFormSchema = Schema.Struct({
   email: Schema.String.pipe(Schema.minLength(1)),
-  password: Schema.String.pipe(Schema.minLength(MIN_PASSWORD_LENGTH)),
   role: Schema.Enums(Role),
   employeeId: Schema.String,
   name: Schema.String,
@@ -74,14 +73,17 @@ export const CreateUserFormSchema = Schema.Struct({
 
 export type CreateUserFormErrors = {
   email?: string[];
-  password?: string[];
   role?: string[];
   employeeId?: string[];
   name?: string[];
 };
 
 export type CreateUserFormState =
-  (FormState & { errors?: CreateUserFormErrors }) | undefined;
+  | (FormState & {
+      errors?: CreateUserFormErrors;
+      temporaryPassword?: string;
+    })
+  | undefined;
 
 export class SessionNotFound extends Data.TaggedError(SESSION_NOT_FOUND_ERROR) {
   public toString() {

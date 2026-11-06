@@ -1,12 +1,15 @@
 import { describe, it, expect } from "vitest";
 
+import { PUNCH_PATH, PUNCH_REPORT_PATH, PUNCH_TOOLS } from "@/constants/punch";
 import { NOTES_TOOL_PATH, PROJECTS_PATH } from "@/constants/tools";
 import {
+  activeSectionHref,
   activeToolHref,
   changePasswordPath,
   employeePath,
   isProtectedPath,
   loginPath,
+  projectNotesPath,
   projectPath,
 } from "@/lib/paths";
 
@@ -50,7 +53,19 @@ describe("isProtectedPath", () => {
   it("protects /punch and everything under it", () => {
     expect(isProtectedPath("/punch")).toBe(true);
     expect(isProtectedPath("/punch/employe/1")).toBe(true);
-    expect(isProtectedPath("/punch/gestionnaire")).toBe(true);
+  });
+
+  it("protects the manager interface", () => {
+    expect(isProtectedPath("/gestionnaire")).toBe(true);
+  });
+
+  it("protects the home page but not every path under it", () => {
+    expect(isProtectedPath("/")).toBe(true);
+    expect(isProtectedPath("/login")).toBe(false);
+  });
+
+  it("protects the search page", () => {
+    expect(isProtectedPath("/recherche")).toBe(true);
   });
 
   it("protects the change-password page", () => {
@@ -59,7 +74,6 @@ describe("isProtectedPath", () => {
 
   it("does not match look-alike prefixes or public pages", () => {
     expect(isProtectedPath("/punchcard")).toBe(false);
-    expect(isProtectedPath("/")).toBe(false);
     expect(isProtectedPath("/login")).toBe(false);
   });
 });
@@ -69,8 +83,25 @@ describe("projectPath", () => {
     expect(projectPath("abc")).toBe("/projets/abc");
   });
 
-  it("carries the tab", () => {
-    expect(projectPath("abc", "notes")).toBe("/projets/abc?tab=notes");
+  it("points the notes tab to the notes page", () => {
+    expect(projectPath("abc", "notes")).toBe("/projets/abc/notes");
+    expect(projectNotesPath("abc")).toBe("/projets/abc/notes");
+  });
+});
+
+describe("activeSectionHref", () => {
+  it("keeps the punch section active on employee pages", () => {
+    expect(activeSectionHref(PUNCH_TOOLS, "/punch/employe/4")).toBe(PUNCH_PATH);
+  });
+
+  it("prefers the most specific section", () => {
+    expect(activeSectionHref(PUNCH_TOOLS, "/punch/rapport/imprimable")).toBe(
+      PUNCH_REPORT_PATH,
+    );
+  });
+
+  it("matches nothing outside the sections", () => {
+    expect(activeSectionHref(PUNCH_TOOLS, "/projets")).toBeUndefined();
   });
 });
 
@@ -85,6 +116,12 @@ describe("activeToolHref", () => {
     expect(
       activeToolHref("/projets/abc", new URLSearchParams("tab=notes")),
     ).toBe(NOTES_TOOL_PATH);
+  });
+
+  it("treats the notes page as the notes tool", () => {
+    expect(activeToolHref("/projets/abc/notes", new URLSearchParams())).toBe(
+      NOTES_TOOL_PATH,
+    );
   });
 
   it("matches nothing outside the tools", () => {

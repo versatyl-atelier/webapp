@@ -1,12 +1,11 @@
 import { PropsWithChildren } from "react";
 
+import { NewProjectButton } from "@/components/NewProjectButton";
 import { ToolSidebar } from "@/components/ToolSidebar";
-import { Button } from "@/components/ui/button";
 import {
   SidebarContent,
   SidebarFooter,
   SidebarMenu,
-  SidebarMenuButton,
 } from "@/components/ui/sidebar";
 
 export async function ProjetsSidebar({ children }: PropsWithChildren) {
@@ -15,9 +14,7 @@ export async function ProjetsSidebar({ children }: PropsWithChildren) {
       <SidebarContent>{children}</SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuButton render={<Button variant="default" />}>
-            + Nouveau projet
-          </SidebarMenuButton>
+          <NewProjectButton />
         </SidebarMenu>
       </SidebarFooter>
     </ToolSidebar>

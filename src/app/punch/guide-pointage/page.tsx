@@ -79,8 +79,9 @@ export default function Page() {
           </li>
           <li className="relative pl-6">
             <span className="text-primary absolute left-0 font-bold">✓</span>
-            <strong>Utiliser "Combler Journée"</strong> si des heures manquent
-            pour atteindre votre objectif
+            <strong>Changer un bloc de jour</strong> - Glissez-le vers une autre
+            journée (Ctrl + glisser pour le copier), ou changez sa date en
+            cliquant dessus
           </li>
           <li className="relative pl-6">
             <span className="text-primary absolute left-0 font-bold">✓</span>

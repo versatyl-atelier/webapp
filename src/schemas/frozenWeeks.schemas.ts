@@ -8,6 +8,8 @@ export const WEEK_FROZEN_MESSAGE =
 export const WEEK_FROZEN_NOTICE =
   "Semaine gelée (Lecture seule) : Demander à un gestionnaire pour dégeler";
 
+export const WEEK_FROZEN_MANAGER_NOTICE = "Semaine gelée (Lecture seule)";
+
 export class WeekFrozenError extends Data.TaggedError("WeekFrozenError")<{
   readonly employeeId: number;
   readonly weekStart: Date;

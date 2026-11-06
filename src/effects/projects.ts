@@ -9,7 +9,9 @@ import { Effect, Schema } from "effect";
 import { assertEmployeeAccess, getActiveSession } from "@/effects/auth";
 import { Role } from "@/generated/prisma/enums";
 import {
-  CONTACTS_SAVED_MESSAGE,
+  CONTACT_EMPTY_MESSAGE,
+  CONTACT_NOT_FOUND_MESSAGE,
+  CONTACT_SAVED_MESSAGE,
   NOTE_NOT_FOUND_MESSAGE,
   NOTE_SAVED_MESSAGE,
   PHASE_NOT_FOUND_MESSAGE,
@@ -29,6 +31,7 @@ import {
 import type { NoteRecord } from "@/lib/projectNotes";
 import { Forbidden } from "@/schemas/auth.schemas";
 import {
+  ContactIdSchema,
   NoteIdSchema,
   PhaseIdSchema,
   PhaseNameSchema,
@@ -39,8 +42,10 @@ import {
   type NoteFormState,
   type PieceFormData,
   type PieceFormState,
-  type ProjectContactsFormData,
-  type ProjectContactsFormState,
+  type ContactFormData,
+  type ContactFormState,
+  type ProjectLocationFormData,
+  type ProjectLocationFormState,
   type ProjectHeaderFormData,
   type ProjectHeaderFormState,
 } from "@/schemas/projects.schemas";
@@ -121,7 +126,7 @@ export const accessibleProjectsWhere = Effect.fn("accessibleProjectsWhere")(
   },
 );
 
-const assertProjectAccess = Effect.fn("assertProjectAccess")(function* (
+export const assertProjectAccess = Effect.fn("assertProjectAccess")(function* (
   prisma: PrismaService,
   projectId: string,
 ) {
@@ -143,7 +148,7 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
   if (!where) {
     return null;
   }
-  const project: ProjectFiche | null = yield* prisma.project.findFirst({
+  const project = yield* prisma.project.findFirst({
     where: { ...where, id },
     select: {
       id: true,
@@ -151,8 +156,18 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
       stage: true,
       color: true,
       address: true,
+      isManual: true,
+      dropboxFolderId: true,
+      fileSections: {
+        where: { isDeleted: false },
+        select: { id: true, pieceId: true, name: true, isCustom: true },
+        orderBy: [{ sortOrder: SortOrder.asc }, { id: SortOrder.asc }],
+      },
       contacts: {
+        where: { isDeleted: false },
         select: {
+          id: true,
+          address: true,
           role: true,
           name: true,
           company: true,
@@ -162,27 +177,50 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
         orderBy: { sortOrder: SortOrder.asc },
       },
       phases: {
+        where: { isDeleted: false },
         select: { id: true, name: true },
         orderBy: { sortOrder: SortOrder.asc },
       },
       pieces: {
+        where: { isDeleted: false },
         select: {
           id: true,
           phaseId: true,
           type: true,
+          description: true,
           caissonMaterial: true,
           cladding: true,
-          doors: true,
+          countertop: true,
           drawers: true,
-          hardware: true,
           finish: true,
           cabinetCount: true,
+          coverUpdatedAt: true,
+          coverX: true,
+          coverY: true,
+          coverZoom: true,
+          dropboxFolderId: true,
+          _count: { select: { notes: { where: { isDeleted: false } } } },
         },
         orderBy: [{ sortOrder: SortOrder.asc }, { id: SortOrder.asc }],
       },
     },
   });
-  return project;
+  if (!project) {
+    return null;
+  }
+  const { dropboxFolderId, pieces, ...rest } = project;
+  const fiche: ProjectFiche = {
+    ...rest,
+    dropboxLinked: dropboxFolderId !== null,
+    pieces: pieces.map(
+      ({ _count, dropboxFolderId: pieceFolderId, ...piece }) => ({
+        ...piece,
+        noteCount: _count.notes,
+        dropboxLinked: pieceFolderId !== null,
+      }),
+    ),
+  };
+  return fiche;
 });
 
 export const getPipelineProjectsEffect = Effect.fn("getPipelineProjects")(
@@ -244,21 +282,20 @@ export const getFicheSuggestionsEffect = Effect.fn("getFicheSuggestions")(
     const project = where ?? { id: { in: [] } };
     const [pieces, contacts] = yield* Effect.all([
       prisma.projectPiece.findMany({
-        where: { project },
+        where: { project, isDeleted: false },
         select: {
           type: true,
           caissonMaterial: true,
           cladding: true,
-          doors: true,
+          countertop: true,
           drawers: true,
-          hardware: true,
           finish: true,
         },
         orderBy: { updatedAt: SortOrder.desc },
         take: RECENT_SUGGESTION_ROWS,
       }),
       prisma.projectContact.findMany({
-        where: { project },
+        where: { project, isDeleted: false },
         select: { role: true, company: true },
         orderBy: { updatedAt: SortOrder.desc },
         take: RECENT_SUGGESTION_ROWS,
@@ -275,39 +312,108 @@ export const saveProjectHeaderEffect = Effect.fn("saveProjectHeader")(
     { projectId, ...data }: ProjectHeaderFormData,
   ) {
     yield* assertProjectAccess(prisma, projectId);
+    const current = yield* prisma.project.findUnique({
+      where: { id: projectId },
+      select: { isManual: true },
+    });
+    const { name, ...trelloOwned } = data;
+    yield* prisma.project.update({
+      where: { id: projectId },
+      data: current?.isManual ? { name, ...trelloOwned } : trelloOwned,
+    });
+    return { message: PROJECT_SAVED_MESSAGE };
+  },
+);
+
+export const saveProjectLocationEffect = Effect.fn("saveProjectLocation")(
+  function* (
+    prisma: PrismaService,
+    _formState: ProjectLocationFormState,
+    { projectId, ...data }: ProjectLocationFormData,
+  ) {
+    yield* assertProjectAccess(prisma, projectId);
     yield* prisma.project.update({ where: { id: projectId }, data });
     return { message: PROJECT_SAVED_MESSAGE };
   },
 );
 
-export const saveProjectContactsEffect = Effect.fn("saveProjectContacts")(
-  function* (
-    prisma: PrismaService,
-    _formState: ProjectContactsFormState,
-    form: ProjectContactsFormData,
-  ) {
-    yield* assertProjectAccess(prisma, form.projectId);
-    const contacts = form.contacts.filter(
-      (contact) => !isEmptyContact(contact),
-    );
-    yield* Effect.annotateLogsScoped({ contacts: contacts.length });
-    yield* prisma.$transaction(
-      Effect.all([
-        prisma.projectContact.deleteMany({
-          where: { projectId: form.projectId },
-        }),
-        prisma.projectContact.createMany({
-          data: contacts.map((contact, sortOrder) => ({
-            ...contact,
-            projectId: form.projectId,
-            sortOrder,
-          })),
-        }),
-      ]),
-    );
-    return { message: CONTACTS_SAVED_MESSAGE };
-  },
-);
+export const saveContactEffect = Effect.fn("saveContact")(function* (
+  prisma: PrismaService,
+  _formState: ContactFormState,
+  { projectId, id, ...fields }: ContactFormData,
+) {
+  yield* assertProjectAccess(prisma, projectId);
+  yield* Effect.annotateLogsScoped({ contactId: id });
+  if (id === undefined) {
+    if (isEmptyContact(fields)) {
+      return { errors: { dataValidation: CONTACT_EMPTY_MESSAGE } };
+    }
+    const siblings = yield* prisma.projectContact.findMany({
+      where: { projectId, isDeleted: false },
+      select: { sortOrder: true },
+    });
+    const contact = yield* prisma.projectContact.create({
+      data: { ...fields, projectId, sortOrder: nextSortOrder(siblings) },
+      select: { id: true },
+    });
+    yield* Effect.annotateLogsScoped({ createdContactId: contact.id });
+    return { message: CONTACT_SAVED_MESSAGE };
+  }
+  const current = yield* prisma.projectContact.count({
+    where: { id, projectId, isDeleted: false },
+  });
+  if (current === 0) {
+    return { errors: { dataValidation: CONTACT_NOT_FOUND_MESSAGE } };
+  }
+  yield* prisma.projectContact.update({ where: { id }, data: fields });
+  return { message: CONTACT_SAVED_MESSAGE };
+});
+
+const accessibleContact = Effect.fn("accessibleContact")(function* (
+  prisma: PrismaService,
+  contactId: unknown,
+) {
+  const id = yield* Schema.decodeUnknown(ContactIdSchema)(contactId);
+  yield* Effect.annotateLogsScoped({ contactId: id });
+  const contact = yield* prisma.projectContact.findUnique({
+    where: { id },
+    select: { id: true, projectId: true, isDeleted: true },
+  });
+  if (!contact) {
+    return yield* new Forbidden({});
+  }
+  yield* assertProjectAccess(prisma, contact.projectId);
+  return contact;
+});
+
+export const deleteContactEffect = Effect.fn("deleteContact")(function* (
+  prisma: PrismaService,
+  contactId: unknown,
+) {
+  const contact = yield* accessibleContact(prisma, contactId);
+  if (contact.isDeleted) {
+    return;
+  }
+  const session = yield* getActiveSession();
+  yield* prisma.projectContact.update({
+    where: { id: contact.id },
+    data: { isDeleted: true, deletedAt: new Date(), deletedBy: session.userId },
+  });
+});
+
+export const restoreContactEffect = Effect.fn("restoreContact")(function* (
+  prisma: PrismaService,
+  contactId: unknown,
+) {
+  const contact = yield* accessibleContact(prisma, contactId);
+  if (!contact.isDeleted) {
+    return;
+  }
+  yield* prisma.projectContact.update({
+    where: { id: contact.id },
+    data: { isDeleted: false, deletedAt: null, deletedBy: null },
+  });
+});
 
 const phaseBelongsTo = Effect.fn("phaseBelongsTo")(function* (
   prisma: PrismaService,
@@ -318,18 +424,18 @@ const phaseBelongsTo = Effect.fn("phaseBelongsTo")(function* (
     return true;
   }
   const count = yield* prisma.projectPhase.count({
-    where: { id: phaseId, projectId },
+    where: { id: phaseId, projectId, isDeleted: false },
   });
   return count > 0;
 });
 
-const piecesSortOrder = Effect.fn("piecesSortOrder")(function* (
+export const piecesSortOrder = Effect.fn("piecesSortOrder")(function* (
   prisma: PrismaService,
   projectId: string,
   phaseId: number | null,
 ) {
   const pieces = yield* prisma.projectPiece.findMany({
-    where: { projectId, phaseId },
+    where: { projectId, phaseId, isDeleted: false },
     select: { sortOrder: true },
   });
   return nextSortOrder(pieces);
@@ -356,7 +462,7 @@ export const savePieceEffect = Effect.fn("savePiece")(function* (
       select: { id: true },
     });
     yield* Effect.annotateLogsScoped({ createdPieceId: piece.id });
-    return { message: PIECE_SAVED_MESSAGE };
+    return { message: PIECE_SAVED_MESSAGE, pieceId: piece.id };
   }
   const current = yield* prisma.projectPiece.findFirst({
     where: { id, projectId },
@@ -375,7 +481,7 @@ export const savePieceEffect = Effect.fn("savePiece")(function* (
         : { sortOrder: yield* piecesSortOrder(prisma, projectId, phaseId) }),
     },
   });
-  return { message: PIECE_SAVED_MESSAGE };
+  return { message: PIECE_SAVED_MESSAGE, pieceId: id };
 });
 
 export const addPhaseEffect = Effect.fn("addPhase")(function* (
@@ -384,7 +490,7 @@ export const addPhaseEffect = Effect.fn("addPhase")(function* (
 ) {
   yield* assertProjectAccess(prisma, projectId);
   const phases = yield* prisma.projectPhase.findMany({
-    where: { projectId },
+    where: { projectId, isDeleted: false },
     select: { sortOrder: true },
   });
   const isFirst = phases.length === 0;
@@ -447,24 +553,36 @@ export const deletePhaseEffect = Effect.fn("deletePhase")(function* (
 ) {
   const phase = yield* phaseProjectId(prisma, phaseId);
   const fallback = yield* prisma.projectPhase.findFirst({
-    where: { projectId: phase.projectId, id: { not: phase.id } },
+    where: {
+      projectId: phase.projectId,
+      id: { not: phase.id },
+      isDeleted: false,
+    },
     select: { id: true },
     orderBy: { sortOrder: SortOrder.asc },
   });
   const fallbackId = fallback?.id ?? null;
   const sortOrder = yield* piecesSortOrder(prisma, phase.projectId, fallbackId);
+  const session = yield* getActiveSession();
   yield* prisma.$transaction(
     Effect.all([
       prisma.projectPiece.updateMany({
-        where: { phaseId: phase.id },
+        where: { phaseId: phase.id, isDeleted: false },
         data: { phaseId: fallbackId, sortOrder },
       }),
-      prisma.projectPhase.delete({ where: { id: phase.id } }),
+      prisma.projectPhase.update({
+        where: { id: phase.id },
+        data: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: session.userId,
+        },
+      }),
     ]),
   );
 });
 
-const accessiblePiece = Effect.fn("accessiblePiece")(function* (
+export const accessiblePiece = Effect.fn("accessiblePiece")(function* (
   prisma: PrismaService,
   pieceId: unknown,
 ) {
@@ -486,7 +604,35 @@ export const deletePieceEffect = Effect.fn("deletePiece")(function* (
   pieceId: unknown,
 ) {
   const piece = yield* accessiblePiece(prisma, pieceId);
-  yield* prisma.projectPiece.delete({ where: { id: piece.id } });
+  const session = yield* getActiveSession();
+  yield* prisma.projectPiece.update({
+    where: { id: piece.id },
+    data: { isDeleted: true, deletedAt: new Date(), deletedBy: session.userId },
+  });
+});
+
+export const restorePieceEffect = Effect.fn("restorePiece")(function* (
+  prisma: PrismaService,
+  pieceId: unknown,
+) {
+  const piece = yield* accessiblePiece(prisma, pieceId);
+  const phaseId = (yield* phaseBelongsTo(
+    prisma,
+    piece.projectId,
+    piece.phaseId,
+  ))
+    ? piece.phaseId
+    : null;
+  yield* prisma.projectPiece.update({
+    where: { id: piece.id },
+    data: {
+      phaseId,
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null,
+      sortOrder: yield* piecesSortOrder(prisma, piece.projectId, phaseId),
+    },
+  });
 });
 
 export const movePieceEffect = Effect.fn("movePiece")(function* (

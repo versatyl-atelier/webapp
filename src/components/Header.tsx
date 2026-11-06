@@ -21,39 +21,45 @@ import {
 export async function Header() {
   const session = await getSession();
   return (
-    <header className="bg-background z-30 flex h-12 w-full shrink-0 justify-between px-4">
+    <header className="bg-background z-30 flex h-12 w-full shrink-0 justify-between px-4 print:hidden">
       <div className="flex items-center gap-3">
         <h1 className="inline-block font-bold">
           <Link href={HOME_PATH}>{APP_NAME}</Link>
         </h1>
-        <Button
-          render={<Link href={SEARCH_PATH} aria-label={HEADER_SEARCH_LABEL} />}
-          nativeButton={false}
-          variant="ghost"
-          size="icon"
-          className="sm:hidden"
-        >
-          <Search />
-        </Button>
-        <Link
-          href={SEARCH_PATH}
-          aria-label={HEADER_SEARCH_LABEL}
-          className="hidden sm:block"
-        >
-          <InputGroup>
-            <InputGroupInput
-              readOnly
-              tabIndex={-1}
-              placeholder={HEADER_SEARCH_LABEL}
-              className="cursor-pointer"
-            />
-            <InputGroupAddon align="inline-end">
-              <SearchShortcutHint />
-            </InputGroupAddon>
-          </InputGroup>
-        </Link>
+        {session?.role && (
+          <>
+            <Button
+              render={
+                <Link href={SEARCH_PATH} aria-label={HEADER_SEARCH_LABEL} />
+              }
+              nativeButton={false}
+              variant="ghost"
+              size="icon"
+              className="sm:hidden"
+            >
+              <Search />
+            </Button>
+            <Link
+              href={SEARCH_PATH}
+              aria-label={HEADER_SEARCH_LABEL}
+              className="hidden sm:block"
+            >
+              <InputGroup>
+                <InputGroupInput
+                  readOnly
+                  tabIndex={-1}
+                  placeholder={HEADER_SEARCH_LABEL}
+                  className="cursor-pointer"
+                />
+                <InputGroupAddon align="inline-end">
+                  <SearchShortcutHint />
+                </InputGroupAddon>
+              </InputGroup>
+            </Link>
+          </>
+        )}
       </div>
-      <SearchShortcut />
+      {session?.role && <SearchShortcut />}
       <div className="my-auto flex items-center gap-2">
         {session ? (
           <LogoutForm name={session.name} role={session.role} />

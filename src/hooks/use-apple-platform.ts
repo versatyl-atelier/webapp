@@ -8,7 +8,7 @@ type NavigatorWithUserAgentData = Navigator & {
 
 const subscribe = () => () => {};
 
-function getIsApplePlatform(): boolean {
+export function getIsApplePlatform(): boolean {
   const nav: NavigatorWithUserAgentData = navigator;
   const platform = nav.userAgentData?.platform ?? nav.platform;
   return APPLE_PLATFORM_PATTERN.test(platform);

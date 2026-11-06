@@ -8,6 +8,7 @@ import {
   NoActivePunchError,
   PunchAlreadyActiveError,
 } from "@/schemas/multiPunch.schemas";
+import { DEFAULT_SUBTASK_ID } from "@/constants/tasks";
 import { assertEmployeeAccess } from "@/effects/auth";
 import { assertWeekNotFrozen, handleWeekFrozen } from "@/effects/frozenWeeks";
 
@@ -50,7 +51,7 @@ export const startMultiPunchEffect = Effect.fn("startMultiPunch")(
               end: null,
               subtaskId:
                 project.projectType === ProjectType.trello
-                  ? "1default"
+                  ? DEFAULT_SUBTASK_ID
                   : undefined,
               entryMethod: "punch",
             },

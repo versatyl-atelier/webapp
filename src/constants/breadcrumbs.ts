@@ -14,17 +14,20 @@ export const CALENDAR_EVENT_ID_PARAM = "id";
 export const COLLAPSED_CRUMBS_LABEL = "Afficher les niveaux précédents";
 
 export const STATIC_CRUMB_LABELS: Record<string, string> = {
+  "/gestionnaire": "Interface gestionnaire",
   "/calendrier": "Calendrier",
   "/calendrier/evenements": "Événements",
   "/calendrier/evenements/nouveau": "Nouvel événement",
   "/change-password": "Changer le mot de passe",
   "/login": "Connexion",
   "/punch": "Punch",
-  "/punch/advanced-reports": "Rapports avancés",
-  "/punch/gestionnaire": "Interface gestionnaire",
+  "/punch/feuille-de-temps": "Feuilles de temps",
+  "/punch/rapport": "Rapports",
+  "/punch/rapport/imprimable": "Version imprimable",
+  "/punch/taches": "Tâches",
   "/punch/guide-pointage": "Guide de pointage",
-  "/punch/reports": "Rapports",
   "/projets": "Projets",
+  "/projets/[id]/notes": "Notes",
   "/lanceur-de-dates": "Lanceur de dates",
   "/lanceur-de-dates/advanced-reports": "Rapports avancés",
   "/lanceur-de-dates/calendrier": "Calendrier",
