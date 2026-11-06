@@ -1,6 +1,21 @@
 import { Schema } from "effect";
 
 import {
+  DROPBOX_FILE_ID_PATTERN,
+  FILE_NAME_REQUIRED_MESSAGE,
+} from "@/constants/dropbox";
+import {
+  COVER_IMAGE_FIELD,
+  COVER_INVALID_TYPE_MESSAGE,
+  COVER_MAX_BYTES,
+  COVER_MIME_TYPE,
+  COVER_PIECE_FIELD,
+  COVER_TOO_LARGE_MESSAGE,
+  COVER_ZOOM_MAX,
+  COVER_ZOOM_MIN,
+  PERCENT,
+} from "@/constants/projectFiles";
+import {
   EMAIL_PATTERN,
   HEX_COLOR_PATTERN,
   INVALID_COLOR_MESSAGE,
@@ -42,13 +57,61 @@ const EmailSchema = Schema.Trim.pipe(
   ),
 );
 
-export const ContactSchema = Schema.Struct({
+export const ContactFormSchema = Schema.Struct({
+  projectId: Schema.String,
+  id: Schema.optional(IdFromFormSchema),
   role: Schema.Trim,
   name: Schema.Trim,
   company: Schema.Trim,
   phone: Schema.Trim,
   email: EmailSchema,
+  address: Schema.Trim,
 });
+
+export type ContactFormData = typeof ContactFormSchema.Type;
+
+export type ContactFormErrors = {
+  projectId?: string[];
+  id?: string[];
+  role?: string[];
+  name?: string[];
+  company?: string[];
+  phone?: string[];
+  email?: string[];
+  address?: string[];
+  dataValidation?: string;
+  schemaValidation?: string;
+};
+
+export type ContactFormState =
+  | (FormState & {
+      errors?: ContactFormErrors;
+    })
+  | undefined;
+
+export const ProjectLocationFormSchema = Schema.Struct({
+  projectId: Schema.String,
+  color: Schema.String.pipe(
+    Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
+  ),
+  address: Schema.Trim,
+});
+
+export type ProjectLocationFormData = typeof ProjectLocationFormSchema.Type;
+
+export type ProjectLocationFormErrors = {
+  projectId?: string[];
+  color?: string[];
+  address?: string[];
+  dataValidation?: string;
+  schemaValidation?: string;
+};
+
+export type ProjectLocationFormState =
+  | (FormState & {
+      errors?: ProjectLocationFormErrors;
+    })
+  | undefined;
 
 export const ProjectHeaderFormSchema = Schema.Struct({
   projectId: Schema.String,
@@ -56,10 +119,6 @@ export const ProjectHeaderFormSchema = Schema.Struct({
     Schema.minLength(1, { message: () => PROJECT_NAME_REQUIRED_MESSAGE }),
   ),
   stage: Schema.Union(NoStageAsNullSchema, Schema.Enums(ProjectStage)),
-  color: Schema.String.pipe(
-    Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
-  ),
-  address: Schema.Trim,
 });
 
 export type ProjectHeaderFormData = typeof ProjectHeaderFormSchema.Type;
@@ -68,8 +127,6 @@ export type ProjectHeaderFormErrors = {
   projectId?: string[];
   name?: string[];
   stage?: string[];
-  color?: string[];
-  address?: string[];
   dataValidation?: string;
   schemaValidation?: string;
 };
@@ -79,11 +136,6 @@ export type ProjectHeaderFormState =
       errors?: ProjectHeaderFormErrors;
     })
   | undefined;
-
-export const ProjectContactsFormSchema = Schema.Struct({
-  projectId: Schema.String,
-  contacts: Schema.parseJson(Schema.Array(ContactSchema)),
-});
 
 export const ProjectCreateFormSchema = Schema.Struct({
   name: Schema.Trim.pipe(
@@ -103,22 +155,6 @@ export type ProjectCreateFormState =
   | (FormState & {
       errors?: ProjectCreateFormErrors;
       projectId?: string;
-    })
-  | undefined;
-
-export type ProjectContactsFormData = typeof ProjectContactsFormSchema.Type;
-
-export type ProjectContactsFormErrors = {
-  projectId?: string[];
-  contacts?: string[];
-  [contactField: `contacts.${number}.${string}`]: string[] | undefined;
-  dataValidation?: string;
-  schemaValidation?: string;
-};
-
-export type ProjectContactsFormState =
-  | (FormState & {
-      errors?: ProjectContactsFormErrors;
     })
   | undefined;
 
@@ -226,3 +262,48 @@ export const FileSectionIdSchema = Schema.Int;
 export const FileSectionNameSchema = Schema.Trim.pipe(Schema.minLength(1));
 export const ProjectIdSchema = Schema.String.pipe(Schema.minLength(1));
 export const ProjectIdsSchema = Schema.Array(ProjectIdSchema);
+export const ContactIdSchema = Schema.Int;
+export const DropboxFileIdSchema = Schema.String.pipe(
+  Schema.pattern(DROPBOX_FILE_ID_PATTERN),
+);
+export const FileNameSchema = Schema.Trim.pipe(
+  Schema.minLength(1, { message: () => FILE_NAME_REQUIRED_MESSAGE }),
+);
+export const FileSizeSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.nonNegative(),
+);
+export const CoverFramingSchema = Schema.Struct({
+  x: Schema.Number.pipe(Schema.between(0, PERCENT)),
+  y: Schema.Number.pipe(Schema.between(0, PERCENT)),
+  zoom: Schema.Number.pipe(Schema.between(COVER_ZOOM_MIN, COVER_ZOOM_MAX)),
+});
+
+export const CoverImageFormSchema = Schema.Struct({
+  [COVER_PIECE_FIELD]: IdFromFormSchema,
+  [COVER_IMAGE_FIELD]: Schema.instanceOf(File).pipe(
+    Schema.filter(
+      (file) => file.type === COVER_MIME_TYPE || COVER_INVALID_TYPE_MESSAGE,
+    ),
+    Schema.filter(
+      (file) =>
+        (file.size > 0 && file.size <= COVER_MAX_BYTES) ||
+        COVER_TOO_LARGE_MESSAGE,
+    ),
+  ),
+});
+
+export type CoverImageFormData = typeof CoverImageFormSchema.Type;
+
+export type CoverImageFormErrors = {
+  [COVER_PIECE_FIELD]?: string[];
+  [COVER_IMAGE_FIELD]?: string[];
+  dataValidation?: string;
+  schemaValidation?: string;
+};
+
+export type CoverImageFormState =
+  | (FormState & {
+      errors?: CoverImageFormErrors;
+    })
+  | undefined;

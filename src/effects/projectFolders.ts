@@ -5,8 +5,10 @@ import { ConfigError, Effect, Schema } from "effect";
 import {
   createDropboxFolder,
   dropboxRootPath,
+  listDropboxChildFolders,
   listDropboxSubfolders,
-  moveDropboxFolder,
+  renameDropboxFolder,
+  resolveDropboxFolder,
 } from "@/effects/dropbox";
 import {
   accessiblePiece,
@@ -20,26 +22,35 @@ import {
   DROPBOX_SYNC_FAILED_MESSAGE,
   PROJECT_SECTIONS,
 } from "@/constants/dropbox";
+import { DROPBOX_SYNC_STATUS } from "@/constants/projectFiles";
 import {
   NEW_PROJECT_STAGE,
   PROJECT_CREATED_MESSAGE,
 } from "@/constants/projects";
 import type { PrismaService } from "@/generated/effect-prisma";
 import {
-  choosePieceFolder,
-  chooseProjectFolder,
+  folderLabel,
   joinDropboxPath,
+  newPieceFolder,
+  newProjectFolder,
   pieceSectionFolders,
+  planFolderAdoption,
   renumberedFolder,
   uniqueFolderName,
 } from "@/lib/dropbox";
 import { nextSortOrder, pieceCopyName } from "@/lib/projects";
 import { Forbidden } from "@/schemas/auth.schemas";
-import { DropboxError } from "@/schemas/dropbox.schemas";
+import {
+  DropboxError,
+  DropboxFolderMissing,
+  DropboxNotLinked,
+  type DropboxFolder,
+} from "@/schemas/dropbox.schemas";
 import {
   FileSectionIdSchema,
   FileSectionNameSchema,
   PieceIdSchema,
+  ProjectIdSchema,
   type PieceFormData,
   type PieceFormState,
   type ProjectCreateFormData,
@@ -48,170 +59,158 @@ import {
   type ProjectHeaderFormState,
 } from "@/schemas/projects.schemas";
 
-const sameFolder = (a: string, b: string) =>
-  a.toLowerCase() === b.toLowerCase();
+type DropboxSoftError =
+  | DropboxError
+  | DropboxFolderMissing
+  | DropboxNotLinked
+  | ConfigError.ConfigError;
+
+const isDropboxSoftError = (error: unknown): error is DropboxSoftError =>
+  error instanceof DropboxError ||
+  error instanceof DropboxFolderMissing ||
+  error instanceof DropboxNotLinked ||
+  ConfigError.isConfigError(error);
 
 export const bestEffortDropbox = <A, E, R>(
   effect: Effect.Effect<A, E, R>,
-): Effect.Effect<
-  A | null,
-  Exclude<E, DropboxError | ConfigError.ConfigError>,
-  R
-> =>
+): Effect.Effect<A | null, Exclude<E, DropboxSoftError>, R> =>
   effect.pipe(
     Effect.catchIf(
-      (error): error is Extract<E, DropboxError | ConfigError.ConfigError> =>
-        error instanceof DropboxError || ConfigError.isConfigError(error),
+      (error): error is Extract<E, DropboxSoftError> =>
+        isDropboxSoftError(error),
       (error) =>
         Effect.logWarning(DROPBOX_SYNC_FAILED_MESSAGE, error).pipe(
           Effect.as(null),
         ),
     ),
-  ) as Effect.Effect<
-    A | null,
-    Exclude<E, DropboxError | ConfigError.ConfigError>,
-    R
-  >;
+  ) as Effect.Effect<A | null, Exclude<E, DropboxSoftError>, R>;
 
-const ensureProjectSections = Effect.fn("ensureProjectSections")(function* (
-  prisma: PrismaService,
-  projectId: string,
-  projectDropboxPath: string,
+const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
+const parentOf = (folder: DropboxFolder) =>
+  folder.path_display.slice(0, folder.path_display.length - folder.name.length);
+
+const siblingNames = Effect.fn("siblingNames")(function* (
+  folder: DropboxFolder,
 ) {
-  const known = (yield* prisma.projectFileSection.findMany({
-    where: { projectId, pieceId: null, isCustom: false },
-    select: { dropboxFolder: true },
-  })).map(({ dropboxFolder }) => dropboxFolder);
-  for (const [sortOrder, { name, folder }] of PROJECT_SECTIONS.entries()) {
-    yield* createDropboxFolder(joinDropboxPath(projectDropboxPath, folder));
-    if (!known.includes(folder)) {
-      yield* prisma.projectFileSection.create({
-        data: { projectId, name, dropboxFolder: folder, sortOrder },
-      });
-    }
-  }
+  const names = yield* listDropboxSubfolders(parentOf(folder));
+  return names.filter((name) => !sameName(name, folder.name));
 });
 
-export const syncProjectFolders = Effect.fn("syncProjectFolders")(function* (
+const folderIfExists = (folderId: string) =>
+  resolveDropboxFolder(folderId).pipe(
+    Effect.catchTag("DropboxFolderMissing", () => Effect.succeed(null)),
+  );
+
+const linkedProjectFolder = Effect.fn("linkedProjectFolder")(function* (
   prisma: PrismaService,
   projectId: string,
 ) {
-  yield* Effect.annotateLogsScoped({ projectId });
   const project = yield* prisma.project.findUnique({
     where: { id: projectId },
-    select: { name: true, dropboxFolder: true },
+    select: { dropboxFolderId: true },
   });
-  if (!project) {
-    return yield* new Forbidden({ projectId });
+  if (!project?.dropboxFolderId) {
+    return yield* new DropboxNotLinked({ projectId });
   }
-  const root = yield* dropboxRootPath;
-  const existing = yield* listDropboxSubfolders(root);
-  const claimed = (yield* prisma.project.findMany({
-    where: { id: { not: projectId }, dropboxFolder: { not: null } },
-    select: { dropboxFolder: true },
-  })).flatMap(({ dropboxFolder }) => (dropboxFolder ? [dropboxFolder] : []));
-  const current = project.dropboxFolder;
-  let folder = current ?? chooseProjectFolder(project.name, existing, claimed);
-  if (current && project.name) {
-    const wanted = uniqueFolderName(
-      project.name,
-      [...existing, ...claimed].filter((other) => !sameFolder(other, current)),
-    );
-    if (!sameFolder(wanted, current) && existing.includes(current)) {
-      yield* moveDropboxFolder(
-        joinDropboxPath(root, current),
-        joinDropboxPath(root, wanted),
-      );
-      folder = wanted;
-    }
-  }
-  const path = joinDropboxPath(root, folder);
-  yield* createDropboxFolder(path);
-  if (folder !== current) {
-    yield* prisma.project.update({
-      where: { id: projectId },
-      data: { dropboxFolder: folder },
-    });
-  }
-  yield* ensureProjectSections(prisma, projectId, path);
-  return { folder, path };
+  return yield* resolveDropboxFolder(project.dropboxFolderId);
 });
 
-export const syncPieceFolders = Effect.fn("syncPieceFolders")(function* (
+const linkedParentFolder = Effect.fn("linkedParentFolder")(function* (
+  prisma: PrismaService,
+  projectId: string,
+  pieceId: number | null,
+) {
+  if (pieceId === null) {
+    return yield* linkedProjectFolder(prisma, projectId);
+  }
+  const piece = yield* prisma.projectPiece.findUnique({
+    where: { id: pieceId },
+    select: { dropboxFolderId: true },
+  });
+  if (!piece?.dropboxFolderId) {
+    return yield* new DropboxNotLinked({ projectId });
+  }
+  return yield* resolveDropboxFolder(piece.dropboxFolderId);
+});
+
+const createSectionFolders = Effect.fn("createSectionFolders")(function* (
+  prisma: PrismaService,
+  parent: DropboxFolder,
+  projectId: string,
+  pieceId: number | null,
+  sections: readonly { name: string; folder: string }[],
+) {
+  for (const [sortOrder, section] of sections.entries()) {
+    const created = yield* createDropboxFolder(
+      joinDropboxPath(parent.path_display, section.folder),
+    );
+    yield* prisma.projectFileSection.create({
+      data: {
+        projectId,
+        pieceId,
+        name: section.name,
+        dropboxFolder: created.name,
+        dropboxFolderId: created.id,
+        sortOrder,
+      },
+    });
+  }
+});
+
+const createProjectTree = Effect.fn("createProjectTree")(function* (
+  prisma: PrismaService,
+  projectId: string,
+  name: string,
+) {
+  const root = yield* dropboxRootPath;
+  const existing = yield* listDropboxSubfolders(root);
+  const folder = yield* createDropboxFolder(
+    joinDropboxPath(root, newProjectFolder(name, existing)),
+  );
+  yield* prisma.project.update({
+    where: { id: projectId },
+    data: { dropboxFolder: folder.name, dropboxFolderId: folder.id },
+  });
+  yield* createSectionFolders(
+    prisma,
+    folder,
+    projectId,
+    null,
+    PROJECT_SECTIONS,
+  );
+  return folder;
+});
+
+const createPieceTree = Effect.fn("createPieceTree")(function* (
   prisma: PrismaService,
   pieceId: number,
 ) {
-  yield* Effect.annotateLogsScoped({ pieceId });
   const piece = yield* prisma.projectPiece.findUnique({
     where: { id: pieceId },
-    select: { projectId: true, type: true, dropboxFolder: true },
+    select: { projectId: true, type: true, dropboxFolderId: true },
   });
-  if (!piece) {
-    return yield* new Forbidden({});
+  if (!piece || piece.dropboxFolderId) {
+    return null;
   }
-  const project = yield* syncProjectFolders(prisma, piece.projectId);
-  const existing = yield* listDropboxSubfolders(project.path);
-  const claimed = (yield* prisma.projectPiece.findMany({
-    where: {
-      projectId: piece.projectId,
-      id: { not: pieceId },
-      dropboxFolder: { not: null },
-    },
-    select: { dropboxFolder: true },
-  })).flatMap(({ dropboxFolder }) => (dropboxFolder ? [dropboxFolder] : []));
-  const current = piece.dropboxFolder;
-  let folder = current ?? choosePieceFolder(piece.type, existing, claimed);
-  if (current) {
-    const wanted = uniqueFolderName(
-      renumberedFolder(current, piece.type),
-      [...existing, ...claimed].filter((other) => !sameFolder(other, current)),
-    );
-    if (!sameFolder(wanted, current) && existing.includes(current)) {
-      yield* moveDropboxFolder(
-        joinDropboxPath(project.path, current),
-        joinDropboxPath(project.path, wanted),
-      );
-      folder = wanted;
-    }
-  }
-  const path = joinDropboxPath(project.path, folder);
-  yield* createDropboxFolder(path);
-  if (folder !== current) {
-    yield* prisma.projectPiece.update({
-      where: { id: pieceId },
-      data: { dropboxFolder: folder },
-    });
-  }
-  const known = (yield* prisma.projectFileSection.findMany({
-    where: { pieceId, isCustom: false },
-    select: { dropboxFolder: true },
-  })).map(({ dropboxFolder }) => dropboxFolder);
-  for (const [
-    sortOrder,
-    { name, folder: sectionFolder },
-  ] of pieceSectionFolders().entries()) {
-    yield* createDropboxFolder(joinDropboxPath(path, sectionFolder));
-    if (!known.includes(sectionFolder)) {
-      yield* prisma.projectFileSection.create({
-        data: {
-          projectId: piece.projectId,
-          pieceId,
-          name,
-          dropboxFolder: sectionFolder,
-          sortOrder,
-        },
-      });
-    }
-  }
-  return { folder, path };
+  const parent = yield* linkedProjectFolder(prisma, piece.projectId);
+  const existing = yield* listDropboxSubfolders(parent.path_display);
+  const folder = yield* createDropboxFolder(
+    joinDropboxPath(parent.path_display, newPieceFolder(piece.type, existing)),
+  );
+  yield* prisma.projectPiece.update({
+    where: { id: pieceId },
+    data: { dropboxFolder: folder.name, dropboxFolderId: folder.id },
+  });
+  yield* createSectionFolders(
+    prisma,
+    folder,
+    piece.projectId,
+    pieceId,
+    pieceSectionFolders(),
+  );
+  return folder;
 });
-
-export const ensurePieceFoldersEffect = Effect.fn("ensurePieceFolders")(
-  function* (prisma: PrismaService, pieceId: unknown) {
-    const piece = yield* accessiblePiece(prisma, pieceId);
-    yield* syncPieceFolders(prisma, piece.id);
-  },
-);
 
 export const createProjectEffect = Effect.fn("createProject")(function* (
   prisma: PrismaService,
@@ -224,11 +223,33 @@ export const createProjectEffect = Effect.fn("createProject")(function* (
     data: { id, name, isManual: true, stage: NEW_PROJECT_STAGE },
     select: { id: true },
   });
-  yield* bestEffortDropbox(syncProjectFolders(prisma, id));
+  yield* bestEffortDropbox(createProjectTree(prisma, id, name));
   return { message: PROJECT_CREATED_MESSAGE, projectId: id };
 });
 
-const accessibleSection = Effect.fn("accessibleSection")(function* (
+export const createProjectFolderEffect = Effect.fn("createProjectFolder")(
+  function* (prisma: PrismaService, projectId: unknown) {
+    const id = yield* Schema.decodeUnknown(ProjectIdSchema)(projectId);
+    yield* assertProjectAccess(prisma, id);
+    const project = yield* prisma.project.findUnique({
+      where: { id },
+      select: { name: true, isManual: true, dropboxFolderId: true },
+    });
+    if (!project?.isManual || project.dropboxFolderId) {
+      return yield* new Forbidden({ projectId: id });
+    }
+    yield* createProjectTree(prisma, id, project.name);
+    const pieces = yield* prisma.projectPiece.findMany({
+      where: { projectId: id, isDeleted: false },
+      select: { id: true },
+    });
+    for (const piece of pieces) {
+      yield* createPieceTree(prisma, piece.id);
+    }
+  },
+);
+
+export const accessibleSection = Effect.fn("accessibleSection")(function* (
   prisma: PrismaService,
   sectionId: unknown,
 ) {
@@ -242,6 +263,7 @@ const accessibleSection = Effect.fn("accessibleSection")(function* (
       pieceId: true,
       name: true,
       dropboxFolder: true,
+      dropboxFolderId: true,
       isCustom: true,
       isDeleted: true,
     },
@@ -251,17 +273,6 @@ const accessibleSection = Effect.fn("accessibleSection")(function* (
   }
   yield* assertProjectAccess(prisma, section.projectId);
   return section;
-});
-
-const sectionParentPath = Effect.fn("sectionParentPath")(function* (
-  prisma: PrismaService,
-  projectId: string,
-  pieceId: number | null,
-) {
-  if (pieceId === null) {
-    return (yield* syncProjectFolders(prisma, projectId)).path;
-  }
-  return (yield* syncPieceFolders(prisma, pieceId)).path;
 });
 
 export const addFileSectionEffect = Effect.fn("addFileSection")(function* (
@@ -281,12 +292,14 @@ export const addFileSectionEffect = Effect.fn("addFileSection")(function* (
       return yield* new Forbidden({ projectId });
     }
   }
-  const parent = yield* sectionParentPath(prisma, projectId, parsedPieceId);
-  const folder = uniqueFolderName(
-    parsedName,
-    yield* listDropboxSubfolders(parent),
+  const parent = yield* linkedParentFolder(prisma, projectId, parsedPieceId);
+  const existing = yield* listDropboxSubfolders(parent.path_display);
+  const folder = yield* createDropboxFolder(
+    joinDropboxPath(
+      parent.path_display,
+      uniqueFolderName(parsedName, existing),
+    ),
   );
-  yield* createDropboxFolder(joinDropboxPath(parent, folder));
   const siblings = yield* prisma.projectFileSection.findMany({
     where: { projectId, pieceId: parsedPieceId },
     select: { sortOrder: true },
@@ -296,7 +309,8 @@ export const addFileSectionEffect = Effect.fn("addFileSection")(function* (
       projectId,
       pieceId: parsedPieceId,
       name: parsedName,
-      dropboxFolder: folder,
+      dropboxFolder: folder.name,
+      dropboxFolderId: folder.id,
       isCustom: true,
       sortOrder: nextSortOrder(siblings),
     },
@@ -310,30 +324,18 @@ export const renameFileSectionEffect = Effect.fn("renameFileSection")(
       return yield* new Forbidden({ projectId: section.projectId });
     }
     const parsedName = yield* Schema.decodeUnknown(FileSectionNameSchema)(name);
-    const current = section.dropboxFolder;
-    const parent = yield* sectionParentPath(
-      prisma,
-      section.projectId,
-      section.pieceId,
-    );
-    let folder = current;
-    if (current) {
-      const existing = yield* listDropboxSubfolders(parent);
+    let folderName = section.dropboxFolder;
+    if (section.dropboxFolderId) {
+      const current = yield* resolveDropboxFolder(section.dropboxFolderId);
       const wanted = uniqueFolderName(
-        parsedName,
-        existing.filter((other) => !sameFolder(other, current)),
+        renumberedFolder(current.name, parsedName),
+        yield* siblingNames(current),
       );
-      if (!sameFolder(wanted, current) && existing.includes(current)) {
-        yield* moveDropboxFolder(
-          joinDropboxPath(parent, current),
-          joinDropboxPath(parent, wanted),
-        );
-        folder = wanted;
-      }
+      folderName = (yield* renameDropboxFolder(current.id, wanted)).name;
     }
     yield* prisma.projectFileSection.update({
       where: { id: section.id },
-      data: { name: parsedName, dropboxFolder: folder },
+      data: { name: parsedName, dropboxFolder: folderName },
     });
   },
 );
@@ -369,6 +371,24 @@ export const restoreFileSectionEffect = Effect.fn("restoreFileSection")(
   },
 );
 
+const renamePieceFolder = Effect.fn("renamePieceFolder")(function* (
+  prisma: PrismaService,
+  pieceId: number,
+  folderId: string,
+  name: string,
+) {
+  const current = yield* resolveDropboxFolder(folderId);
+  const wanted = uniqueFolderName(
+    renumberedFolder(current.name, name),
+    yield* siblingNames(current),
+  );
+  const renamed = yield* renameDropboxFolder(current.id, wanted);
+  yield* prisma.projectPiece.update({
+    where: { id: pieceId },
+    data: { dropboxFolder: renamed.name },
+  });
+});
+
 export const savePieceWithFoldersEffect = Effect.fn("savePiece")(function* (
   prisma: PrismaService,
   formState: PieceFormState,
@@ -379,16 +399,19 @@ export const savePieceWithFoldersEffect = Effect.fn("savePiece")(function* (
       ? null
       : yield* prisma.projectPiece.findUnique({
           where: { id: form.id },
-          select: { type: true, dropboxFolder: true },
+          select: { type: true, dropboxFolderId: true },
         });
   const state = yield* savePieceEffect(prisma, formState, form);
   if (state?.errors || state?.pieceId === undefined) {
     return state;
   }
-  const needsSync =
-    !before || !before.dropboxFolder || before.type !== form.type;
-  if (needsSync) {
-    yield* bestEffortDropbox(syncPieceFolders(prisma, state.pieceId));
+  const pieceId = state.pieceId;
+  if (!before) {
+    yield* bestEffortDropbox(createPieceTree(prisma, pieceId));
+  } else if (before.dropboxFolderId && before.type !== form.type) {
+    yield* bestEffortDropbox(
+      renamePieceFolder(prisma, pieceId, before.dropboxFolderId, form.type),
+    );
   }
   return state;
 });
@@ -402,11 +425,24 @@ export const saveProjectHeaderWithFoldersEffect = Effect.fn(
 ) {
   const before = yield* prisma.project.findUnique({
     where: { id: form.projectId },
-    select: { name: true, isManual: true },
+    select: { name: true, isManual: true, dropboxFolderId: true },
   });
   const state = yield* saveProjectHeaderEffect(prisma, formState, form);
-  if (before?.isManual && before.name !== form.name) {
-    yield* bestEffortDropbox(syncProjectFolders(prisma, form.projectId));
+  if (before?.isManual && before.dropboxFolderId && before.name !== form.name) {
+    const folderId = before.dropboxFolderId;
+    yield* bestEffortDropbox(
+      Effect.gen(function* () {
+        const current = yield* resolveDropboxFolder(folderId);
+        const renamed = yield* renameDropboxFolder(
+          current.id,
+          uniqueFolderName(form.name, yield* siblingNames(current)),
+        );
+        yield* prisma.project.update({
+          where: { id: form.projectId },
+          data: { dropboxFolder: renamed.name },
+        });
+      }),
+    );
   }
   return state;
 });
@@ -447,5 +483,271 @@ export const duplicatePieceEffect = Effect.fn("duplicatePiece")(function* (
     select: { id: true },
   });
   yield* Effect.annotateLogsScoped({ createdPieceId: copy.id });
-  yield* bestEffortDropbox(syncPieceFolders(prisma, copy.id));
+  yield* bestEffortDropbox(createPieceTree(prisma, copy.id));
 });
+
+const knownFolders = (
+  rows: readonly {
+    dropboxFolderId: string | null;
+    dropboxFolder: string | null;
+  }[],
+) =>
+  new Map(
+    rows.flatMap(({ dropboxFolderId, dropboxFolder }) =>
+      dropboxFolderId && dropboxFolder
+        ? [[dropboxFolderId, dropboxFolder] as const]
+        : [],
+    ),
+  );
+
+const refreshFolderNames = (
+  prisma: PrismaService,
+  children: readonly { id: string; name: string }[],
+) =>
+  Effect.forEach(children, (child) =>
+    Effect.all([
+      prisma.projectFileSection.updateMany({
+        where: { dropboxFolderId: child.id },
+        data: { dropboxFolder: child.name },
+      }),
+      prisma.projectPiece.updateMany({
+        where: { dropboxFolderId: child.id },
+        data: { dropboxFolder: child.name },
+      }),
+    ]),
+  );
+
+const adoptSections = Effect.fn("adoptSections")(function* (
+  prisma: PrismaService,
+  projectId: string,
+  pieceId: number | null,
+  parent: DropboxFolder,
+) {
+  const rows = yield* prisma.projectFileSection.findMany({
+    where: { projectId, pieceId },
+    select: { dropboxFolderId: true, dropboxFolder: true, sortOrder: true },
+  });
+  const children = yield* listDropboxChildFolders(parent.path_display);
+  const plan = planFolderAdoption(
+    children,
+    knownFolders(rows),
+    pieceId === null ? "project" : "piece",
+  );
+  yield* refreshFolderNames(prisma, plan.refresh);
+  const firstOrder = nextSortOrder(rows);
+  for (const [index, section] of plan.sections.entries()) {
+    yield* prisma.projectFileSection.create({
+      data: {
+        projectId,
+        pieceId,
+        name: section.name,
+        dropboxFolder: section.folder,
+        dropboxFolderId: section.id,
+        isCustom: section.isCustom,
+        sortOrder: firstOrder + index,
+      },
+    });
+  }
+  return { plan, adopted: plan.sections.length };
+});
+
+export const syncFromDropboxEffect = Effect.fn("syncFromDropbox")(function* (
+  prisma: PrismaService,
+  projectId: unknown,
+) {
+  const id = yield* Schema.decodeUnknown(ProjectIdSchema)(projectId);
+  yield* assertProjectAccess(prisma, id);
+  yield* Effect.annotateLogsScoped({ projectId: id });
+  const project = yield* prisma.project.findUnique({
+    where: { id },
+    select: { dropboxFolderId: true, dropboxFolder: true },
+  });
+  if (!project?.dropboxFolderId) {
+    return { status: DROPBOX_SYNC_STATUS.unlinked, adopted: 0 };
+  }
+  const folder = yield* folderIfExists(project.dropboxFolderId);
+  if (!folder) {
+    return { status: DROPBOX_SYNC_STATUS.missing, adopted: 0 };
+  }
+  if (folder.name !== project.dropboxFolder) {
+    yield* prisma.project.update({
+      where: { id },
+      data: { dropboxFolder: folder.name },
+    });
+  }
+
+  const pieceRows = yield* prisma.projectPiece.findMany({
+    where: { projectId: id },
+    select: { dropboxFolderId: true, dropboxFolder: true },
+  });
+  const projectChildren = yield* listDropboxChildFolders(folder.path_display);
+  const rootRows = yield* prisma.projectFileSection.findMany({
+    where: { projectId: id, pieceId: null },
+    select: { dropboxFolderId: true, dropboxFolder: true },
+  });
+  const plan = planFolderAdoption(
+    projectChildren,
+    knownFolders([...rootRows, ...pieceRows]),
+    "project",
+  );
+  yield* refreshFolderNames(prisma, plan.refresh);
+
+  const phase = yield* prisma.projectPhase.findFirst({
+    where: { projectId: id, isDeleted: false },
+    select: { id: true },
+    orderBy: { sortOrder: "asc" },
+  });
+  const phaseId = phase?.id ?? null;
+  for (const child of plan.pieces) {
+    yield* prisma.projectPiece.create({
+      data: {
+        projectId: id,
+        phaseId,
+        type: folderLabel(child.name),
+        dropboxFolder: child.name,
+        dropboxFolderId: child.id,
+        sortOrder: yield* piecesSortOrder(prisma, id, phaseId),
+      },
+    });
+  }
+  const rootAdoption = yield* adoptSections(prisma, id, null, folder);
+
+  const pieces = yield* prisma.projectPiece.findMany({
+    where: { projectId: id, isDeleted: false, dropboxFolderId: { not: null } },
+    select: { id: true, dropboxFolderId: true, dropboxFolder: true },
+  });
+  let adopted = plan.pieces.length + rootAdoption.adopted;
+  const missingPieceIds: number[] = [];
+  for (const piece of pieces) {
+    const pieceFolder = piece.dropboxFolderId
+      ? yield* folderIfExists(piece.dropboxFolderId)
+      : null;
+    if (!pieceFolder) {
+      missingPieceIds.push(piece.id);
+      continue;
+    }
+    if (pieceFolder.name !== piece.dropboxFolder) {
+      yield* prisma.projectPiece.update({
+        where: { id: piece.id },
+        data: { dropboxFolder: pieceFolder.name },
+      });
+    }
+    adopted += (yield* adoptSections(prisma, id, piece.id, pieceFolder))
+      .adopted;
+  }
+  yield* Effect.annotateLogsScoped({ adopted });
+  return { status: DROPBOX_SYNC_STATUS.ok, adopted, missingPieceIds };
+});
+
+export const unlinkProjectEffect = Effect.fn("unlinkProject")(function* (
+  prisma: PrismaService,
+  projectId: unknown,
+) {
+  const id = yield* Schema.decodeUnknown(ProjectIdSchema)(projectId);
+  yield* assertProjectAccess(prisma, id);
+  const cleared = { dropboxFolder: null, dropboxFolderId: null };
+  yield* prisma.projectFileSection.updateMany({
+    where: { projectId: id },
+    data: cleared,
+  });
+  yield* prisma.projectPiece.updateMany({
+    where: { projectId: id },
+    data: cleared,
+  });
+  yield* prisma.project.update({ where: { id }, data: cleared });
+});
+
+export const recreateProjectTreeEffect = Effect.fn("recreateProjectTree")(
+  function* (prisma: PrismaService, projectId: unknown) {
+    const id = yield* Schema.decodeUnknown(ProjectIdSchema)(projectId);
+    yield* assertProjectAccess(prisma, id);
+    const project = yield* prisma.project.findUnique({
+      where: { id },
+      select: { name: true, dropboxFolder: true, dropboxFolderId: true },
+    });
+    if (!project?.dropboxFolderId) {
+      return yield* new DropboxNotLinked({ projectId: id });
+    }
+    const root = yield* dropboxRootPath;
+    const existing = yield* listDropboxSubfolders(root);
+    const folder = yield* createDropboxFolder(
+      joinDropboxPath(
+        root,
+        newProjectFolder(project.dropboxFolder ?? project.name, existing),
+      ),
+    );
+    yield* prisma.project.update({
+      where: { id },
+      data: { dropboxFolder: folder.name, dropboxFolderId: folder.id },
+    });
+    const sections = yield* prisma.projectFileSection.findMany({
+      where: { projectId: id, isDeleted: false },
+      select: {
+        id: true,
+        pieceId: true,
+        name: true,
+        dropboxFolder: true,
+      },
+    });
+    const pieces = yield* prisma.projectPiece.findMany({
+      where: { projectId: id, isDeleted: false },
+      select: { id: true, type: true, dropboxFolder: true },
+    });
+    const pieceFolders = new Map<number, DropboxFolder>();
+    for (const piece of pieces) {
+      const created = yield* createDropboxFolder(
+        joinDropboxPath(
+          folder.path_display,
+          piece.dropboxFolder ??
+            newPieceFolder(
+              piece.type,
+              yield* listDropboxSubfolders(folder.path_display),
+            ),
+        ),
+      );
+      yield* prisma.projectPiece.update({
+        where: { id: piece.id },
+        data: { dropboxFolder: created.name, dropboxFolderId: created.id },
+      });
+      pieceFolders.set(piece.id, created);
+    }
+    for (const section of sections) {
+      const parent =
+        section.pieceId === null ? folder : pieceFolders.get(section.pieceId);
+      if (!parent) {
+        continue;
+      }
+      const created = yield* createDropboxFolder(
+        joinDropboxPath(
+          parent.path_display,
+          section.dropboxFolder ?? section.name,
+        ),
+      );
+      yield* prisma.projectFileSection.update({
+        where: { id: section.id },
+        data: { dropboxFolder: created.name, dropboxFolderId: created.id },
+      });
+    }
+  },
+);
+
+export const recreateSectionFolderEffect = Effect.fn("recreateSectionFolder")(
+  function* (prisma: PrismaService, sectionId: unknown) {
+    const section = yield* accessibleSection(prisma, sectionId);
+    const parent = yield* linkedParentFolder(
+      prisma,
+      section.projectId,
+      section.pieceId,
+    );
+    const created = yield* createDropboxFolder(
+      joinDropboxPath(
+        parent.path_display,
+        section.dropboxFolder ?? section.name,
+      ),
+    );
+    yield* prisma.projectFileSection.update({
+      where: { id: section.id },
+      data: { dropboxFolder: created.name, dropboxFolderId: created.id },
+    });
+  },
+);

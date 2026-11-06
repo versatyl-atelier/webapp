@@ -1,215 +1,171 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
-import { useActionState, useId, useState } from "react";
-import { toast } from "sonner";
+import { Mail, MapPin, Phone, Plus } from "lucide-react";
+import { useId, useState } from "react";
 
-import { saveProjectContacts } from "@/actions/projects";
-import { FieldErrors } from "@/components/FieldErrors";
-import { FormValidationAlerts } from "@/components/FormValidationAlerts";
-import { SuggestInput } from "@/components/SuggestInput";
-import { Badge } from "@/components/ui/badge";
+import { ContactDialog } from "@/components/ContactDialog";
+import { ProjectLocationDialog } from "@/components/ProjectLocationDialog";
+import { RowTitle } from "@/components/RowTitle";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   ADD_CONTACT_LABEL,
-  CANCEL_LABEL,
-  CONTACT_FIELDS,
+  ADD_CONTACT_SHORT_LABEL,
   CONTACTS_HEADING,
-  EDIT_LABEL,
-  NO_CONTACTS_LABEL,
-  REMOVE_CONTACT_LABEL,
-  SAVE_LABEL,
-  SAVED_TOAST_OPTIONS,
+  PROJECT_CARD_ADDRESS_FALLBACK,
+  PROJECT_CARD_ROLE_LABEL,
 } from "@/constants/projects";
 import {
-  contactDetails,
   contactHeadline,
-  EMPTY_CONTACT,
+  projectColorLabel,
+  projectColorStyle,
   type ContactRecord,
   type FicheSuggestions,
 } from "@/lib/projects";
-import type { ProjectContactsFormState } from "@/schemas/projects.schemas";
+import { cn } from "@/lib/utils";
 
-type DraftContact = ContactRecord & { key: string };
+type OpenDialog = "project" | "new" | { contactId: number } | null;
 
-type ContactField = (typeof CONTACT_FIELDS)[number]["key"];
-
-const INPUT_TYPES: Partial<Record<ContactField, string>> = {
-  phone: "tel",
-  email: "email",
-};
+const CARD_CLASS =
+  "bg-card focus-within:ring-ring/50 relative flex flex-col gap-1 rounded-xl border p-4 shadow-xs transition-[box-shadow,transform] focus-within:ring-3 hover:-translate-y-px hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0";
+const CARD_BUTTON_CLASS =
+  "text-left outline-hidden after:absolute after:inset-0";
+const CARD_LINK_CLASS =
+  "hover:text-primary relative z-10 flex min-w-0 items-center gap-2 truncate";
 
 type ProjectContactsProps = {
   projectId: string;
+  project: { color: string; address: string };
   contacts: ContactRecord[];
   suggestions: Pick<FicheSuggestions, "role" | "company">;
 };
 
-function toDraft(contact: ContactRecord): DraftContact {
-  return { ...contact, key: crypto.randomUUID() };
-}
-
 export function ProjectContacts({
   projectId,
+  project,
   contacts,
   suggestions,
 }: ProjectContactsProps) {
-  const formId = useId();
-  const headingId = `${formId}-heading`;
-  const [editing, setEditing] = useState(false);
-  const [drafts, setDrafts] = useState<DraftContact[]>([]);
-  const [state, action, saving] = useActionState(
-    async (formState: ProjectContactsFormState, formData: FormData) => {
-      const next = await saveProjectContacts(formState, formData);
-      if (next?.message) {
-        toast.success(next.message, SAVED_TOAST_OPTIONS);
-        setEditing(false);
-      }
-      return next;
-    },
-    undefined,
-  );
-  const errors = state?.errors;
-
-  const startEditing = () => {
-    setDrafts((contacts.length ? contacts : [EMPTY_CONTACT]).map(toDraft));
-    setEditing(true);
-  };
-
-  const updateDraft = (key: string, field: ContactField, value: string) =>
-    setDrafts((current) =>
-      current.map((draft) =>
-        draft.key === key ? { ...draft, [field]: value } : draft,
-      ),
-    );
-
-  const serialized = JSON.stringify(drafts.map(({ key: _key, ...c }) => c));
+  const headingId = useId();
+  const [dialog, setDialog] = useState<OpenDialog>(null);
+  const closeDialog = () => setDialog(null);
+  const openContact =
+    typeof dialog === "object" && dialog !== null
+      ? contacts.find(({ id }) => id === dialog.contactId)
+      : undefined;
 
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id={headingId} className="text-base font-semibold tracking-tight">
-          {CONTACTS_HEADING}
-        </h2>
-        {editing ? (
+      <RowTitle id={headingId}>{CONTACTS_HEADING}</RowTitle>
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(var(--container-contact),1fr))] gap-3.5">
+        <li className={CARD_CLASS}>
+          <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
+            <span
+              aria-hidden
+              title={projectColorLabel(project.color)}
+              style={projectColorStyle(project.color)}
+              className="size-2 shrink-0 rounded-full bg-(--project-color)"
+            />
+            {PROJECT_CARD_ROLE_LABEL}
+          </p>
+          <p
+            className={cn(
+              "font-semibold",
+              !project.address && "text-muted-foreground font-medium",
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setDialog("project")}
+              className={CARD_BUTTON_CLASS}
+            >
+              {project.address || PROJECT_CARD_ADDRESS_FALLBACK}
+            </button>
+          </p>
+        </li>
+        {contacts.map((contact) => (
+          <li key={contact.id} className={CARD_CLASS}>
+            <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+              {contact.role || CONTACTS_HEADING}
+            </p>
+            <h3 className="font-semibold">
+              <button
+                type="button"
+                onClick={() => setDialog({ contactId: contact.id })}
+                className={CARD_BUTTON_CLASS}
+              >
+                {contactHeadline(contact)}
+              </button>
+            </h3>
+            {contact.name && contact.company && (
+              <p className="text-muted-foreground text-sm">{contact.company}</p>
+            )}
+            {(contact.phone || contact.email || contact.address) && (
+              <div className="mt-2 flex flex-col gap-1 text-sm">
+                {contact.phone && (
+                  <a
+                    href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}
+                    className={CARD_LINK_CLASS}
+                  >
+                    <Phone aria-hidden className="size-3.5 shrink-0" />
+                    {contact.phone}
+                  </a>
+                )}
+                {contact.email && (
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className={CARD_LINK_CLASS}
+                  >
+                    <Mail aria-hidden className="size-3.5 shrink-0" />
+                    {contact.email}
+                  </a>
+                )}
+                {contact.address && (
+                  <p className="flex min-w-0 items-center gap-2 truncate">
+                    <MapPin aria-hidden className="size-3.5 shrink-0" />
+                    {contact.address}
+                  </p>
+                )}
+              </div>
+            )}
+          </li>
+        ))}
+        <li className="flex">
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            onClick={() => setDrafts((d) => [...d, toDraft(EMPTY_CONTACT)])}
+            aria-label={ADD_CONTACT_LABEL}
+            onClick={() => setDialog("new")}
+            className="text-muted-foreground border-input min-h-24 w-full flex-1 rounded-xl border-2 border-dashed bg-transparent"
           >
             <Plus />
-            {ADD_CONTACT_LABEL}
+            {ADD_CONTACT_SHORT_LABEL}
           </Button>
-        ) : (
-          <Button variant="outline" size="sm" onClick={startEditing}>
-            {EDIT_LABEL}
-          </Button>
-        )}
-      </div>
+        </li>
+      </ul>
 
-      {!editing &&
-        (contacts.length === 0 ? (
-          <p className="text-muted-foreground text-sm italic">
-            {NO_CONTACTS_LABEL}
-          </p>
-        ) : (
-          <ul className="divide-y">
-            {contacts.map((contact, index) => (
-              <li
-                key={index}
-                className="flex flex-wrap items-center gap-2 py-1.5 text-sm"
-              >
-                {contact.role && (
-                  <Badge variant="secondary" className="uppercase">
-                    {contact.role}
-                  </Badge>
-                )}
-                <span className="font-medium">{contactHeadline(contact)}</span>
-                <span className="text-muted-foreground">
-                  {contactDetails(contact)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ))}
-
-      {editing && (
-        <form action={action} className="flex flex-col gap-3">
-          <FormValidationAlerts errors={errors} />
-          <input type="hidden" name="projectId" value={projectId} />
-          <input type="hidden" name="contacts" value={serialized} />
-          <ul className="flex flex-col gap-2">
-            {drafts.map((draft, index) => (
-              <li
-                key={draft.key}
-                className="bg-card grid grid-cols-2 items-start gap-2 rounded-lg border p-2.5 md:grid-cols-[1.1fr_1.3fr_1.2fr_1fr_1.3fr_auto]"
-              >
-                {CONTACT_FIELDS.map(({ key, label, placeholder }) => {
-                  const id = `${formId}-${draft.key}-${key}`;
-                  const fieldErrors = errors?.[`contacts.${index}.${key}`];
-                  return (
-                    <Field key={key} className="gap-1">
-                      <FieldLabel htmlFor={id} className="text-xs">
-                        {label}
-                      </FieldLabel>
-                      {key === "role" || key === "company" ? (
-                        <SuggestInput
-                          id={id}
-                          suggestions={suggestions[key]}
-                          value={draft[key]}
-                          onValueChange={(v) => updateDraft(draft.key, key, v)}
-                          placeholder={placeholder}
-                          invalid={!!fieldErrors}
-                        />
-                      ) : (
-                        <Input
-                          id={id}
-                          type={INPUT_TYPES[key]}
-                          value={draft[key]}
-                          onChange={(e) =>
-                            updateDraft(draft.key, key, e.target.value)
-                          }
-                          placeholder={placeholder}
-                          aria-invalid={!!fieldErrors}
-                        />
-                      )}
-                      <FieldErrors errors={fieldErrors} />
-                    </Field>
-                  );
-                })}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={REMOVE_CONTACT_LABEL}
-                  className="justify-self-end md:mt-5"
-                  onClick={() =>
-                    setDrafts((current) =>
-                      current.filter(({ key }) => key !== draft.key),
-                    )
-                  }
-                >
-                  <X />
-                </Button>
-              </li>
-            ))}
-          </ul>
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setEditing(false)}
-            >
-              {CANCEL_LABEL}
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {SAVE_LABEL}
-            </Button>
-          </div>
-        </form>
+      {dialog === "project" && (
+        <ProjectLocationDialog
+          projectId={projectId}
+          color={project.color}
+          address={project.address}
+          onClose={closeDialog}
+        />
+      )}
+      {dialog === "new" && (
+        <ContactDialog
+          projectId={projectId}
+          suggestions={suggestions}
+          onClose={closeDialog}
+        />
+      )}
+      {openContact && (
+        <ContactDialog
+          key={openContact.id}
+          projectId={projectId}
+          suggestions={suggestions}
+          contact={openContact}
+          onClose={closeDialog}
+        />
       )}
     </section>
   );

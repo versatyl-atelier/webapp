@@ -27,6 +27,7 @@ import { ProjectType, type ProjectStage } from "@/generated/prisma/enums";
 import type { CSSProperties } from "react";
 import { daysBetween, toDateKey, type DateKey } from "@/lib/calendar";
 import { parseItemKey } from "@/lib/itemKey";
+import type { FileSectionRecord } from "@/lib/projectFiles";
 
 export function projectIdsToProjectData(projectIds: string[]) {
   return projectIds.map((projectId) => {
@@ -45,10 +46,12 @@ export type SuggestionField = keyof typeof DEFAULT_SUGGESTIONS;
 
 export type FicheSuggestions = Record<SuggestionField, string[]>;
 
-export type ContactRecord = Pick<
+export type ContactFields = Pick<
   ProjectContact,
-  "role" | "name" | "company" | "phone" | "email"
+  "role" | "name" | "company" | "phone" | "email" | "address"
 >;
+
+export type ContactRecord = ContactFields & { id: number };
 
 export type PhaseRecord = Pick<ProjectPhase, "id" | "name">;
 
@@ -64,11 +67,11 @@ export type PieceRecord = Pick<
   | "drawers"
   | "finish"
   | "cabinetCount"
-  | "coverFileId"
+  | "coverUpdatedAt"
   | "coverX"
   | "coverY"
   | "coverZoom"
-> & { noteCount: number };
+> & { noteCount: number; dropboxLinked: boolean };
 
 export type ProjectFiche = {
   id: string;
@@ -77,17 +80,20 @@ export type ProjectFiche = {
   color: string;
   address: string;
   isManual: boolean;
+  dropboxLinked: boolean;
+  fileSections: FileSectionRecord[];
   contacts: ContactRecord[];
   phases: PhaseRecord[];
   pieces: PieceRecord[];
 };
 
-export const EMPTY_CONTACT: ContactRecord = {
+export const EMPTY_CONTACT: ContactFields = {
   role: "",
   name: "",
   company: "",
   phone: "",
   email: "",
+  address: "",
 };
 
 export function mergeSuggestions(
@@ -106,17 +112,17 @@ export function mergeSuggestions(
   });
 }
 
-export function contactHeadline(contact: ContactRecord): string {
+export function contactHeadline(contact: ContactFields): string {
   return contact.name || contact.company || UNNAMED_CONTACT_LABEL;
 }
 
-export function contactDetails(contact: ContactRecord): string {
+export function contactDetails(contact: ContactFields): string {
   return [contact.name ? contact.company : "", contact.phone, contact.email]
     .filter(Boolean)
     .join(CONTACT_DETAIL_SEPARATOR);
 }
 
-export function isEmptyContact(contact: ContactRecord): boolean {
+export function isEmptyContact(contact: ContactFields): boolean {
   return Object.values(contact).every((value) => !value.trim());
 }
 
@@ -178,7 +184,7 @@ export function buildSuggestions(
     | "drawers"
     | "finish"
   >[],
-  contacts: readonly Pick<ContactRecord, "role" | "company">[],
+  contacts: readonly Pick<ContactFields, "role" | "company">[],
 ): FicheSuggestions {
   const from = <K extends SuggestionField>(
     rows: readonly Partial<Record<K, string>>[],

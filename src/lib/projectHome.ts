@@ -8,7 +8,11 @@ export type HomeProject = {
   color: string;
   stage: ProjectStage | null;
   address: string;
-  coverFileId: string | null;
+  coverPieceId: number | null;
+  coverUpdatedAt: Date | null;
+  coverX: number;
+  coverY: number;
+  coverZoom: number;
 };
 
 export type SearchableProject = {
@@ -74,8 +78,4 @@ export function mergePinOrder(
   const known = new Set(existing);
   const ordered = [...new Set(requested)].filter((id) => known.has(id));
   return [...ordered, ...existing.filter((id) => !ordered.includes(id))];
-}
-
-export function coverUrl(projectId: string, coverFileId: string): string {
-  return `/projets/${projectId}/couverture?v=${encodeURIComponent(coverFileId)}`;
 }

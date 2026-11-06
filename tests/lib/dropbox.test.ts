@@ -5,8 +5,16 @@ import {
   PIECE_SECTION_NAMES,
 } from "@/constants/dropbox";
 import {
-  choosePieceFolder,
-  chooseProjectFolder,
+  compareFileNames,
+  uniqueFileName,
+  fileExtension,
+  hasThumbnail,
+  isImageName,
+  isWithinDropboxPath,
+  parseSubpath,
+  newPieceFolder,
+  newProjectFolder,
+  planFolderAdoption,
   dropboxSafeName,
   folderLabel,
   folderNumber,
@@ -99,52 +107,179 @@ describe("folderLabel", () => {
   });
 });
 
-describe("chooseProjectFolder", () => {
-  it("adopts a free folder with the same name", () => {
+describe("isWithinDropboxPath", () => {
+  it("accepts descendants, ignoring case", () => {
     expect(
-      chooseProjectFolder("Beauregard Lacasse", ["beauregard lacasse"], []),
-    ).toBe("beauregard lacasse");
-  });
-
-  it("does not adopt a folder claimed by another project", () => {
-    expect(
-      chooseProjectFolder(
-        "Beauregard Lacasse",
-        ["Beauregard Lacasse"],
-        ["Beauregard Lacasse"],
+      isWithinDropboxPath(
+        "/projets/beauregard/pdm/a.jpg",
+        "/Projets/Beauregard",
       ),
-    ).toBe("Beauregard Lacasse (2)");
+    ).toBe(true);
   });
 
-  it("uses the name when no folder exists", () => {
-    expect(chooseProjectFolder("Tremblay Sophie", ["Autre"], [])).toBe(
+  it("rejects the folder itself, siblings sharing a prefix and other roots", () => {
+    expect(
+      isWithinDropboxPath("/Projets/Beauregard", "/Projets/Beauregard"),
+    ).toBe(false);
+    expect(
+      isWithinDropboxPath("/Projets/Beauregard 2/a.jpg", "/Projets/Beauregard"),
+    ).toBe(false);
+    expect(isWithinDropboxPath("/Autre/a.jpg", "/Projets/Beauregard")).toBe(
+      false,
+    );
+  });
+
+  it("never matches an empty parent", () => {
+    expect(isWithinDropboxPath("/a.jpg", "")).toBe(false);
+  });
+});
+
+describe("parseSubpath", () => {
+  it("splits a relative path and tolerates empties", () => {
+    expect(parseSubpath("PROD//V1")).toEqual(["PROD", "V1"]);
+    expect(parseSubpath("")).toEqual([]);
+    expect(parseSubpath(null)).toEqual([]);
+  });
+
+  it("rejects traversal and backslashes", () => {
+    expect(parseSubpath("../x")).toBeNull();
+    expect(parseSubpath("a/./b")).toBeNull();
+    expect(parseSubpath("a\\b")).toBeNull();
+  });
+});
+
+describe("file names", () => {
+  it("reads the lowercase extension", () => {
+    expect(fileExtension("Plan.PDF")).toBe("pdf");
+    expect(fileExtension("sans-extension")).toBe("");
+    expect(fileExtension("archive.tar.gz")).toBe("gz");
+  });
+
+  it("tells images and thumbnailable files apart", () => {
+    expect(isImageName("IMG_7814.jpeg")).toBe(true);
+    expect(isImageName("plan.pdf")).toBe(false);
+    expect(hasThumbnail("plan.pdf")).toBe(true);
+    expect(hasThumbnail("cuisine.skp")).toBe(false);
+  });
+
+  it("sorts numbers naturally", () => {
+    expect(["IMG 10", "IMG 2", "IMG 1"].sort(compareFileNames)).toEqual([
+      "IMG 1",
+      "IMG 2",
+      "IMG 10",
+    ]);
+  });
+});
+
+describe("uniqueFileName", () => {
+  it("keeps a free name", () => {
+    expect(uniqueFileName("Plan.pdf", ["Autre.pdf"])).toBe("Plan.pdf");
+  });
+
+  it("numbers before the extension, ignoring case", () => {
+    expect(uniqueFileName("Plan.pdf", ["plan.pdf", "Plan (2).pdf"])).toBe(
+      "Plan (3).pdf",
+    );
+  });
+
+  it("handles names without extension and dotfiles", () => {
+    expect(uniqueFileName("LISEZMOI", ["LISEZMOI"])).toBe("LISEZMOI (2)");
+    expect(uniqueFileName(".gitignore", [".gitignore"])).toBe(".gitignore (2)");
+  });
+
+  it("replaces forbidden characters first", () => {
+    expect(uniqueFileName("a/b:c.jpg", [])).toBe("a-b-c.jpg");
+  });
+});
+
+describe("newProjectFolder", () => {
+  it("never reuses an existing folder, whatever its case", () => {
+    expect(newProjectFolder("Beauregard Lacasse", ["beauregard lacasse"])).toBe(
+      "Beauregard Lacasse (2)",
+    );
+    expect(newProjectFolder("Tremblay Sophie", ["Autre"])).toBe(
       "Tremblay Sophie",
     );
   });
 });
 
-describe("choosePieceFolder", () => {
+describe("newPieceFolder", () => {
   const existing = ["PDM", "Finition", "2. Vanité SDB des maitres"];
 
-  it("adopts an existing numbered folder with the same name", () => {
-    expect(choosePieceFolder("Vanité SDB des maitres", existing, [])).toBe(
-      "2. Vanité SDB des maitres",
+  it("takes the next number and never adopts a folder", () => {
+    expect(newPieceFolder("Cuisine", existing)).toBe("3. Cuisine");
+    expect(newPieceFolder("Vanité SDB des maitres", existing)).toBe(
+      "3. Vanité SDB des maitres",
     );
   });
+});
 
-  it("creates the next numbered folder otherwise", () => {
-    expect(choosePieceFolder("Cuisine", existing, [])).toBe("3. Cuisine");
+describe("planFolderAdoption", () => {
+  const child = (id: string, name: string) => ({ id, name });
+
+  it("adopts a numbered folder at project level as a piece", () => {
+    const plan = planFolderAdoption(
+      [child("a", "3. Salle de bain"), child("b", "Divers")],
+      new Map(),
+      "project",
+    );
+    expect(plan.pieces).toEqual([child("a", "3. Salle de bain")]);
+    expect(plan.sections).toEqual([
+      { id: "b", folder: "Divers", name: "Divers", isCustom: true },
+    ]);
   });
 
-  it("does not adopt a folder claimed by another piece", () => {
-    expect(
-      choosePieceFolder("Vanité SDB des maitres", existing, [
-        "2. Vanité SDB des maitres",
-      ]),
-    ).toBe("3. Vanité SDB des maitres");
+  it("recognises a default project section by its folder name", () => {
+    const plan = planFolderAdoption([child("p", "pdm")], new Map(), "project");
+    expect(plan.sections).toEqual([
+      { id: "p", folder: "pdm", name: "Prise de mesure", isCustom: false },
+    ]);
   });
 
-  it("does not adopt an unnumbered project folder", () => {
-    expect(choosePieceFolder("Finition", existing, [])).toBe("3. Finition");
+  it("names a hand-made piece section without its number", () => {
+    const plan = planFolderAdoption(
+      [child("x", "9. Divers"), child("y", "3. 3D")],
+      new Map(),
+      "piece",
+    );
+    expect(plan.sections).toEqual([
+      { id: "y", folder: "3. 3D", name: "3D", isCustom: false },
+      { id: "x", folder: "9. Divers", name: "Divers", isCustom: true },
+    ]);
+    expect(plan.pieces).toEqual([]);
+  });
+
+  it("never adopts a numbered folder as a piece inside a piece", () => {
+    const plan = planFolderAdoption(
+      [child("n", "4. Autre")],
+      new Map(),
+      "piece",
+    );
+    expect(plan.pieces).toEqual([]);
+    expect(plan.sections).toHaveLength(1);
+  });
+
+  it("skips known folders, deleted ones included, and refreshes renamed ones", () => {
+    const known = new Map([
+      ["k1", "Divers"],
+      ["k2", "Ancien nom"],
+    ]);
+    const plan = planFolderAdoption(
+      [child("k1", "Divers"), child("k2", "Nouveau nom"), child("new", "Neuf")],
+      known,
+      "project",
+    );
+    expect(plan.refresh).toEqual([child("k2", "Nouveau nom")]);
+    expect(plan.sections.map(({ id }) => id)).toEqual(["new"]);
+    expect(plan.pieces).toEqual([]);
+  });
+
+  it("is stable: sorts new folders naturally", () => {
+    const plan = planFolderAdoption(
+      [child("b", "10. B"), child("a", "2. A")],
+      new Map(),
+      "project",
+    );
+    expect(plan.pieces.map(({ name }) => name)).toEqual(["2. A", "10. B"]);
   });
 });

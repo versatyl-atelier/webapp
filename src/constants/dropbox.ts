@@ -18,7 +18,46 @@ export const DROPBOX_ENDPOINTS = {
   listFolderContinue: "files/list_folder/continue",
   move: "files/move_v2",
   temporaryLink: "files/get_temporary_link",
+  metadata: "files/get_metadata",
+  delete: "files/delete_v2",
+  restore: "files/restore",
+  uploadLink: "files/get_temporary_upload_link",
 } as const;
+
+export const DROPBOX_UPLOAD_LINK_DURATION_SECONDS = 900;
+export const DROPBOX_FILE_ID_PATTERN = /^id:[\w-]+$/;
+export const DROPBOX_NOT_FOUND_PREFIX = "path/not_found";
+export const DROPBOX_NOT_FOLDER_PREFIX = "path/not_folder";
+export const FILE_NAME_REQUIRED_MESSAGE = "Nom de fichier requis";
+export const FILE_TOO_LARGE_MESSAGE =
+  "Fichier trop volumineux (150 Mo maximum)";
+export const DROPBOX_UPLOAD_MODE = "add";
+export const DROPBOX_MAX_UPLOAD_BYTES = 150 * 1024 * 1024;
+export const DROPBOX_SUBPATH_FORBIDDEN_SEGMENTS = [".", ".."] as const;
+export const IMAGE_EXTENSIONS = [
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "webp",
+  "heic",
+  "bmp",
+  "tif",
+  "tiff",
+] as const;
+export const THUMBNAIL_EXTENSIONS = [
+  ...IMAGE_EXTENSIONS,
+  "pdf",
+  "svg",
+] as const;
+export const DROPBOX_EXTENSION_SEPARATOR = ".";
+export const DROPBOX_COLLATION_LOCALE = "fr";
+export const FILE_THUMBNAIL_TILE_SIZE = "w480h320";
+export const FILE_THUMBNAIL_PREVIEW_SIZE = "w2048h1536";
+export const FILE_THUMBNAIL_SIZES = [
+  FILE_THUMBNAIL_TILE_SIZE,
+  FILE_THUMBNAIL_PREVIEW_SIZE,
+] as const;
 
 export const DROPBOX_FORBIDDEN_NAME_CHARS = /[<>:"/\\|?*]/g;
 export const DROPBOX_TRAILING_NAME_CHARS = /[\s.]+$/;
@@ -50,6 +89,7 @@ export const PROJECT_SECTIONS = [
 ] as const;
 
 export const DROPBOX_SYNC_FAILED_MESSAGE = "Dropbox sync failed";
-export const FILE_SECTION_NOT_FOUND_MESSAGE = "Section introuvable";
-export const FILE_SECTION_FIXED_MESSAGE =
-  "Cette section ne peut pas être modifiée";
+export const THUMBNAIL_FORMAT = "jpeg";
+export const THUMBNAIL_MODE = "fitone_bestfit";
+export const THUMBNAIL_CONTENT_TYPE = "image/jpeg";
+export const THUMBNAIL_CACHE_CONTROL = "private, max-age=86400";

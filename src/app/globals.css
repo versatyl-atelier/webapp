@@ -145,6 +145,11 @@
   --text-2xs: 0.653rem;
   --text-2xs-line-height: calc(1 / 0.653);
 
+  --container-file-tile: 11.25rem;
+  --container-file-tile-sm: 5.75rem;
+  --container-file-section: 23.75rem;
+  --container-contact: 13.75rem;
+
   --spacing-toolbar: calc(var(--spacing) * 10);
   --spacing-note-meta: calc(var(--spacing) * 49);
   --spacing-note-rule: calc(var(--spacing-note-meta) + var(--spacing) * 1.5);

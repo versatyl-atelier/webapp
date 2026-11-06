@@ -5,21 +5,19 @@ import Link from "next/link";
 import { useId, useOptimistic, useState, useTransition } from "react";
 
 import { reorderPins } from "@/actions/projects";
+import { CoverImage } from "@/components/CoverImage";
 import { PinButton } from "@/components/PinButton";
+import { REORDER_PIN_SHORTCUTS } from "@/constants/projectFiles";
+import { ARROW_LEFT_KEY, ARROW_RIGHT_KEY } from "@/constants/keys";
+import { useIsApplePlatform } from "@/hooks/use-apple-platform";
 import { Badge } from "@/components/ui/badge";
 import {
   PROJECT_DRAG_TYPE,
-  REORDER_BACK_KEY,
-  REORDER_FORWARD_KEY,
-  REORDER_PIN_HINT,
+  REORDER_PIN_HINT_APPLE,
+  REORDER_PIN_HINT_DEFAULT,
 } from "@/constants/projectHome";
 import { PROJECT_STAGE_LABELS } from "@/constants/projects";
-import {
-  coverUrl,
-  movePinBefore,
-  movePinBy,
-  type HomeProject,
-} from "@/lib/projectHome";
+import { movePinBefore, movePinBy, type HomeProject } from "@/lib/projectHome";
 import { projectPath } from "@/lib/paths";
 import { projectColorStyle } from "@/lib/projects";
 import { cn } from "@/lib/utils";
@@ -38,6 +36,9 @@ export function ProjectRow({
   pinned,
 }: ProjectRowProps) {
   const headingId = useId();
+  const reorderHint = useIsApplePlatform()
+    ? REORDER_PIN_HINT_APPLE
+    : REORDER_PIN_HINT_DEFAULT;
   const [dragged, setDragged] = useState<string | null>(null);
   const [target, setTarget] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -121,12 +122,16 @@ export function ProjectRow({
               )}
             >
               <div className="bg-muted text-muted-foreground flex aspect-video items-center justify-center overflow-hidden border-b">
-                {project.coverFileId ? (
-                  <img
-                    src={coverUrl(project.id, project.coverFileId)}
-                    alt=""
-                    loading="lazy"
-                    className="size-full object-cover"
+                {project.coverPieceId !== null && project.coverUpdatedAt ? (
+                  <CoverImage
+                    projectId={project.id}
+                    pieceId={project.coverPieceId}
+                    version={project.coverUpdatedAt}
+                    framing={{
+                      x: project.coverX,
+                      y: project.coverY,
+                      zoom: project.coverZoom,
+                    }}
                   />
                 ) : (
                   <ImageIcon aria-hidden className="size-7" />
@@ -146,17 +151,17 @@ export function ProjectRow({
                   <Link
                     href={projectPath(project.id)}
                     aria-keyshortcuts={
-                      pinned ? "Alt+ArrowLeft Alt+ArrowRight" : undefined
+                      pinned ? REORDER_PIN_SHORTCUTS : undefined
                     }
-                    aria-description={pinned ? REORDER_PIN_HINT : undefined}
+                    aria-description={pinned ? reorderHint : undefined}
                     onKeyDown={(e) => {
                       if (!pinned || !e.altKey) {
                         return;
                       }
                       const offset =
-                        e.key === REORDER_BACK_KEY
+                        e.key === ARROW_LEFT_KEY
                           ? -1
-                          : e.key === REORDER_FORWARD_KEY
+                          : e.key === ARROW_RIGHT_KEY
                             ? 1
                             : 0;
                       if (offset !== 0) {
@@ -164,7 +169,7 @@ export function ProjectRow({
                         reorder(movePinBy(ids, project.id, offset));
                       }
                     }}
-                    className="outline-none after:absolute after:inset-0"
+                    className="outline-hidden after:absolute after:inset-0"
                   >
                     {project.name}
                   </Link>

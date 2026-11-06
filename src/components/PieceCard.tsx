@@ -10,23 +10,41 @@ import {
   PIECE_NOTES_LABEL,
   UNNAMED_PIECE_LABEL,
 } from "@/constants/projects";
+import { CoverImage } from "@/components/CoverImage";
+import { UPLOADING_LABEL } from "@/constants/projectFiles";
+import { useCoverUpload } from "@/hooks/use-cover-upload";
+import { useFileDrop } from "@/hooks/use-file-drop";
+import { usePasteUpload } from "@/hooks/use-paste-upload";
 import { pieceReadFields, type PieceRecord } from "@/lib/projects";
 import { cn } from "@/lib/utils";
 
 type PieceCardProps = {
+  projectId: string;
   piece: PieceRecord;
   draggable: boolean;
   onOpen: () => void;
 };
 
-export function PieceCard({ piece, draggable, onOpen }: PieceCardProps) {
+export function PieceCard({
+  projectId,
+  piece,
+  draggable,
+  onOpen,
+}: PieceCardProps) {
   const [dragging, setDragging] = useState(false);
+  const { upload, uploading } = useCoverUpload(piece.id);
+  const pasteHandlers = usePasteUpload((pasted) => void upload(pasted));
+  const { dragOver, dropHandlers } = useFileDrop(
+    (dropped) => void upload(dropped),
+  );
   const fields = pieceReadFields(piece);
   const title = piece.type || UNNAMED_PIECE_LABEL;
 
   return (
     <li
       draggable={draggable}
+      {...pasteHandlers}
+      {...dropHandlers}
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData(PIECE_DRAG_TYPE, String(piece.id));
@@ -34,12 +52,31 @@ export function PieceCard({ piece, draggable, onOpen }: PieceCardProps) {
       }}
       onDragEnd={() => setDragging(false)}
       className={cn(
-        "bg-card focus-within:ring-ring/50 relative flex flex-col overflow-hidden rounded-xl border shadow-xs transition-shadow focus-within:ring-3 hover:shadow-md",
+        "bg-card focus-within:ring-ring/50 relative flex flex-col overflow-hidden rounded-xl border shadow-xs transition-[box-shadow,transform] focus-within:ring-3 hover:-translate-y-px hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0",
         dragging && "opacity-40",
+        dragOver && "ring-primary ring-2",
       )}
     >
-      <div className="bg-muted text-muted-foreground flex aspect-video items-center justify-center border-b">
-        <ImageIcon aria-hidden className="size-7" />
+      <div className="bg-muted text-muted-foreground flex aspect-video items-center justify-center overflow-hidden border-b">
+        {piece.coverUpdatedAt ? (
+          <CoverImage
+            projectId={projectId}
+            pieceId={piece.id}
+            version={piece.coverUpdatedAt}
+            framing={{
+              x: piece.coverX,
+              y: piece.coverY,
+              zoom: piece.coverZoom,
+            }}
+          />
+        ) : (
+          <ImageIcon aria-hidden className="size-7" />
+        )}
+        {uploading && (
+          <p className="bg-background/80 absolute inset-0 flex animate-pulse items-center justify-center text-sm motion-reduce:animate-none">
+            {UPLOADING_LABEL}
+          </p>
+        )}
         {draggable && (
           <span
             title={DRAG_PIECE_LABEL}
@@ -54,7 +91,7 @@ export function PieceCard({ piece, draggable, onOpen }: PieceCardProps) {
           <button
             type="button"
             onClick={onOpen}
-            className="text-left outline-none after:absolute after:inset-0"
+            className="text-left outline-hidden after:absolute after:inset-0"
           >
             {title}
           </button>

@@ -11,15 +11,19 @@ import {
 } from "@/actions/projects";
 import { PieceCard } from "@/components/PieceCard";
 import { PieceDialog } from "@/components/PieceDialog";
+import { RowTitle } from "@/components/RowTitle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ADD_PHASE_LABEL,
   ADD_PIECE_LABEL,
+  ADD_PHASE_SHORT_LABEL,
+  ADD_PIECE_SHORT_LABEL,
+  PIECE_COUNT_PLURAL_LABEL,
+  PIECE_COUNT_SINGULAR_LABEL,
   PHASE_NAME_LABEL,
   PIECES_HEADING,
   PIECE_DRAG_TYPE,
-  PIECES_HINT,
   REMOVE_PHASE_LABEL,
 } from "@/constants/projects";
 import {
@@ -28,6 +32,7 @@ import {
   type PhaseRecord,
   type PieceRecord,
 } from "@/lib/projects";
+import type { FileSectionRecord } from "@/lib/projectFiles";
 import { cn } from "@/lib/utils";
 
 type OpenDialog = { pieceId: number } | { phaseId: number | null } | null;
@@ -36,6 +41,7 @@ type ProjectPiecesProps = {
   projectId: string;
   phases: PhaseRecord[];
   pieces: PieceRecord[];
+  fileSections: FileSectionRecord[];
   suggestions: FicheSuggestions;
 };
 
@@ -47,6 +53,7 @@ export function ProjectPieces({
   projectId,
   phases,
   pieces,
+  fileSections,
   suggestions,
 }: ProjectPiecesProps) {
   const headingId = useId();
@@ -75,33 +82,28 @@ export function ProjectPieces({
     });
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id={headingId} className="text-base font-semibold tracking-tight">
-          {PIECES_HEADING}
-        </h2>
+    <section aria-labelledby={headingId} className="flex flex-col gap-2.5">
+      <div className="flex min-h-7 items-center gap-1.5">
+        <RowTitle id={headingId}>{PIECES_HEADING}</RowTitle>
         <Button
           variant="ghost"
           size="sm"
+          aria-label={ADD_PHASE_LABEL}
           disabled={pending}
           onClick={() => startTransition(() => addPhase(projectId))}
         >
           <Plus />
-          {ADD_PHASE_LABEL}
+          {ADD_PHASE_SHORT_LABEL}
         </Button>
       </div>
-      <p className="text-muted-foreground text-xs">{PIECES_HINT}</p>
 
       {piecesByPhase(phases, optimisticPieces).map(({ phase, pieces }) => {
         const key = phaseKey(phase);
         const phaseId = phase?.id ?? null;
         return (
-          <div
-            key={key}
-            className={cn(phase && "border-primary border-l-3 pl-3.5")}
-          >
+          <div key={key} className="group/phase">
             {phase && (
-              <div className="mb-2.5 flex items-center gap-2">
+              <div className="mb-2.5 flex items-center gap-1.5">
                 <Input
                   aria-label={PHASE_NAME_LABEL}
                   defaultValue={phase.name}
@@ -111,11 +113,16 @@ export function ProjectPieces({
                       startTransition(() => renamePhase(phase.id, name));
                     }
                   }}
-                  className="hover:border-input h-7 max-w-56 border-transparent font-semibold shadow-none"
+                  className="hover:border-input h-7 max-w-56 border-transparent bg-transparent px-2 text-sm font-semibold shadow-none dark:bg-transparent"
                 />
+                <span className="text-muted-foreground text-xs">
+                  {pieces.length > 0 &&
+                    `${pieces.length} ${pieces.length > 1 ? PIECE_COUNT_PLURAL_LABEL : PIECE_COUNT_SINGULAR_LABEL}`}
+                </span>
                 <Button
                   variant="ghost"
                   size="icon-sm"
+                  className="opacity-0 transition-opacity group-hover/phase:opacity-100 focus-visible:opacity-100"
                   aria-label={`${REMOVE_PHASE_LABEL} : ${phase.name}`}
                   disabled={pending}
                   onClick={() => startTransition(() => deletePhase(phase.id))}
@@ -155,6 +162,7 @@ export function ProjectPieces({
               {pieces.map((piece) => (
                 <PieceCard
                   key={piece.id}
+                  projectId={projectId}
                   piece={piece}
                   draggable={canDrag}
                   onOpen={() => setDialog({ pieceId: piece.id })}
@@ -165,10 +173,11 @@ export function ProjectPieces({
                   type="button"
                   variant="outline"
                   onClick={() => setDialog({ phaseId })}
-                  className="text-muted-foreground min-h-28 w-full flex-1 border-dashed"
+                  aria-label={ADD_PIECE_LABEL}
+                  className="text-muted-foreground border-input min-h-30 w-full flex-1 rounded-xl border-2 border-dashed bg-transparent"
                 >
                   <Plus />
-                  {ADD_PIECE_LABEL}
+                  {ADD_PIECE_SHORT_LABEL}
                 </Button>
               </li>
             </ul>
@@ -184,6 +193,9 @@ export function ProjectPieces({
           phases={phases}
           suggestions={suggestions}
           piece={openPiece}
+          sections={fileSections.filter(
+            ({ pieceId }) => pieceId === openPiece.id,
+          )}
           onClose={closeDialog}
         />
       )}
@@ -193,6 +205,7 @@ export function ProjectPieces({
           phaseId={dialog.phaseId}
           phases={phases}
           suggestions={suggestions}
+          sections={[]}
           onClose={closeDialog}
         />
       )}
