@@ -9,7 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useId, useState, useTransition } from "react";
+import { useId, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
@@ -29,7 +29,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -51,7 +50,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   CABINET_COUNT_LABEL,
-  CANCEL_LABEL,
   CLADDING_FORM_FIELD,
   CLADDING_PLACEHOLDER,
   DUPLICATE_PIECE_LABEL,
@@ -69,7 +67,6 @@ import {
   PIECE_TYPE_LABEL,
   PIECE_TYPE_PLACEHOLDER,
   REMOVE_PIECE_LABEL,
-  SAVE_LABEL,
   SAVED_TOAST_OPTIONS,
   UNNAMED_PIECE_LABEL,
 } from "@/constants/projects";
@@ -118,17 +115,34 @@ export function PieceDialog({
     value: String(id),
     label: name,
   }));
-  const [state, action, saving] = useActionState(
-    async (formState: PieceFormState, formData: FormData) => {
-      const next = await savePiece(formState, formData);
-      if (next?.message) {
-        toast.success(next.message, SAVED_TOAST_OPTIONS);
-        onClose();
-      }
-      return next;
-    },
-    undefined,
-  );
+  const formRef = useRef<HTMLFormElement>(null);
+  const initial = useRef<string | null>(null);
+  const [state, setState] = useState<PieceFormState>();
+  const [saving, setSaving] = useState(false);
+  const snapshot = () =>
+    JSON.stringify([
+      ...new FormData(formRef.current ?? undefined).entries(),
+    ]);
+  useEffect(() => {
+    initial.current = snapshot();
+  }, []);
+
+  // Les changements sont enregistrés à la fermeture de la fenêtre.
+  const close = async () => {
+    if (saving) return;
+    if (!formRef.current || snapshot() === initial.current) {
+      onClose();
+      return;
+    }
+    setSaving(true);
+    const next = await savePiece(state, new FormData(formRef.current));
+    setSaving(false);
+    setState(next);
+    if (next?.message) {
+      toast.success(next.message, SAVED_TOAST_OPTIONS);
+      onClose();
+    }
+  };
   const errors = state?.errors;
   const title = piece ? piece.type || UNNAMED_PIECE_LABEL : NEW_PIECE_LABEL;
 
@@ -150,7 +164,7 @@ export function PieceDialog({
     });
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog open onOpenChange={(open) => !open && void close()}>
       <DialogContent
         {...dropHandlers}
         className="max-h-11/12 gap-0 overflow-y-auto p-0 sm:max-w-5xl"
@@ -193,7 +207,11 @@ export function PieceDialog({
         <div className="flex flex-col gap-6 px-6 pt-12 pb-6">
           <form
             id={`${formId}-form`}
-            action={action}
+            ref={formRef}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void close();
+            }}
             className="flex flex-col gap-6"
           >
             <FormValidationAlerts errors={errors} />
@@ -369,18 +387,6 @@ export function PieceDialog({
               />
             </section>
           )}
-          <DialogFooter className="-mx-6 -mb-6 px-6 py-4">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              {CANCEL_LABEL}
-            </Button>
-            <Button
-              type="submit"
-              form={`${formId}-form`}
-              disabled={saving || busy}
-            >
-              {SAVE_LABEL}
-            </Button>
-          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>
