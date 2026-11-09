@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { headers } from "next/headers";
 
 import {
+  ATELIER_EMPLOYEE_MESSAGE,
   CHANGE_PASSWORD_SUCCESS_MESSAGE,
   CREATE_USER_FAILED_MESSAGE,
   CREATE_USER_SUCCESS_MESSAGE,
@@ -22,6 +23,7 @@ import {
 } from "@/constants/auth";
 import type { PrismaService } from "@/generated/effect-prisma";
 import { Role } from "@/generated/prisma/enums";
+import { newTemporaryPassword } from "@/lib/accounts";
 import { auth } from "@/lib/auth";
 import { canAccessEmployee, hasAnyRole, toAppSession } from "@/lib/permissions";
 import { getSession } from "@/lib/session";
@@ -37,7 +39,7 @@ import {
   type SwitchEmployeeFormState,
 } from "@/schemas/auth.schemas";
 
-const authApi = <A>(call: () => Promise<A>) =>
+export const authApi = <A>(call: () => Promise<A>) =>
   Effect.tryPromise({
     try: call,
     catch: (cause) =>
@@ -48,7 +50,7 @@ const authApi = <A>(call: () => Promise<A>) =>
       }),
   });
 
-const dieOnUnexpected = ({ code, cause }: AuthApiError) =>
+export const dieOnUnexpected = ({ code, cause }: AuthApiError) =>
   code ? Effect.void : Effect.die(cause);
 
 export const requireSession = Effect.fn("requireSession")(function* () {
@@ -222,7 +224,6 @@ export const createUserEffect = Effect.fn("createUser")(
     _formState: CreateUserFormState,
     {
       email,
-      password,
       role,
       employeeId: strEmployeeId,
       name,
@@ -231,6 +232,9 @@ export const createUserEffect = Effect.fn("createUser")(
     const hasEmployee = strEmployeeId !== NO_EMPLOYEE_ID;
     if (!hasEmployee && role === Role.employee) {
       return { errors: { employeeId: [EMPLOYEE_REQUIRED_MESSAGE] } };
+    }
+    if (hasEmployee && role === Role.atelier) {
+      return { errors: { employeeId: [ATELIER_EMPLOYEE_MESSAGE] } };
     }
 
     let displayName = String(name).trim();
@@ -254,12 +258,13 @@ export const createUserEffect = Effect.fn("createUser")(
       return { errors: { name: [NAME_REQUIRED_MESSAGE] } };
     }
 
+    const temporaryPassword = newTemporaryPassword();
     const requestHeaders = yield* Effect.tryPromise(headers);
     yield* authApi(() =>
       auth.api.createUser({
         body: {
           email: String(email),
-          password: String(password),
+          password: temporaryPassword,
           name: displayName,
           role: role as Role,
           data: { employeeId, mustChangePassword: true, emailVerified: true },
@@ -267,7 +272,7 @@ export const createUserEffect = Effect.fn("createUser")(
         headers: requestHeaders,
       }),
     );
-    return { message: CREATE_USER_SUCCESS_MESSAGE };
+    return { message: CREATE_USER_SUCCESS_MESSAGE, temporaryPassword };
   },
   Effect.catchTag("AuthApiError", (error) =>
     Effect.zipRight(

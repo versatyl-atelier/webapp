@@ -6,8 +6,19 @@ import {
   REDIRECT_TO_PARAM,
 } from "@/constants/auth";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
-import { PROJECT_TAB_PARAM } from "@/constants/projects";
-import { TOOLS } from "@/constants/tools";
+import {
+  NOTES_TAB,
+  PROJECT_NOTES_PATH_PATTERN,
+  PROJECT_TAB_PARAM,
+} from "@/constants/projects";
+
+import {
+  EMPLOYEE_TOOLS,
+  HOME_PATH,
+  MANAGER_TOOL,
+  type Tool,
+} from "@/constants/tools";
+
 import type { DateKey } from "@/lib/calendar";
 import type { ProjectTab } from "@/lib/projectTabs";
 
@@ -40,13 +51,27 @@ export function employeeWeekPath(
   return `${employeePath(employeeId)}?${params.toString()}`;
 }
 
+export function projectNotesPath(projectId: string): string {
+  return `/projets/${projectId}/notes`;
+}
+
 export function projectPath(projectId: string, tab?: ProjectTab): string {
-  const path = `/projets/${projectId}`;
-  if (!tab) {
-    return path;
+  if (tab === NOTES_TAB) {
+    return projectNotesPath(projectId);
   }
-  const params = new URLSearchParams({ [PROJECT_TAB_PARAM]: tab });
-  return `${path}?${params.toString()}`;
+  return `/projets/${projectId}`;
+}
+
+export function withProjectTab(
+  pathname: string,
+  searchParams: URLSearchParams,
+): URLSearchParams {
+  if (!PROJECT_NOTES_PATH_PATTERN.test(pathname)) {
+    return searchParams;
+  }
+  const params = new URLSearchParams(searchParams);
+  params.set(PROJECT_TAB_PARAM, NOTES_TAB);
+  return params;
 }
 
 export function changePasswordPath(redirectTo?: string): string {
@@ -58,10 +83,13 @@ export function isWithinPath(pathname: string, prefix: string): boolean {
 }
 
 export function isProtectedPath(pathname: string): boolean {
-  return PROTECTED_PATH_PREFIXES.some((prefix) =>
-    isWithinPath(pathname, prefix),
+  return (
+    pathname === HOME_PATH ||
+    PROTECTED_PATH_PREFIXES.some((prefix) => isWithinPath(pathname, prefix))
   );
 }
+
+const ALL_TOOLS = [...EMPLOYEE_TOOLS, MANAGER_TOOL];
 
 function splitHref(href: string): { path: string; params: URLSearchParams } {
   const [path, query = ""] = href.split("?");
@@ -69,14 +97,26 @@ function splitHref(href: string): { path: string; params: URLSearchParams } {
 }
 
 export function isToolPath(pathname: string): boolean {
-  return TOOLS.some(({ href }) => isWithinPath(pathname, splitHref(href).path));
+  return ALL_TOOLS.some(({ href }) =>
+    isWithinPath(pathname, splitHref(href).path),
+  );
+}
+
+export function activeSectionHref(
+  tools: readonly Tool[],
+  pathname: string,
+): string | undefined {
+  return tools
+    .filter(({ href }) => isWithinPath(pathname, href))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 }
 
 export function activeToolHref(
   pathname: string,
-  searchParams: URLSearchParams,
+  currentSearchParams: URLSearchParams,
 ): string | undefined {
-  return TOOLS.map(({ href }) => ({ href, ...splitHref(href) }))
+  const searchParams = withProjectTab(pathname, currentSearchParams);
+  return ALL_TOOLS.map(({ href }) => ({ href, ...splitHref(href) }))
     .filter(
       ({ path, params }) =>
         isWithinPath(pathname, path) &&

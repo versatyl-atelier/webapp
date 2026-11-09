@@ -1,19 +1,25 @@
-import { EmployeeSelect } from "@/components/EmployeeSelect";
+import { redirect } from "next/navigation";
 
-import { getEmployees } from "@/actions/employees";
-import { pinEmployeeFirst } from "@/lib/employees";
-import { Role } from "@/generated/prisma/enums";
+import { ALL_EMPLOYEES_ACCESS_ROLES } from "@/constants/auth";
+import { PUNCH_PATH, PUNCH_SELECT_EMPLOYEE_PROMPT } from "@/constants/punch";
+import { employeePath } from "@/lib/paths";
 import { requireActiveSession } from "@/lib/session";
 
 export default async function Page() {
-  const session = await requireActiveSession("/punch");
-  const employees = await getEmployees();
+  const session = await requireActiveSession(PUNCH_PATH);
+  if (
+    session.employeeId !== null &&
+    !ALL_EMPLOYEES_ACCESS_ROLES.includes(session.role)
+  ) {
+    redirect(employeePath(session.employeeId));
+  }
+
   return (
-    <EmployeeSelect
-      employees={pinEmployeeFirst(employees || [], session.employeeId)}
-      currentEmployeeId={session.employeeId}
-      canAccessAll={session.role === Role.manager}
-      className="mt-4 w-md self-center"
-    />
+    <p className="text-muted-foreground m-auto flex items-center gap-3 p-4 text-lg">
+      <span aria-hidden className="text-3xl">
+        ←
+      </span>
+      {PUNCH_SELECT_EMPLOYEE_PROMPT}
+    </p>
   );
 }

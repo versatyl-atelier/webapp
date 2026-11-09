@@ -8,9 +8,9 @@ import {
   getEmployeesWithoutAccountEffect,
 } from "@/effects/employees";
 
-export const getEmployee = cachedGetter(getEmployeeEffect, [Role.employee]);
+export const getEmployee = cachedGetter(getEmployeeEffect, [Role.atelier]);
 
-export const getEmployees = cachedGetter(getEmployeesEffect, [Role.employee]);
+export const getEmployees = cachedGetter(getEmployeesEffect, [Role.atelier]);
 
 export const getEmployeesWithoutAccount = cachedGetter(
   getEmployeesWithoutAccountEffect,

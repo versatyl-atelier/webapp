@@ -6,24 +6,10 @@ import { toast } from "sonner";
 import { addManualTime } from "@/actions/timeEntries";
 import { Button } from "@/components/ui/button";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
-import ProjectSelect from "@/components/ProjectSelect";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import TimeEntryFields, { type DateOption } from "@/components/TimeEntryFields";
 
 const DEFAULT_MANUAL_HOURS = "1";
 const LUNCH_HOURS_LABEL = "🍽️ Ajouter Dîner (0.5h)";
-
-export type DateOption = {
-  value: string;
-  label: string;
-};
 
 type ManualTimeFormProps = {
   employeeId: number;
@@ -49,74 +35,38 @@ export default function ManualTimeForm({
   }, [state, router]);
 
   return (
-    <div className="bg-card rounded-lg border-2 p-2.5">
+    <div className="bg-card rounded-lg border-2 p-2">
       <div className="border-primary mb-2 border-b-2 pb-1 text-center text-xs font-bold">
         Ajout Manuel
       </div>
-      <form action={action} className="space-y-2.5">
+      <form action={action} className="space-y-1.5">
         <input type="hidden" name="employeeId" value={employeeId} />
         <FormValidationAlerts errors={state?.errors} />
-        <ProjectSelect className="p-1.5" disabled={pending || !!disabled} />
-        {state?.errors?.projectId?.map((error: string) => (
-          <FieldError key={error}>- {error}</FieldError>
-        ))}
-        <Field>
-          <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
-            Heures
-          </FieldLabel>
-          <Input
-            name="hours"
-            type="text"
-            defaultValue={DEFAULT_MANUAL_HOURS}
-            placeholder="ex: 1.5, 1h30, 30m"
-            className="w-full rounded border-2 px-1.5 py-1 text-xs"
-            disabled={pending || !!disabled}
-          />
-          {state?.errors?.hours?.map((error: string) => (
-            <FieldError key={error}>- {error}</FieldError>
-          ))}
-        </Field>
-        <Field>
-          <FieldLabel className="mb-1 block text-xs font-semibold uppercase">
-            Date
-          </FieldLabel>
-          <Select
-            name="date"
-            items={dateOptions}
-            defaultValue={defaultDate}
-            disabled={pending || !!disabled}
-          >
-            <SelectTrigger className="w-full rounded border-2 px-1.5 py-1 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {dateOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {state?.errors?.date?.map((error: string) => (
-            <FieldError key={error}>- {error}</FieldError>
-          ))}
-        </Field>
+        <TimeEntryFields
+          errors={state?.errors}
+          dateOptions={dateOptions}
+          defaultDate={defaultDate}
+          defaultHours={DEFAULT_MANUAL_HOURS}
+          disabled={pending || !!disabled}
+        />
         <Button
+          size="sm"
           type="submit"
           name="command"
           value="add"
           disabled={pending || !!disabled}
-          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
+          className="w-full rounded-sm text-xs font-semibold uppercase"
         >
           Ajouter
         </Button>
         <Button
+          size="sm"
           type="submit"
           name="command"
           value="lunch"
           variant="secondary"
           disabled={pending || !!disabled}
-          className="w-full rounded-sm py-2 text-xs font-semibold uppercase"
+          className="w-full rounded-sm text-xs font-semibold uppercase"
         >
           {LUNCH_HOURS_LABEL}
         </Button>

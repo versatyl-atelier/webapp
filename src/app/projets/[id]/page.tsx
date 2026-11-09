@@ -1,81 +1,92 @@
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import {
   getFicheSuggestions,
   getProject,
-  getProjectNotes,
+  isProjectPinned,
 } from "@/actions/projects";
+import { CreateFolderButton } from "@/components/CreateFolderButton";
 import { ProjectContacts } from "@/components/ProjectContacts";
+import { ProjectFilesSection } from "@/components/ProjectFilesSection";
 import { ProjectHeader } from "@/components/ProjectHeader";
-import { ProjectNotes } from "@/components/ProjectNotes";
 import { ProjectPieces } from "@/components/ProjectPieces";
-import { ProjectTabs } from "@/components/ProjectTabs";
-import { TabsContent } from "@/components/ui/tabs";
+import { ProjectViewTracker } from "@/components/ProjectViewTracker";
+import { RowTitle } from "@/components/RowTitle";
 import {
-  NOTES_TAB,
-  PROJECT_TAB_PARAM,
-  PROJECT_TABS,
-  STRUCTURE_TAB,
+  NOTES_EMOJI,
+  NOTES_HEADING,
+  NOTES_LINK_LABEL,
 } from "@/constants/projects";
-import { projectPath } from "@/lib/paths";
-import { parseProjectTab } from "@/lib/projectTabs";
+import { projectNotesPath, projectPath } from "@/lib/paths";
 import { requireActiveSession } from "@/lib/session";
 
 type ProjectPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export default async function Page({ params, searchParams }: ProjectPageProps) {
+export default async function Page({ params }: ProjectPageProps) {
   const { id } = await params;
-  const session = await requireActiveSession(projectPath(id));
-  const [project, suggestions, notes] = await Promise.all([
+  await requireActiveSession(projectPath(id));
+  const [project, suggestions, pinned] = await Promise.all([
     getProject(id),
     getFicheSuggestions(),
-    getProjectNotes(id),
+    isProjectPinned(id),
   ]);
 
   if (!project) {
     return notFound();
   }
 
-  const query = await searchParams;
-  const tab = parseProjectTab(query[PROJECT_TAB_PARAM]);
-
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 pt-6 pb-16">
-      <ProjectHeader project={project} />
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 pt-4 pb-16">
+      <ProjectViewTracker projectId={project.id} />
+      <ProjectHeader project={project} pinned={pinned} />
+      <ProjectPieces
+        projectId={project.id}
+        phases={project.phases}
+        pieces={project.pieces}
+        fileSections={project.fileSections}
+        suggestions={suggestions}
+      />
       <ProjectContacts
         projectId={project.id}
+        project={{ color: project.color, address: project.address }}
         contacts={project.contacts}
         suggestions={suggestions}
       />
-      <ProjectTabs tab={tab}>
-        {PROJECT_TABS.map(({ value }) => (
-          <TabsContent key={value} value={value}>
-            {value === STRUCTURE_TAB ? (
-              <div className="flex flex-col gap-8 pt-4">
-                <ProjectPieces
-                  projectId={project.id}
-                  phases={project.phases}
-                  pieces={project.pieces}
-                  suggestions={suggestions}
-                />
-              </div>
-            ) : value === NOTES_TAB ? (
-              <ProjectNotes
-                projectId={project.id}
-                phases={project.phases}
-                notes={notes}
-                currentUser={{ id: session.userId, name: session.name }}
-                now={new Date()}
-              />
-            ) : (
-              "…"
-            )}
-          </TabsContent>
-        ))}
-      </ProjectTabs>
+      <section
+        aria-labelledby="project-notes"
+        className="flex flex-col gap-2.5"
+      >
+        <RowTitle id="project-notes" className="min-h-7 content-center">
+          {NOTES_HEADING}
+        </RowTitle>
+        <Link
+          href={projectNotesPath(project.id)}
+          className="group bg-card hover:border-input focus-visible:ring-ring/50 inline-flex w-fit items-center gap-2.5 rounded-xl border px-4 py-3 font-medium shadow-xs outline-hidden transition-shadow hover:shadow-md focus-visible:ring-3"
+        >
+          <span aria-hidden className="text-lg">
+            {NOTES_EMOJI}
+          </span>
+          {NOTES_LINK_LABEL}
+          <ArrowRight
+            aria-hidden
+            className="text-muted-foreground size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+          />
+        </Link>
+      </section>
+      {project.dropboxLinked ? (
+        <ProjectFilesSection
+          projectId={project.id}
+          sections={project.fileSections.filter(
+            ({ pieceId }) => pieceId === null,
+          )}
+        />
+      ) : (
+        project.isManual && <CreateFolderButton projectId={project.id} />
+      )}
     </div>
   );
 }

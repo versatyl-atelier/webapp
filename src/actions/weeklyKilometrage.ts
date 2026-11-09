@@ -7,5 +7,5 @@ import { Role } from "@/generated/prisma/enums";
 import { getWeeklyKilometrageEffect } from "@/effects/weeklyKilometrage";
 
 export const getWeeklyKilometrage = cachedGetter(getWeeklyKilometrageEffect, [
-  Role.employee,
+  Role.atelier,
 ]);

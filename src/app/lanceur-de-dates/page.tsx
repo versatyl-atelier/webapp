@@ -1,8 +1,29 @@
-export default function Page() {
+import { getLanceurRows, getPlanSettings } from "@/actions/lanceur";
+import { getClosures } from "@/actions/lanceurSettings";
+import { LanceurPlanner } from "@/components/LanceurPlanner";
+import { LanceurSync } from "@/components/LanceurSync";
+import { Role } from "@/generated/prisma/enums";
+import { LANCEUR_PATH } from "@/constants/tools";
+import { toLocalDateKey } from "@/lib/calendar";
+import { requireActiveSession } from "@/lib/session";
+
+export default async function Page() {
+  const session = await requireActiveSession(LANCEUR_PATH);
+  const [rows, settings, closures] = await Promise.all([
+    getLanceurRows(),
+    getPlanSettings(),
+    session.role === Role.manager ? getClosures() : null,
+  ]);
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center">
-      <h1 className="text-3xl font-bold">Lanceur de dates</h1>
-      <p className="text-muted-foreground mt-2">Placeholder page</p>
-    </div>
+    <>
+      <LanceurSync />
+      <LanceurPlanner
+        rows={rows}
+        settings={settings}
+        today={toLocalDateKey(new Date())}
+        closures={closures}
+      />
+    </>
   );
 }

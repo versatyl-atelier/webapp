@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
 import type { PrismaService } from "@/generated/effect-prisma";
-import { TimeEntry } from "@/generated/prisma/client";
+import { TimeEntry, TimeEntryProject } from "@/generated/prisma/client";
 import { ProjectType } from "@/generated/prisma/enums";
 import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
 import {
@@ -9,7 +9,6 @@ import {
   TimeEntryCreateArgs,
   TimeEntryDeleteArgs,
   TimeEntryFindFirstArgs,
-  TimeEntryFindManyArgs,
   TimeEntryProjectCreateArgs,
   TimeEntryProjectCreateManyArgs,
   TimeEntryProjectDeleteManyArgs,
@@ -23,21 +22,73 @@ import {
   DateRange,
   type EditTimeEntryFormState,
   type AddManualTimeFormState,
-  type FillDayFormState,
+  type MoveTimeEntryFormState,
+  type MoveTimeEntryUndo,
 } from "@/schemas/timeEntries.schemas";
 
-import { parseItemKey } from "@/lib/itemKey";
+import { INVALID_DATE_MESSAGE } from "@/constants/calendar";
 import {
-  secondsToHours,
-  parseTimeToSeconds,
-  calculateHoursNeeded,
-} from "@/lib/time";
+  DEFAULT_SUBTASK_ID,
+  LUNCH_TASK_NAME,
+  SUBTASK_NOT_FOUND_MESSAGE,
+} from "@/constants/tasks";
+import {
+  ACTIVE_PUNCH_NOT_MOVABLE_MESSAGE,
+  COPY_COMMAND,
+  COPY_ENTRY_METHOD,
+  COPY_UNDONE_MESSAGE,
+  ENTRY_COPIED_MESSAGE,
+  ENTRY_MOVED_MESSAGE,
+  ENTRY_NOT_FOUND_MESSAGE,
+  MOVE_COMMAND,
+  MOVE_UNDONE_MESSAGE,
+  PROJECT_REQUIRED_MESSAGE,
+  UNDO_COPY_COMMAND,
+  UNDO_MOVE_COMMAND,
+} from "@/constants/timeEntries";
+import { isDateKey } from "@/lib/calendar";
+import { parseItemKey } from "@/lib/itemKey";
+import { secondsToHours, parseTimeToSeconds, shiftToDay } from "@/lib/time";
 import { assertEmployeeAccess } from "@/effects/auth";
 import { assertWeekNotFrozen, handleWeekFrozen } from "@/effects/frozenWeeks";
 import { ProjectOrTask } from "@/components/ProjectSelect";
 
-const LUNCH_TASK_NAME = "Dîner";
 const LUNCH_HOURS = 0.5;
+
+type TimeEntryCopy = Pick<TimeEntry, "employeeId" | "start" | "end"> & {
+  subtaskId: string;
+  projects: Pick<TimeEntryProject, "projectId" | "taskId" | "projectType">[];
+};
+
+const createTimeEntryCopy = Effect.fn("createTimeEntryCopy")(function* (
+  prisma: PrismaService,
+  { employeeId, start, end, subtaskId, projects }: TimeEntryCopy,
+) {
+  return yield* prisma.$transaction(
+    Effect.gen(function* () {
+      const createArgs: TimeEntryCreateArgs = {
+        data: {
+          employeeId,
+          start,
+          end,
+          subtaskId,
+          entryMethod: COPY_ENTRY_METHOD,
+        },
+      };
+      const copy = yield* prisma.timeEntry.create(createArgs);
+      const createProjectsArgs: TimeEntryProjectCreateManyArgs = {
+        data: projects.map(({ projectId, taskId, projectType }) => ({
+          timeEntryId: copy.id,
+          projectId,
+          taskId,
+          projectType,
+        })),
+      };
+      yield* prisma.timeEntryProject.createMany(createProjectsArgs);
+      return copy;
+    }),
+  );
+});
 
 const assertTimeEntryAccess = Effect.fn("assertTimeEntryAccess")(function* (
   prisma: PrismaService,
@@ -102,11 +153,18 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
       projectId,
       startTime,
       hours,
+      date,
+      subtaskId,
       command,
     }: Record<string, FormDataEntryValue | null>,
   ) {
     const entryId = parseInt(String(timeEntryId), 10);
     yield* Effect.annotateLogsScoped({ timeEntryId: entryId });
+
+    if (date && !isDateKey(String(date))) {
+      return { errors: { date: [INVALID_DATE_MESSAGE] } };
+    }
+    const targetDay = date ? dayBounds(String(date)).dayStart : null;
 
     const findArgs: TimeEntryFindFirstArgs = {
       where: { id: entryId, isDeleted: false },
@@ -118,25 +176,69 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
       yield* Effect.annotateLogsScoped({
         employeeId: existingEntry.employeeId,
       });
+      if (command !== COPY_COMMAND) {
+        yield* assertWeekNotFrozen(
+          prisma,
+          existingEntry.employeeId,
+          existingEntry.start,
+        );
+      }
       yield* assertWeekNotFrozen(
         prisma,
         existingEntry.employeeId,
-        existingEntry.start,
+        targetDay ?? existingEntry.start,
       );
     }
 
     switch (command) {
-      case "save": {
+      case "save":
+      case COPY_COMMAND: {
         const hourValue = secondsToHours(parseTimeToSeconds(String(hours)));
-        const start = new Date(String(startTime));
+        const currentStart = new Date(String(startTime));
+        const start = targetDay
+          ? shiftToDay(currentStart, targetDay)
+          : currentStart;
         const end = new Date(start.getTime() + hourValue * 3600000);
         const { id, type } = parseItemKey(String(projectId));
+        if (!id) {
+          return { errors: { projectId: [PROJECT_REQUIRED_MESSAGE] } };
+        }
         const strId = id.toString();
+        const entrySubtaskId =
+          type === ProjectType.trello && subtaskId
+            ? String(subtaskId)
+            : DEFAULT_SUBTASK_ID;
+        const subtask = yield* prisma.subtask.findFirst({
+          where: { id: entrySubtaskId, isDeleted: false },
+        });
+        if (!subtask) {
+          return { errors: { subtaskId: [SUBTASK_NOT_FOUND_MESSAGE] } };
+        }
+        if (command === COPY_COMMAND) {
+          if (!existingEntry?.employeeId) {
+            return { errors: { timeEntryId: [ENTRY_NOT_FOUND_MESSAGE] } };
+          }
+          yield* createTimeEntryCopy(prisma, {
+            employeeId: existingEntry.employeeId,
+            start,
+            end,
+            subtaskId: entrySubtaskId,
+            projects: [
+              {
+                projectType: type,
+                projectId: type === ProjectType.trello ? strId : null,
+                taskId: type === ProjectType.task ? parseInt(strId, 10) : null,
+              },
+            ],
+          });
+          return { message: ENTRY_COPIED_MESSAGE };
+        }
         yield* Effect.tryPromise(() =>
           putTimeEntry({
             id: entryId,
             start,
             end,
+            subtaskId: entrySubtaskId,
             projects: [
               {
                 id: type === ProjectType.trello ? strId : parseInt(strId, 10),
@@ -199,6 +301,7 @@ export const putTimeEntryEffect = Effect.fn("putTimeEntry")(function* (
     data: {
       start: entry.start,
       end: entry.end,
+      subtaskId: entry.subtaskId,
     },
   };
 
@@ -217,26 +320,6 @@ function dayBounds(date: string) {
   end.setDate(end.getDate() + 1);
   return { dayStart: start, dayEnd: end };
 }
-
-const getExistingHours = Effect.fn("getExistingHours")(function* (
-  prisma: PrismaService,
-  employeeId: number,
-  date: string,
-) {
-  const { dayStart, dayEnd } = dayBounds(date);
-  const args: TimeEntryFindManyArgs = {
-    where: {
-      employeeId,
-      isDeleted: false,
-      start: { gte: dayStart, lt: dayEnd },
-    },
-  };
-  const entries = yield* prisma.timeEntry.findMany(args);
-  return entries.reduce((sum, entry) => {
-    if (!entry.end) return sum;
-    return sum + (entry.end.getTime() - entry.start.getTime()) / 3600000;
-  }, 0);
-});
 
 export const addManualTimeEffect = Effect.fn("addManualTime")(
   function* (
@@ -328,64 +411,96 @@ export const addManualTimeEffect = Effect.fn("addManualTime")(
   Effect.catchTag("WeekFrozenError", handleWeekFrozen),
 );
 
-export const fillDayEffect = Effect.fn("fillDay")(
+export const moveTimeEntryEffect = Effect.fn("moveTimeEntry")(
   function* (
     prisma: PrismaService,
-    _formState: FillDayFormState,
+    _formState: MoveTimeEntryFormState,
     {
-      employeeId,
-      projectId,
-      target,
+      timeEntryId,
       date,
+      sourceDate,
+      command,
     }: Record<string, FormDataEntryValue | null>,
   ) {
-    const id = parseInt(String(employeeId), 10);
-    yield* assertEmployeeAccess(id);
-    yield* Effect.annotateLogsScoped({ employeeId: id });
+    const entryId = parseInt(String(timeEntryId), 10);
+    yield* Effect.annotateLogsScoped({ timeEntryId: entryId, command });
+
+    if (!isDateKey(String(date))) {
+      return { errors: { date: [INVALID_DATE_MESSAGE] } };
+    }
+    if (sourceDate && !isDateKey(String(sourceDate))) {
+      return { errors: { sourceDate: [INVALID_DATE_MESSAGE] } };
+    }
+
+    const entry = yield* prisma.timeEntry.findFirst({
+      where: { id: entryId, isDeleted: false },
+      include: { projects: true },
+    });
+    yield* assertEmployeeAccess(entry?.employeeId ?? null);
+    if (!entry?.employeeId) {
+      return { errors: { timeEntryId: [ENTRY_NOT_FOUND_MESSAGE] } };
+    }
+    const { employeeId } = entry;
+    yield* Effect.annotateLogsScoped({ employeeId });
+
+    if (command === UNDO_COPY_COMMAND) {
+      if (entry.entryMethod !== COPY_ENTRY_METHOD) {
+        return { errors: { timeEntryId: [ENTRY_NOT_FOUND_MESSAGE] } };
+      }
+      yield* assertWeekNotFrozen(prisma, employeeId, entry.start);
+      yield* deleteTimeEntryEffect(prisma, entryId);
+      return { message: COPY_UNDONE_MESSAGE };
+    }
+
+    if (!entry.end) {
+      return { errors: { timeEntryId: [ACTIVE_PUNCH_NOT_MOVABLE_MESSAGE] } };
+    }
 
     const { dayStart } = dayBounds(String(date));
-    yield* assertWeekNotFrozen(prisma, id, dayStart);
+    yield* assertWeekNotFrozen(prisma, employeeId, dayStart);
 
-    const targetValue = secondsToHours(parseTimeToSeconds(String(target)));
-    if (!targetValue) {
-      return { errors: { target: ["Objectif invalide"] } };
-    }
-
-    const { id: rawId, type } = parseItemKey(String(projectId));
-    if (!rawId) {
-      return { errors: { projectId: ["Projet requis"] } };
-    }
-    const strId = rawId.toString();
-
-    const existingHours = yield* getExistingHours(prisma, id, String(date));
-    const hoursNeeded = calculateHoursNeeded(targetValue, existingHours);
-
-    if (hoursNeeded <= 0) {
-      return { errors: { target: ["Objectif déjà atteint"] } };
-    }
-
-    const start = dayStart;
-    const end = new Date(start.getTime() + hoursNeeded * 3600000);
-
-    yield* prisma.$transaction(
-      Effect.gen(function* () {
-        const createArgs: TimeEntryCreateArgs = {
-          data: { employeeId: id, start, end, entryMethod: "fill" },
-        };
-        const timeEntry = yield* prisma.timeEntry.create(createArgs);
-        const createProjectArgs: TimeEntryProjectCreateArgs = {
-          data: {
-            timeEntryId: timeEntry.id,
-            projectType: type,
-            projectId: type === ProjectType.trello ? strId : null,
-            taskId: type === ProjectType.task ? parseInt(strId, 10) : null,
-          },
-        };
-        yield* prisma.timeEntryProject.create(createProjectArgs);
-      }),
+    const start = shiftToDay(entry.start, dayStart);
+    const end = new Date(
+      start.getTime() + (entry.end.getTime() - entry.start.getTime()),
     );
 
-    return { message: "Comblé" };
+    if (command === MOVE_COMMAND || command === UNDO_MOVE_COMMAND) {
+      if (start.getTime() === entry.start.getTime()) {
+        return {};
+      }
+      yield* assertWeekNotFrozen(prisma, employeeId, entry.start);
+      const updateArgs: TimeEntryUpdateArgs = {
+        where: { id: entryId },
+        data: { start, end },
+      };
+      yield* prisma.timeEntry.update(updateArgs);
+      if (command === UNDO_MOVE_COMMAND) {
+        return { message: MOVE_UNDONE_MESSAGE };
+      }
+      if (!sourceDate) {
+        return { message: ENTRY_MOVED_MESSAGE };
+      }
+      const undo: MoveTimeEntryUndo = {
+        timeEntryId: String(entryId),
+        date: String(sourceDate),
+        command: UNDO_MOVE_COMMAND,
+      };
+      return { message: ENTRY_MOVED_MESSAGE, undo };
+    }
+
+    const copy = yield* createTimeEntryCopy(prisma, {
+      employeeId,
+      start,
+      end,
+      subtaskId: entry.subtaskId,
+      projects: entry.projects,
+    });
+    const undo: MoveTimeEntryUndo = {
+      timeEntryId: String(copy.id),
+      date: String(date),
+      command: UNDO_COPY_COMMAND,
+    };
+    return { message: ENTRY_COPIED_MESSAGE, undo };
   },
   Effect.catchTag("WeekFrozenError", handleWeekFrozen),
 );

@@ -2,7 +2,7 @@
 
 import { ChevronDown, Search } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
 
 import {
@@ -21,7 +21,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { PROJECT_TAB_PARAM } from "@/constants/projects";
-import { projectPath } from "@/lib/paths";
+import { projectPath, withProjectTab } from "@/lib/paths";
 import { findProjectTab, type ProjectTab } from "@/lib/projectTabs";
 import { projectColorLabel, projectColorStyle } from "@/lib/projects";
 import { normalize } from "@/lib/text";
@@ -88,7 +88,11 @@ type ProjectsFilterProps = {
 
 export function ProjectsFilter({ projects }: ProjectsFilterProps) {
   const inputId = useId();
-  const tab = findProjectTab(useSearchParams().get(PROJECT_TAB_PARAM));
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tab = findProjectTab(
+    withProjectTab(pathname, searchParams).get(PROJECT_TAB_PARAM),
+  );
   const [query, setQuery] = useState("");
   const needle = normalize(query);
   const matches = projects.filter(({ name }) =>

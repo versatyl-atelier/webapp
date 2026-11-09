@@ -2,7 +2,7 @@ import { createAccessControl } from "better-auth/plugins/access";
 import { defaultStatements } from "better-auth/plugins/admin/access";
 import { Schema } from "effect";
 
-import { ROLE_RANK } from "@/constants/auth";
+import { ALL_EMPLOYEES_ACCESS_ROLES, ROLE_RANK } from "@/constants/auth";
 import { Role } from "@/generated/prisma/enums";
 import type { AppSession } from "@/schemas/auth.schemas";
 
@@ -14,6 +14,7 @@ export const roles = {
     user: ["create", "list", "get", "set-role", "set-password"],
     session: [],
   }),
+  [Role.atelier]: ac.newRole({ user: [], session: [] }),
 };
 
 const decodeRole = Schema.decodeUnknownOption(Schema.Enums(Role));
@@ -35,7 +36,7 @@ export function canAccessEmployee(
   session: Pick<AppSession, "role" | "employeeId">,
   employeeId: number | null,
 ): boolean {
-  if (session.role === Role.manager) {
+  if (ALL_EMPLOYEES_ACCESS_ROLES.includes(session.role)) {
     return true;
   }
   return employeeId !== null && session.employeeId === employeeId;

@@ -8,14 +8,17 @@ import {
   useState,
 } from "react";
 
-import { EVENT_CATEGORIES, type EventCategory } from "@/constants/calendar";
+import {
+  CALENDAR_FILTER_KEYS,
+  type CalendarFilterKey,
+} from "@/constants/calendar";
 import { toggleFilter } from "@/lib/calendar";
 
 interface CalendarFiltersContextType {
   query: string;
   setQuery: (query: string) => void;
-  activeCategories: ReadonlySet<EventCategory>;
-  toggleCategory: (category: EventCategory) => void;
+  activeFilters: ReadonlySet<CalendarFilterKey>;
+  toggleFilterKey: (key: CalendarFilterKey) => void;
 }
 
 const CalendarFiltersContext = createContext<CalendarFiltersContextType | null>(
@@ -24,19 +27,19 @@ const CalendarFiltersContext = createContext<CalendarFiltersContextType | null>(
 
 export function CalendarFiltersProvider({ children }: PropsWithChildren) {
   const [query, setQuery] = useState("");
-  const [activeCategories, setActiveCategories] = useState<
-    ReadonlySet<EventCategory>
+  const [activeFilters, setActiveFilters] = useState<
+    ReadonlySet<CalendarFilterKey>
   >(() => new Set());
 
-  const toggleCategory = useCallback((category: EventCategory) => {
-    setActiveCategories((current) =>
-      toggleFilter(current, category, EVENT_CATEGORIES),
+  const toggleFilterKey = useCallback((key: CalendarFilterKey) => {
+    setActiveFilters((current) =>
+      toggleFilter(current, key, CALENDAR_FILTER_KEYS),
     );
   }, []);
 
   return (
     <CalendarFiltersContext.Provider
-      value={{ query, setQuery, activeCategories, toggleCategory }}
+      value={{ query, setQuery, activeFilters, toggleFilterKey }}
     >
       {children}
     </CalendarFiltersContext.Provider>

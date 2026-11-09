@@ -3,7 +3,7 @@ import { ProjectsFilter } from "@/components/ProjectsFilter";
 import { Role } from "@/generated/prisma/enums";
 import { requireActiveSession } from "@/lib/session";
 
-async function loadProjects() {
+export async function loadProjects() {
   const session = await requireActiveSession("/projets");
   if (session.role === Role.manager) {
     return getAllProjects();
