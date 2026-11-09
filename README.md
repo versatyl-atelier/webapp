@@ -38,7 +38,7 @@ Cards for projects, phases and pieces are created in Trello from the app, and ca
 | `TRELLO_TOKEN`  | Token authorized for a service account that is a member of every board used |
 | `TRELLO_SECRET` | The Power-Up's secret, used to verify the signature of incoming webhooks    |
 
-- Trello calls `<TRELLO_PUBLIC_URL>/api/trello/webhook`, falling back to `BETTER_AUTH_URL`. It must be reachable from the internet: on a deployment `BETTER_AUTH_URL` is enough, locally set `TRELLO_PUBLIC_URL` to a tunnel URL (e.g. `cloudflared tunnel --url http://localhost:3000`)
+- Trello calls `<BETTER_AUTH_URL>/api/trello/webhook`, so the deployment must be reachable from the internet and webhooks cannot be registered from localhost
 - Managers configure destinations, list-to-stage lists and webhooks at `/gestionnaire/trello`
 - Never put real values in `.env.example`, it is committed
 

@@ -16,7 +16,6 @@ import {
   getTrelloConfigEffect,
   getTrelloListsEffect,
   registerTrelloWebhooksEffect,
-  reregisterTrelloWebhooksEffect,
   saveTrelloDestinationEffect,
   saveTrelloStageListEffect,
 } from "@/effects/trelloConfig";
@@ -50,12 +49,6 @@ const clearStageListMutation = protectedEffect(
 );
 const registerWebhooksMutation = protectedEffect(
   registerTrelloWebhooksEffect,
-  [Role.manager],
-  "mutation",
-);
-
-const reregisterWebhooksMutation = protectedEffect(
-  reregisterTrelloWebhooksEffect,
   [Role.manager],
   "mutation",
 );
@@ -95,12 +88,6 @@ export async function clearTrelloStageList(stage: ProjectStage): Promise<void> {
 
 export async function registerTrelloWebhooks(): Promise<number> {
   const registered = await registerWebhooksMutation();
-  refresh();
-  return registered;
-}
-
-export async function reregisterTrelloWebhooks(): Promise<number> {
-  const registered = await reregisterWebhooksMutation();
   refresh();
   return registered;
 }

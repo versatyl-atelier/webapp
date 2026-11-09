@@ -2,7 +2,6 @@ import { Effect, Schema } from "effect";
 
 import {
   createTrelloWebhook,
-  deleteTrelloWebhook,
   listTrelloWebhooks,
   trelloCallbackUrl,
   getTrelloBoard,
@@ -69,35 +68,6 @@ export const getTrelloConfigEffect = Effect.fn("getTrelloConfig")(function* (
       }),
     })),
   };
-});
-
-export const reregisterTrelloWebhooksEffect = Effect.fn(
-  "reregisterTrelloWebhooks",
-)(function* (prisma: PrismaService) {
-  const [destinations, stageLists, existing] = yield* Effect.all([
-    prisma.trelloDestination.findMany({ select: { boardId: true } }),
-    prisma.trelloStageList.findMany({ select: { boardId: true } }),
-    listTrelloWebhooks(),
-  ]);
-  const boardIds = new Set(
-    [...destinations, ...stageLists].map(({ boardId }) => boardId),
-  );
-  for (const boardId of boardIds) {
-    const ours = existing.filter(
-      ({ idModel, callbackURL }) =>
-        idModel === boardId && callbackURL.endsWith(TRELLO_WEBHOOK_PATH),
-    );
-    const webhook = yield* createTrelloWebhook(boardId);
-    for (const { id } of ours.filter(({ id: oldId }) => oldId !== webhook.id)) {
-      yield* deleteTrelloWebhook(id);
-    }
-    yield* prisma.trelloWebhook.deleteMany({ where: { boardId } });
-    yield* prisma.trelloWebhook.create({
-      data: { boardId, webhookId: webhook.id },
-    });
-  }
-  yield* Effect.annotateLogsScoped({ webhooksReregistered: boardIds.size });
-  return boardIds.size;
 });
 
 export const getTrelloListsEffect = Effect.fn("getTrelloLists")(function* (

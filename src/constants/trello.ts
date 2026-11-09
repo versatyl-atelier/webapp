@@ -41,7 +41,6 @@ export const TRELLO_PATHS = {
   organizationBoards: (id: string) => `/organizations/${id}/boards`,
   cards: "/cards",
   webhooks: "/webhooks",
-  webhook: (id: string) => `/webhooks/${id}`,
   board: (id: string) => `/boards/${id}`,
   boardLists: (id: string) => `/boards/${id}/lists`,
   list: (id: string) => `/lists/${id}`,
@@ -157,9 +156,6 @@ export const TRELLO_WEBHOOKS_DESCRIPTION =
   "Un webhook par tableau utilisé permet à Trello d’informer l’application.";
 export const TRELLO_REGISTER_WEBHOOKS_LABEL = "Enregistrer les webhooks";
 export const TRELLO_WEBHOOKS_NONE_LABEL = "Aucun tableau configuré";
-export const TRELLO_REREGISTER_WEBHOOKS_LABEL = "Réenregistrer les webhooks";
-export const TRELLO_WEBHOOKS_DEV_NOTE =
-  "Réservé au développement local : le tunnel change d’adresse à chaque lancement. Après avoir mis à jour TRELLO_PUBLIC_URL et redémarré le serveur, réenregistrez les webhooks. En production, l’adresse est stable et l’enregistrement se fait une seule fois.";
 export const TRELLO_WEBHOOK_STALE_LABEL = "Adresse périmée";
 export const TRELLO_WEBHOOK_FAILURES_LABEL = "échecs de livraison";
 export const TRELLO_WEBHOOK_ACTIVE_LABEL = "Webhook actif";
@@ -174,7 +170,6 @@ export const TRELLO_CLEAR_LABEL = "Retirer";
 export const TRELLO_SAVE_LABEL = "Enregistrer";
 export const TRELLO_SAVED_MESSAGE = "Configuration Trello enregistrée";
 export const TRELLO_CLEARED_MESSAGE = "Configuration Trello retirée";
-export const TRELLO_WEBHOOKS_REREGISTERED_MESSAGE = "Webhooks réenregistrés";
 export const TRELLO_WEBHOOKS_REGISTERED_MESSAGE = "Webhooks enregistrés";
 export const TRELLO_LIST_TAKEN_MESSAGE =
   "Cette liste est déjà associée à une autre étape";
