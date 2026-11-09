@@ -41,11 +41,7 @@ const trelloAppUrl = Config.string("BETTER_AUTH_URL");
 
 export const trelloWebhookSecret = Config.redacted("TRELLO_SECRET");
 
-const trelloPublicUrl = Config.string("TRELLO_PUBLIC_URL").pipe(
-  Config.orElse(() => trelloAppUrl),
-);
-
-export const trelloCallbackUrl = trelloPublicUrl.pipe(
+export const trelloCallbackUrl = trelloAppUrl.pipe(
   Effect.map((baseUrl) => webhookCallbackUrl(baseUrl)),
 );
 
@@ -273,16 +269,6 @@ export const listTrelloWebhooks = Effect.fn("listTrelloWebhooks")(function* () {
     TRELLO_PATHS.tokenWebhooks(Redacted.value(token)),
     {},
     Schema.Array(TrelloWebhookSchema),
-  );
-});
-
-export const deleteTrelloWebhook = Effect.fn("deleteTrelloWebhook")(function* (
-  webhookId: string,
-) {
-  yield* trelloFetch(
-    TRELLO_METHODS.delete,
-    TRELLO_PATHS.webhook(webhookId),
-    {},
   );
 });
 

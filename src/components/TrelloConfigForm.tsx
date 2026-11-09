@@ -8,7 +8,6 @@ import {
   clearTrelloDestination,
   clearTrelloStageList,
   registerTrelloWebhooks,
-  reregisterTrelloWebhooks,
   saveTrelloDestination,
   saveTrelloStageList,
 } from "@/actions/trello";
@@ -27,9 +26,6 @@ import {
   TRELLO_DESTINATION_KEYS,
   TRELLO_DESTINATION_LABELS,
   TRELLO_REGISTER_WEBHOOKS_LABEL,
-  TRELLO_REREGISTER_WEBHOOKS_LABEL,
-  TRELLO_WEBHOOKS_DEV_NOTE,
-  TRELLO_WEBHOOKS_REREGISTERED_MESSAGE,
   TRELLO_WEBHOOK_FAILURES_LABEL,
   TRELLO_WEBHOOK_STALE_LABEL,
   TRELLO_STAGES_DESCRIPTION,
@@ -85,19 +81,6 @@ export function TrelloConfigForm({
       try {
         await registerTrelloWebhooks();
         toast.success(TRELLO_WEBHOOKS_REGISTERED_MESSAGE, SAVED_TOAST_OPTIONS);
-      } catch {
-        toast.error(TRELLO_UNAVAILABLE_MESSAGE);
-      }
-    });
-
-  const reregister = () =>
-    startTransition(async () => {
-      try {
-        await reregisterTrelloWebhooks();
-        toast.success(
-          TRELLO_WEBHOOKS_REREGISTERED_MESSAGE,
-          SAVED_TOAST_OPTIONS,
-        );
       } catch {
         toast.error(TRELLO_UNAVAILABLE_MESSAGE);
       }
@@ -188,9 +171,6 @@ export function TrelloConfigForm({
           <p className="text-muted-foreground text-sm">
             {TRELLO_WEBHOOKS_DESCRIPTION}
           </p>
-          <p className="text-muted-foreground mt-1 text-sm italic">
-            {TRELLO_WEBHOOKS_DEV_NOTE}
-          </p>
         </div>
         {webhooks.length === 0 ? (
           <p className="text-muted-foreground text-sm">
@@ -229,16 +209,6 @@ export function TrelloConfigForm({
           >
             <Webhook />
             {TRELLO_REGISTER_WEBHOOKS_LABEL}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={pending || webhooks.length === 0}
-            onClick={reregister}
-          >
-            <Webhook />
-            {TRELLO_REREGISTER_WEBHOOKS_LABEL}
           </Button>
         </div>
       </section>

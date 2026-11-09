@@ -471,7 +471,7 @@ describe("webhookStatus", () => {
     ).toEqual({ status: "active", failures: 0 });
   });
 
-  it("is stale when Trello still calls an old tunnel address", () => {
+  it("is stale when Trello still calls an old address", () => {
     expect(
       webhookStatus({
         saved: true,
