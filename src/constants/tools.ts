@@ -38,7 +38,7 @@ export const MANAGER_TOOL: Tool = {
 export const EMPLOYEE_TOOLS: Tool[] = [
   {
     href: "/calendrier",
-    icon: "🗓",
+    icon: "📅",
     title: "Calendrier",
     description: "Échéances et événements",
   },
@@ -58,7 +58,7 @@ export const EMPLOYEE_TOOLS: Tool[] = [
 
   {
     href: LANCEUR_PATH,
-    icon: "📅",
+    icon: "☄️",
     title: "Lanceur",
     description: "Planification production",
   },

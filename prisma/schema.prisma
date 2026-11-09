@@ -44,6 +44,7 @@ model Employee {
   weeklyTarget Float     @default(40)
   statutId     String?   @default("atelier")
   displayOrder Int       @default(999)
+  color        String    @default("#4A90D9")
   isDeleted    Boolean   @default(false)
   deletedAt    DateTime?
   deletedBy    Int?
@@ -56,6 +57,7 @@ model Employee {
   weeklyKilometrage WeeklyKilometrage[]
   weeklyObjectives  WeeklyObjective[]
   user              User?
+  lanceurPhases     LanceurPhase[]
 
   @@map("employees")
 }
@@ -367,9 +369,50 @@ model ProjectPhase {
   project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   pieces  ProjectPiece[]
   notes   ProjectNote[]
+  lanceur LanceurPhase?
 
   @@index([projectId])
   @@map("projectPhases")
+}
+
+enum LanceurOptionField {
+  etape
+  installateur
+}
+
+model LanceurPhase {
+  phaseId         Int       @id
+  pdmDate         DateTime? @db.Date
+  approvalDate    DateTime? @db.Date
+  deliveryDate    DateTime? @db.Date
+  price           Float?
+  isSigned        Boolean   @default(false)
+  isApproved      Boolean?
+  priority        Int       @default(0)
+  etape           String    @default("")
+  installateur    String    @default("")
+  deliveryComment String    @default("")
+  responsibleId   Int?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  phase       ProjectPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  responsible Employee?    @relation(fields: [responsibleId], references: [id], onDelete: SetNull)
+
+  @@index([priority])
+  @@index([responsibleId])
+  @@map("lanceurPhases")
+}
+
+model LanceurOption {
+  id        Int                @id @default(autoincrement())
+  field     LanceurOptionField
+  value     String
+  sortOrder Int                @default(0)
+  createdAt DateTime           @default(now())
+
+  @@unique([field, value])
+  @@map("lanceurOptions")
 }
 
 model ProjectPiece {
