@@ -28,6 +28,20 @@ Project files live in Dropbox. Set these variables in `.env`, `.env.staging` and
 - The app only creates Dropbox folders for projects created in the app. Imported (Trello) projects are never linked: `npm run db:unlinkNonManualDropbox` (also `:staging`/`:prod`) clears any link left on them, in the database only
 - Folders are tracked by Dropbox id. After deploying the id migration, run `npm run db:backfillDropboxFolderIds` (also `:staging`/`:prod`) once to fill the ids of existing app-created projects
 
+### Trello
+
+Cards for projects, phases and pieces are created in Trello from the app, and card moves flow back through webhooks. Set these variables in `.env`, `.env.staging` and `.env.prod`, and in the Vercel Preview and Production environments:
+
+| Variable        | Value                                                                       |
+| --------------- | --------------------------------------------------------------------------- |
+| `TRELLO_KEY`    | API key of the Trello Power-Up (trello.com/power-ups/admin)                 |
+| `TRELLO_TOKEN`  | Token authorized for a service account that is a member of every board used |
+| `TRELLO_SECRET` | The Power-Up's secret, used to verify the signature of incoming webhooks    |
+
+- Trello calls `<TRELLO_PUBLIC_URL>/api/trello/webhook`, falling back to `BETTER_AUTH_URL`. It must be reachable from the internet: on a deployment `BETTER_AUTH_URL` is enough, locally set `TRELLO_PUBLIC_URL` to a tunnel URL (e.g. `cloudflared tunnel --url http://localhost:3000`)
+- Managers configure destinations, list-to-stage lists and webhooks at `/gestionnaire/trello`
+- Never put real values in `.env.example`, it is committed
+
 ### Day-to-day dev
 
 - Start the local database

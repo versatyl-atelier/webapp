@@ -65,6 +65,8 @@ export type PieceRecord = Pick<
   | "id"
   | "phaseId"
   | "type"
+  | "hasCaisson"
+  | "hasFinition"
   | "description"
   | "caissonMaterial"
   | "cladding"
@@ -131,8 +133,13 @@ export function isEmptyContact(contact: ContactFields): boolean {
   return Object.values(contact).every((value) => !value.trim());
 }
 
+export type PieceReadSource = Pick<
+  PieceRecord,
+  "cladding" | "cabinetCount" | (typeof PIECE_TEXT_FIELDS)[number]["key"]
+>;
+
 export function pieceReadFields(
-  piece: PieceRecord,
+  piece: PieceReadSource,
 ): { label: string; value: string }[] {
   const cladding = {
     label: PIECE_CLADDING_READ_LABEL,

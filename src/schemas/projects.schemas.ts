@@ -25,6 +25,7 @@ import {
   NOTE_BODY_REQUIRED_MESSAGE,
   PROJECT_NAME_REQUIRED_MESSAGE,
 } from "@/constants/projects";
+import { PIECE_TOGGLE_FALSE, PIECE_TOGGLE_TRUE } from "@/constants/trello";
 import { ProjectStage } from "@/generated/prisma/enums";
 import { FormState } from "@/schemas/forms.schemas";
 
@@ -41,6 +42,17 @@ const EmptyAsNullSchema = Schema.Literal("").pipe(
 const OptionalIdFromFormSchema = Schema.Union(
   EmptyAsNullSchema,
   IdFromFormSchema,
+);
+
+const BooleanFromFormSchema = Schema.Literal(
+  PIECE_TOGGLE_TRUE,
+  PIECE_TOGGLE_FALSE,
+).pipe(
+  Schema.transform(Schema.Boolean, {
+    strict: true,
+    decode: (value) => value === PIECE_TOGGLE_TRUE,
+    encode: (value) => (value ? PIECE_TOGGLE_TRUE : PIECE_TOGGLE_FALSE),
+  }),
 );
 
 const NoStageAsNullSchema = Schema.Literal(NO_PROJECT_STAGE_VALUE).pipe(
@@ -163,6 +175,8 @@ export const PieceFormSchema = Schema.Struct({
   id: Schema.optional(IdFromFormSchema),
   phaseId: OptionalIdFromFormSchema,
   type: Schema.Trim,
+  hasCaisson: BooleanFromFormSchema,
+  hasFinition: BooleanFromFormSchema,
   description: Schema.Trim,
   caissonMaterial: Schema.Trim,
   cladding: Schema.parseJson(Schema.mutable(Schema.Array(Schema.Trim))).pipe(
@@ -190,6 +204,8 @@ export type PieceFormErrors = {
   id?: string[];
   phaseId?: string[];
   type?: string[];
+  hasCaisson?: string[];
+  hasFinition?: string[];
   description?: string[];
   caissonMaterial?: string[];
   cladding?: string[];

@@ -39,7 +39,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -71,6 +73,14 @@ import {
   UNNAMED_PIECE_LABEL,
 } from "@/constants/projects";
 import { COUNT_SEPARATOR, PIECE_FILES_HEADING } from "@/constants/projectFiles";
+import {
+  PIECE_ATELIER_DESCRIPTION,
+  PIECE_ATELIER_HEADING,
+  PIECE_CAISSON_LABEL,
+  PIECE_FINITION_LABEL,
+  PIECE_TOGGLE_FALSE,
+  PIECE_TOGGLE_TRUE,
+} from "@/constants/trello";
 import { useCoverUpload } from "@/hooks/use-cover-upload";
 import { useFileDrop } from "@/hooks/use-file-drop";
 import { usePasteUpload } from "@/hooks/use-paste-upload";
@@ -110,6 +120,8 @@ export function PieceDialog({
   );
   usePasteUpload((pasted) => void upload(pasted), { fallback: true });
   const [targetPhaseId, setTargetPhaseId] = useState(phaseId);
+  const [hasCaisson, setHasCaisson] = useState(piece?.hasCaisson ?? true);
+  const [hasFinition, setHasFinition] = useState(piece?.hasFinition ?? false);
   const [busy, startTransition] = useTransition();
   const phaseItems = phases.map(({ id, name }) => ({
     value: String(id),
@@ -218,6 +230,16 @@ export function PieceDialog({
             <input type="hidden" name="projectId" value={projectId} />
             {piece && <input type="hidden" name="id" value={piece.id} />}
             <input type="hidden" name="phaseId" value={targetPhaseId ?? ""} />
+            <input
+              type="hidden"
+              name="hasCaisson"
+              value={hasCaisson ? PIECE_TOGGLE_TRUE : PIECE_TOGGLE_FALSE}
+            />
+            <input
+              type="hidden"
+              name="hasFinition"
+              value={hasFinition ? PIECE_TOGGLE_TRUE : PIECE_TOGGLE_FALSE}
+            />
             <div className="grid items-start gap-6 md:grid-cols-2">
               {piece ? (
                 <CoverEditor
@@ -370,6 +392,30 @@ export function PieceDialog({
                 </Field>
               )}
             </div>
+            <fieldset className="flex flex-col gap-2 border-t pt-5">
+              <legend className="text-muted-foreground text-xs font-medium">
+                {PIECE_ATELIER_HEADING}
+              </legend>
+              <p className="text-muted-foreground text-xs">
+                {PIECE_ATELIER_DESCRIPTION}
+              </p>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                <Label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={hasCaisson}
+                    onCheckedChange={setHasCaisson}
+                  />
+                  {PIECE_CAISSON_LABEL}
+                </Label>
+                <Label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={hasFinition}
+                    onCheckedChange={setHasFinition}
+                  />
+                  {PIECE_FINITION_LABEL}
+                </Label>
+              </div>
+            </fieldset>
           </form>
           {piece?.dropboxLinked && (
             <section

@@ -19,6 +19,11 @@ import {
 } from "@/effects/projects";
 import { getActiveSession } from "@/effects/auth";
 import {
+  bestEffortTrello,
+  syncAllPieceCards,
+  syncDesignCards,
+} from "@/effects/trelloCards";
+import {
   DROPBOX_SYNC_FAILED_MESSAGE,
   PROJECT_SECTIONS,
 } from "@/constants/dropbox";
@@ -224,6 +229,7 @@ export const createProjectEffect = Effect.fn("createProject")(function* (
     select: { id: true },
   });
   yield* bestEffortDropbox(createProjectTree(prisma, id, name));
+  yield* bestEffortTrello(syncDesignCards(prisma, id, true));
   return { message: PROJECT_CREATED_MESSAGE, projectId: id };
 });
 
@@ -413,6 +419,7 @@ export const savePieceWithFoldersEffect = Effect.fn("savePiece")(function* (
       renamePieceFolder(prisma, pieceId, before.dropboxFolderId, form.type),
     );
   }
+  yield* bestEffortTrello(syncAllPieceCards(prisma, form.projectId, pieceId));
   return state;
 });
 
@@ -459,6 +466,8 @@ export const duplicatePieceEffect = Effect.fn("duplicatePiece")(function* (
       phaseId: true,
       type: true,
       description: true,
+      hasCaisson: true,
+      hasFinition: true,
       caissonMaterial: true,
       cladding: true,
       countertop: true,

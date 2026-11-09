@@ -35,6 +35,8 @@ const piece = (overrides: Partial<PieceRecord>): PieceRecord => ({
   id: 1,
   phaseId: null,
   type: "",
+  hasCaisson: true,
+  hasFinition: false,
   description: "",
   caissonMaterial: "",
   cladding: [],

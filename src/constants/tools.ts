@@ -1,5 +1,6 @@
 import { MANAGER_PATH } from "@/constants/auth";
 import { NOTES_TAB, PROJECT_TAB_PARAM } from "@/constants/projects";
+import { TRELLO_PAGE_PATH } from "@/constants/trello";
 
 export type Tool = {
   href: string;
@@ -34,6 +35,11 @@ export const MANAGER_TOOL: Tool = {
   description: "Comptes, config, etc.",
   managerOnly: true,
 };
+
+export const MANAGER_NAV_ITEMS = [
+  { href: MANAGER_PATH, icon: "👥", title: "Comptes" },
+  { href: TRELLO_PAGE_PATH, icon: "🗂️", title: "Trello" },
+] as const;
 
 export const TOOLS: Tool[] = [
   {
