@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import {
   getFicheSuggestions,
   getProject,
+  getProjectTrello,
   isProjectPinned,
 } from "@/actions/projects";
 import { CreateFolderButton } from "@/components/CreateFolderButton";
@@ -12,6 +13,7 @@ import { ProjectContacts } from "@/components/ProjectContacts";
 import { ProjectFilesSection } from "@/components/ProjectFilesSection";
 import { ProjectHeader } from "@/components/ProjectHeader";
 import { ProjectPieces } from "@/components/ProjectPieces";
+import { ProjectTrello } from "@/components/ProjectTrello";
 import { ProjectViewTracker } from "@/components/ProjectViewTracker";
 import { RowTitle } from "@/components/RowTitle";
 import {
@@ -29,10 +31,11 @@ type ProjectPageProps = {
 export default async function Page({ params }: ProjectPageProps) {
   const { id } = await params;
   await requireActiveSession(projectPath(id));
-  const [project, suggestions, pinned] = await Promise.all([
+  const [project, suggestions, pinned, trello] = await Promise.all([
     getProject(id),
     getFicheSuggestions(),
     isProjectPinned(id),
+    getProjectTrello(id),
   ]);
 
   if (!project) {
@@ -77,6 +80,12 @@ export default async function Page({ params }: ProjectPageProps) {
           />
         </Link>
       </section>
+      <ProjectTrello
+        projectId={project.id}
+        keys={trello.keys}
+        pieceCount={trello.pieceCount}
+        lost={trello.lost}
+      />
       {project.dropboxLinked ? (
         <ProjectFilesSection
           projectId={project.id}
