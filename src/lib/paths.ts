@@ -11,7 +11,14 @@ import {
   PROJECT_NOTES_PATH_PATTERN,
   PROJECT_TAB_PARAM,
 } from "@/constants/projects";
-import { MANAGER_TOOL, TOOLS, type Tool } from "@/constants/tools";
+
+import {
+  EMPLOYEE_TOOLS,
+  HOME_PATH,
+  MANAGER_TOOL,
+  type Tool,
+} from "@/constants/tools";
+
 import type { DateKey } from "@/lib/calendar";
 import type { ProjectTab } from "@/lib/projectTabs";
 
@@ -76,12 +83,13 @@ export function isWithinPath(pathname: string, prefix: string): boolean {
 }
 
 export function isProtectedPath(pathname: string): boolean {
-  return PROTECTED_PATH_PREFIXES.some((prefix) =>
-    isWithinPath(pathname, prefix),
+  return (
+    pathname === HOME_PATH ||
+    PROTECTED_PATH_PREFIXES.some((prefix) => isWithinPath(pathname, prefix))
   );
 }
 
-const ALL_TOOLS = [...TOOLS, MANAGER_TOOL];
+const ALL_TOOLS = [...EMPLOYEE_TOOLS, MANAGER_TOOL];
 
 function splitHref(href: string): { path: string; params: URLSearchParams } {
   const [path, query = ""] = href.split("?");

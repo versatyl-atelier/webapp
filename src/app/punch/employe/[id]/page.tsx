@@ -34,6 +34,7 @@ import { Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FreezeForm } from "@/components/FreezeForm";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
+import { TimeEntryDragHint } from "@/components/TimeEntryDragHint";
 import { PageContextProvider } from "./context-provider";
 import { cn } from "@/lib/utils";
 
@@ -255,6 +256,7 @@ export default async function EmployeePage({
               </div>
             </div>
           </div>
+          {!disabledReason && <TimeEntryDragHint />}
         </div>
         <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
           <MultiPunchForm

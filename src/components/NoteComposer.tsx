@@ -16,6 +16,7 @@ import {
   SUBMIT_NOTE_KEYS_APPLE,
   SUBMIT_NOTE_KEYS_DEFAULT,
 } from "@/constants/projects";
+import { KBD_CLASSES } from "@/constants/tools";
 import { useIsApplePlatform } from "@/hooks/use-apple-platform";
 import type { NoteFormState } from "@/schemas/projects.schemas";
 
@@ -83,9 +84,7 @@ export function NoteComposer({
           {keys.map((key, index) => (
             <span key={key}>
               {index > 0 && "+"}
-              <kbd className="bg-muted text-2xs rounded-sm border px-1 font-sans">
-                {key}
-              </kbd>
+              <kbd className={KBD_CLASSES}>{key}</kbd>
             </span>
           ))}{" "}
           {SUBMIT_NOTE_HINT}

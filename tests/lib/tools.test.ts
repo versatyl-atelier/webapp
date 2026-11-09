@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  ATELIER_TOOL_HREFS,
+  MANAGER_TOOL,
+  EMPLOYEE_TOOLS,
+} from "@/constants/tools";
 import { PUNCH_TOOLS } from "@/constants/punch";
-import { ATELIER_TOOL_HREFS, MANAGER_TOOL, TOOLS } from "@/constants/tools";
 import { Role } from "@/generated/prisma/enums";
 import { punchToolsForRole, toolsForRole } from "@/lib/tools";
 
@@ -13,9 +17,12 @@ describe("toolsForRole", () => {
   });
 
   it("adds the manager interface for managers only", () => {
-    expect(toolsForRole(Role.manager)).toEqual([...TOOLS, MANAGER_TOOL]);
-    expect(toolsForRole(Role.employee)).toEqual(TOOLS);
-    expect(toolsForRole(null)).toEqual(TOOLS);
+    expect(toolsForRole(Role.manager)).toEqual([
+      ...EMPLOYEE_TOOLS,
+      MANAGER_TOOL,
+    ]);
+    expect(toolsForRole(Role.employee)).toEqual(EMPLOYEE_TOOLS);
+    expect(toolsForRole(null)).toEqual([]);
   });
 });
 

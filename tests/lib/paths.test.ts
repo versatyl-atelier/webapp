@@ -59,13 +59,21 @@ describe("isProtectedPath", () => {
     expect(isProtectedPath("/gestionnaire")).toBe(true);
   });
 
+  it("protects the home page but not every path under it", () => {
+    expect(isProtectedPath("/")).toBe(true);
+    expect(isProtectedPath("/login")).toBe(false);
+  });
+
+  it("protects the search page", () => {
+    expect(isProtectedPath("/recherche")).toBe(true);
+  });
+
   it("protects the change-password page", () => {
     expect(isProtectedPath("/change-password")).toBe(true);
   });
 
   it("does not match look-alike prefixes or public pages", () => {
     expect(isProtectedPath("/punchcard")).toBe(false);
-    expect(isProtectedPath("/")).toBe(false);
     expect(isProtectedPath("/login")).toBe(false);
   });
 });
