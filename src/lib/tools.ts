@@ -30,12 +30,3 @@ export function punchToolsForRole(role: Role | null): Tool[] {
     ({ managerOnly }) => !managerOnly || role === Role.manager,
   );
 }
-
-export function punchToolsForRole(role: Role | null): Tool[] {
-  if (role === null || role === Role.atelier) {
-    return [];
-  }
-  return PUNCH_TOOLS.filter(
-    ({ managerOnly }) => !managerOnly || role === Role.manager,
-  );
-}
