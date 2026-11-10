@@ -2,6 +2,7 @@ import { Effect, Schema } from "effect";
 
 import { COVER_SET_MESSAGE } from "@/constants/projectFiles";
 import { accessiblePiece, assertProjectAccess } from "@/effects/projects";
+import { bestEffortTrello, syncPieceCover } from "@/effects/trelloCards";
 import type { PrismaService } from "@/generated/effect-prisma";
 import { DEFAULT_COVER_FRAMING } from "@/lib/projectFiles";
 import {
@@ -47,6 +48,7 @@ export const saveCoverImageEffect = Effect.fn("saveCoverImage")(function* (
     pieceId: piece.id,
     coverBytes: bytes.byteLength,
   });
+  yield* bestEffortTrello(syncPieceCover(prisma, piece.id));
   return { message: COVER_SET_MESSAGE };
 });
 
@@ -64,6 +66,7 @@ export const clearPieceCoverEffect = Effect.fn("clearPieceCover")(function* (
       }),
     ]),
   );
+  yield* bestEffortTrello(syncPieceCover(prisma, piece.id));
 });
 
 export const setCoverFramingEffect = Effect.fn("setCoverFraming")(function* (

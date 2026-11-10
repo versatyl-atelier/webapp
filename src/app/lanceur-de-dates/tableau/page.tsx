@@ -1,5 +1,5 @@
 import {
-  getAvailablePhases,
+  getImportableProjects,
   getLanceurEmployees,
   getLanceurOptions,
   getLanceurRows,
@@ -25,11 +25,11 @@ import { requireActiveSession } from "@/lib/session";
 
 export default async function Page() {
   await requireActiveSession(LANCEUR_TABLEAU_PATH);
-  const [rows, options, employees, availablePhases] = await Promise.all([
+  const [rows, options, employees, importableProjects] = await Promise.all([
     getLanceurRows(),
     getLanceurOptions(),
     getLanceurEmployees(),
-    getAvailablePhases(),
+    getImportableProjects(),
   ]);
   const now = new Date();
   const valuesOf = (field: LanceurOptionField) =>
@@ -58,7 +58,7 @@ export default async function Page() {
               : LANCEUR_ACTIVE_PROJECTS_SINGULAR}
           </div>
           <div className="flex flex-wrap items-center gap-2 print:hidden">
-            <LanceurAddPhase phases={availablePhases} />
+            <LanceurAddPhase projects={importableProjects} />
             <LanceurOptionsDialog options={options} />
             <PrintButton />
           </div>

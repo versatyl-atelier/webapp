@@ -83,6 +83,7 @@ model User {
   noteVersions   ProjectNoteVersion[]
   projectViews   ProjectView[]
   projectPins    ProjectPin[]
+  lanceurLogs    LanceurLog[]
   calendarEvents CalendarEvent[]
 
   @@map("users")
@@ -328,6 +329,7 @@ model Project {
   views             ProjectView[]
   pins              ProjectPin[]
   calendarEvents    CalendarEvent[]
+  trelloCards       TrelloCard[]
 
   @@index([stage])
   @@map("projects")
@@ -366,10 +368,11 @@ model ProjectPhase {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  pieces  ProjectPiece[]
-  notes   ProjectNote[]
-  lanceur LanceurPhase?
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pieces      ProjectPiece[]
+  notes       ProjectNote[]
+  lanceur     LanceurPhase?
+  trelloCards TrelloCard[]
 
   @@index([projectId])
   @@map("projectPhases")
@@ -398,10 +401,34 @@ model LanceurPhase {
 
   phase       ProjectPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
   responsible Employee?    @relation(fields: [responsibleId], references: [id], onDelete: SetNull)
+  logs        LanceurLog[]
 
   @@index([priority])
   @@index([responsibleId])
   @@map("lanceurPhases")
+}
+
+enum LanceurLogField {
+  price
+  pdmDate
+  approvalDate
+  deliveryDate
+}
+
+model LanceurLog {
+  id        Int             @id @default(autoincrement())
+  phaseId   Int
+  field     LanceurLogField
+  oldValue  String?
+  newValue  String?
+  userId    String?
+  createdAt DateTime        @default(now())
+
+  phase LanceurPhase @relation(fields: [phaseId], references: [phaseId], onDelete: Cascade)
+  user  User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([phaseId, createdAt])
+  @@map("lanceurLogs")
 }
 
 model LanceurOption {
@@ -420,6 +447,8 @@ model ProjectPiece {
   projectId       String
   phaseId         Int?
   type            String    @default("")
+  hasCaisson      Boolean   @default(true)
+  hasFinition     Boolean   @default(false)
   caissonMaterial String    @default("")
   cladding        String[]  @default([])
   drawers         String    @default("")
@@ -445,10 +474,113 @@ model ProjectPiece {
   notes        ProjectNote[]
   fileSections ProjectFileSection[]
   cover        ProjectPieceCover?
+  trelloCards  TrelloCard[]
 
   @@index([projectId])
   @@index([phaseId])
   @@map("projectPieces")
+}
+
+enum TrelloCardRole {
+  design
+  planification
+  atelier
+}
+
+enum TrelloCardVariant {
+  simple
+  caisson
+  finition
+}
+
+enum TrelloCardState {
+  active
+  hidden
+  archived
+  lost
+}
+
+enum TrelloDestinationKey {
+  design
+  planification
+  atelierSimple
+  atelierCaisson
+  atelierFinition
+}
+
+model TrelloDestination {
+  key       TrelloDestinationKey @id
+  boardId   String
+  boardName String
+  listId    String
+  listName  String
+  updatedAt DateTime             @updatedAt
+
+  @@map("trelloDestinations")
+}
+
+model TrelloStageList {
+  stage     ProjectStage @id
+  boardId   String
+  boardName String
+  listId    String       @unique
+  listName  String
+  updatedAt DateTime     @updatedAt
+
+  @@map("trelloStageLists")
+}
+
+model TrelloWebhook {
+  boardId   String   @id
+  webhookId String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("trelloWebhooks")
+}
+
+model TrelloCard {
+  id           Int               @id @default(autoincrement())
+  projectId    String
+  phaseId      Int?
+  pieceId      Int?
+  role         TrelloCardRole
+  variant      TrelloCardVariant @default(simple)
+  trelloCardId String            @unique
+  boardId      String
+  listId       String
+  state        TrelloCardState   @default(active)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase   ProjectPhase? @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  piece   ProjectPiece? @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+  events  TrelloEvent[]
+
+  @@index([projectId])
+  @@index([phaseId])
+  @@index([pieceId])
+  @@map("trelloCards")
+}
+
+model TrelloEvent {
+  id           Int      @id @default(autoincrement())
+  actionId     String   @unique
+  cardId       Int
+  trelloCardId String
+  type         String
+  fromBoardId  String?
+  fromListId   String?
+  toBoardId    String?
+  toListId     String?
+  actorName    String?
+  occurredAt   DateTime
+  createdAt    DateTime @default(now())
+
+  card TrelloCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+  @@map("trelloEvents")
 }
 
 model ProjectNote {

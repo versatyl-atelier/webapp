@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildChangeReport,
   changedDates,
   computeEditChanges,
   snapshotRows,
+  trackedChanges,
   type PlanDates,
 } from "@/lib/lanceurEdit";
 import type { LanceurRow } from "@/lib/lanceur";
@@ -64,15 +64,33 @@ describe("edit session changes", () => {
   it("ignores phases added after the snapshot", () => {
     expect(computeEditChanges([], [row({})])).toEqual([]);
   });
+});
 
-  it("builds an escaped report grouped by project", () => {
-    const snapshot = snapshotRows([row({})]);
-    const changes = computeEditChanges(snapshot, [
-      row({ deliveryDate: "2026-12-04" }),
+describe("trackedChanges", () => {
+  const before = {
+    price: 10000,
+    pdmDate: "2026-11-02",
+    approvalDate: null,
+    deliveryDate: "2026-12-01",
+  };
+
+  it("lists only the tracked fields that actually change", () => {
+    expect(
+      trackedChanges(before, {
+        price: 12000,
+        pdmDate: "2026-11-02",
+        approvalDate: "2026-11-09",
+      }),
+    ).toEqual([
+      { field: "price", oldValue: "10000", newValue: "12000" },
+      { field: "approvalDate", oldValue: null, newValue: "2026-11-09" },
     ]);
-    const html = buildChangeReport(changes, "4 novembre 2026");
-    expect(html).toContain("Cuisine &lt;A&gt;");
-    expect(html).toContain("2026-12-04");
-    expect(html).toContain("1 modification, 1 projet");
+  });
+
+  it("records a cleared date and ignores absent fields", () => {
+    expect(trackedChanges(before, { deliveryDate: null })).toEqual([
+      { field: "deliveryDate", oldValue: "2026-12-01", newValue: null },
+    ]);
+    expect(trackedChanges(before, {})).toEqual([]);
   });
 });

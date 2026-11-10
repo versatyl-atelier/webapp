@@ -5,7 +5,7 @@ import "server-only";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { Role } from "@/generated/prisma/enums";
+import { Role, type TrelloCardRole } from "@/generated/prisma/enums";
 import {
   cachedGetter,
   protectedEffect,
@@ -13,10 +13,7 @@ import {
 } from "@/lib/effect";
 import {
   addNoteEffect,
-  addPhaseEffect,
   deleteNoteEffect,
-  deletePhaseEffect,
-  deletePieceEffect,
   editNoteEffect,
   getAllProjectsEffect,
   getFicheSuggestionsEffect,
@@ -28,12 +25,23 @@ import {
   movePieceEffect,
   renamePhaseEffect,
   restoreNoteEffect,
-  restorePieceEffect,
   deleteContactEffect,
   restoreContactEffect,
   saveContactEffect,
   saveProjectLocationEffect,
 } from "@/effects/projects";
+import {
+  addPhaseWithTrelloEffect,
+  deletePhaseWithTrelloEffect,
+  deletePieceWithTrelloEffect,
+  restorePieceWithTrelloEffect,
+} from "@/effects/projectTrello";
+import {
+  createDesignCardEffect,
+  getProjectTrelloEffect,
+  regenerateCardEffect,
+  sendPieceCardsEffect,
+} from "@/effects/trelloCards";
 import {
   addFileSectionEffect,
   createProjectEffect,
@@ -119,6 +127,10 @@ export const getProjectHome = cachedGetter(getProjectHomeEffect, [
 ]);
 
 export const isProjectPinned = cachedGetter(isProjectPinnedEffect, [
+  Role.employee,
+]);
+
+export const getProjectTrello = cachedGetter(getProjectTrelloEffect, [
   Role.employee,
 ]);
 
@@ -236,7 +248,7 @@ export async function editNote(
 }
 
 const addPhaseMutation = protectedEffect(
-  addPhaseEffect,
+  addPhaseWithTrelloEffect,
   [Role.employee],
   "mutation",
 );
@@ -246,12 +258,12 @@ const renamePhaseMutation = protectedEffect(
   "mutation",
 );
 const deletePhaseMutation = protectedEffect(
-  deletePhaseEffect,
+  deletePhaseWithTrelloEffect,
   [Role.employee],
   "mutation",
 );
 const deletePieceMutation = protectedEffect(
-  deletePieceEffect,
+  deletePieceWithTrelloEffect,
   [Role.employee],
   "mutation",
 );
@@ -303,7 +315,7 @@ const restoreContactMutation = protectedEffect(
   "mutation",
 );
 const restorePieceMutation = protectedEffect(
-  restorePieceEffect,
+  restorePieceWithTrelloEffect,
   [Role.employee],
   "mutation",
 );
@@ -598,4 +610,41 @@ export async function saveCoverImage(
   ]);
   refresh();
   return state;
+}
+
+const createDesignCardMutation = protectedEffect(
+  createDesignCardEffect,
+  [Role.employee],
+  "mutation",
+);
+const sendPieceCardsMutation = protectedEffect(
+  sendPieceCardsEffect,
+  [Role.employee],
+  "mutation",
+);
+const regenerateCardMutation = protectedEffect(
+  regenerateCardEffect,
+  [Role.employee],
+  "mutation",
+);
+
+export async function createDesignCard(projectId: string): Promise<boolean> {
+  const synced = await createDesignCardMutation(projectId);
+  refresh();
+  return synced;
+}
+
+export async function sendPieceCards(
+  projectId: string,
+  role: TrelloCardRole,
+): Promise<boolean> {
+  const synced = await sendPieceCardsMutation(projectId, role);
+  refresh();
+  return synced;
+}
+
+export async function regenerateCard(cardId: number): Promise<boolean> {
+  const synced = await regenerateCardMutation(cardId);
+  refresh();
+  return synced;
 }

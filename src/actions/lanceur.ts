@@ -9,8 +9,10 @@ import {
   addLanceurOptionEffect,
   addLanceurPhaseEffect,
   deleteLanceurOptionEffect,
-  getAvailablePhasesEffect,
+  getImportableProjectsEffect,
+  importLanceurPhasesEffect,
   getLanceurEmployeesEffect,
+  getLanceurLogEffect,
   getLanceurOptionsEffect,
   getLanceurRowsEffect,
   getPlanSettingsEffect,
@@ -19,6 +21,8 @@ import {
 } from "@/effects/lanceur";
 import { cachedGetter, protectedEffect } from "@/lib/effect";
 import type {
+  LanceurAddTarget,
+  LanceurImportEntry,
   LanceurOptionInput,
   LanceurPatch,
 } from "@/schemas/lanceur.schemas";
@@ -39,7 +43,7 @@ export const getPlanSettings = cachedGetter(getPlanSettingsEffect, [
   Role.employee,
 ]);
 
-export const getAvailablePhases = cachedGetter(getAvailablePhasesEffect, [
+export const getImportableProjects = cachedGetter(getImportableProjectsEffect, [
   Role.employee,
 ]);
 
@@ -50,6 +54,12 @@ const updateMutation = protectedEffect(
 );
 const addPhaseMutation = protectedEffect(
   addLanceurPhaseEffect,
+  [Role.employee],
+  "mutation",
+);
+const logQuery = protectedEffect(getLanceurLogEffect, [Role.employee]);
+const importPhasesMutation = protectedEffect(
+  importLanceurPhasesEffect,
   [Role.employee],
   "mutation",
 );
@@ -75,10 +85,20 @@ export async function updateLanceurPhase(phaseId: number, patch: LanceurPatch) {
   return result;
 }
 
-export async function addLanceurPhase(phaseId: number) {
-  const result = await addPhaseMutation(phaseId);
+export async function addLanceurPhase(target: LanceurAddTarget) {
+  const result = await addPhaseMutation(target);
   refresh();
   return result;
+}
+
+export async function importLanceurPhases(entries: LanceurImportEntry[]) {
+  const result = await importPhasesMutation(entries);
+  refresh();
+  return result;
+}
+
+export async function getLanceurLog(phaseId: number) {
+  return logQuery(phaseId);
 }
 
 export async function removeLanceurPhase(phaseId: number) {

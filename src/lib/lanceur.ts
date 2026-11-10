@@ -6,6 +6,7 @@ import {
   LANCEUR_PHASE_SEPARATOR,
 } from "@/constants/lanceur";
 import { toDateKey, type DateKey } from "@/lib/calendar";
+import type { EditField } from "@/constants/lanceurEdit";
 import type { PlanItem } from "@/lib/lanceurPlan";
 import type { LanceurPatch } from "@/schemas/lanceur.schemas";
 
@@ -148,4 +149,44 @@ export function toPlanItem(row: LanceurRow): PlanItem {
     deliveryDate: row.deliveryDate,
     price: row.price,
   };
+}
+
+export type LanceurLogEntry = {
+  id: number;
+  field: EditField;
+  oldValue: string | null;
+  newValue: string | null;
+  createdAt: string;
+  userName: string | null;
+};
+
+export type LanceurLogGroup = {
+  key: string;
+  createdAt: string;
+  userName: string | null;
+  entries: LanceurLogEntry[];
+};
+
+export function groupLogEntries(
+  entries: readonly LanceurLogEntry[],
+): LanceurLogGroup[] {
+  const groups: LanceurLogGroup[] = [];
+  for (const entry of entries) {
+    const last = groups[groups.length - 1];
+    if (
+      last &&
+      last.createdAt === entry.createdAt &&
+      last.userName === entry.userName
+    ) {
+      last.entries.push(entry);
+    } else {
+      groups.push({
+        key: `${entry.createdAt}-${entry.id}`,
+        createdAt: entry.createdAt,
+        userName: entry.userName,
+        entries: [entry],
+      });
+    }
+  }
+  return groups;
 }

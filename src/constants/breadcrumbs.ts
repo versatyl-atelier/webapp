@@ -15,6 +15,7 @@ export const COLLAPSED_CRUMBS_LABEL = "Afficher les niveaux précédents";
 
 export const STATIC_CRUMB_LABELS: Record<string, string> = {
   "/gestionnaire": "Interface gestionnaire",
+  "/gestionnaire/trello": "Trello",
   "/calendrier": "Calendrier",
   "/calendrier/evenements": "Événements",
   "/calendrier/evenements/nouveau": "Nouvel événement",

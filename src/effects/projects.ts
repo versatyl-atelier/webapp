@@ -187,6 +187,8 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
           id: true,
           phaseId: true,
           type: true,
+          hasCaisson: true,
+          hasFinition: true,
           description: true,
           caissonMaterial: true,
           cladding: true,
