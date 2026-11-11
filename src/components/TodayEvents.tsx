@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getProjectOccurrences } from "@/actions/calendar";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
 import { HomeCardLink } from "@/components/HomeCardLink";
 import {
@@ -65,13 +66,17 @@ export async function TodayEvents({ today }: TodayEventsProps) {
             const isToday = occurrence.date === today;
             return (
               <li key={occurrence.key} className="border-b last:border-b-0">
-                <Link
-                  href={calendarDayPath(occurrence.date)}
-                  title={occurrenceDescription(occurrence)}
-                  className={cn(
-                    "hover:bg-accent focus-visible:ring-ring flex items-center gap-2.5 px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
-                    !isToday && "opacity-65",
-                  )}
+                <ActionTooltip
+                  label={occurrenceDescription(occurrence)}
+                  render={
+                    <Link
+                      href={calendarDayPath(occurrence.date)}
+                      className={cn(
+                        "hover:bg-accent focus-visible:ring-ring flex items-center gap-2.5 px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
+                        !isToday && "opacity-65",
+                      )}
+                    />
+                  }
                 >
                   <span
                     className={cn(
@@ -95,7 +100,7 @@ export async function TodayEvents({ today }: TodayEventsProps) {
                   <span className="min-w-0 flex-1 truncate">
                     {occurrence.title}
                   </span>
-                </Link>
+                </ActionTooltip>
               </li>
             );
           })}

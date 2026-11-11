@@ -2,6 +2,7 @@
 
 import { Folder, MoreHorizontal } from "lucide-react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -71,19 +72,23 @@ export function FileTile({
         )}
       </div>
       <div className={cn("min-w-0", hideName ? "p-0" : "px-2 py-1.5")}>
-        <button
-          type="button"
-          onClick={onOpen}
-          title={file.name}
-          className={cn(
-            "block w-full truncate text-left outline-hidden after:absolute after:inset-0",
-            large ? "text-xs" : "text-2xs",
-            hideName && "sr-only",
-            !hideName && "text-muted-foreground",
-          )}
+        <ActionTooltip
+          label={file.name}
+          render={
+            <button
+              type="button"
+              onClick={onOpen}
+              className={cn(
+                "block w-full truncate text-left outline-hidden after:absolute after:inset-0",
+                large ? "text-xs" : "text-2xs",
+                hideName && "sr-only",
+                !hideName && "text-muted-foreground",
+              )}
+            />
+          }
         >
           {file.name}
-        </button>
+        </ActionTooltip>
         {!hideName && !file.isFolder && file.size !== null && (
           <p className="text-muted-foreground text-2xs">
             {formatFileSize(file.size)}

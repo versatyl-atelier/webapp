@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -52,6 +53,38 @@ type ProjectListProps = {
   query: string;
   onQueryChange: (query: string) => void;
 };
+
+type TransferButtonProps = {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+};
+
+function TransferButton({
+  label,
+  disabled,
+  onClick,
+  children,
+}: TransferButtonProps) {
+  return (
+    <ActionTooltip
+      label={label}
+      render={
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          aria-label={label}
+          disabled={disabled}
+          onClick={onClick}
+        />
+      }
+    >
+      {children}
+    </ActionTooltip>
+  );
+}
 
 function typeIcon(type: ProjectType) {
   return type === ProjectType.task ? "📋" : "🔷";
@@ -215,50 +248,34 @@ export function ProjectTransfer({
           onQueryChange={setAvailableQuery}
         />
         <div className="flex flex-row justify-center gap-1.5 md:flex-col md:self-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            title={ADD_SELECTED_LABEL}
-            aria-label={ADD_SELECTED_LABEL}
+          <TransferButton
+            label={ADD_SELECTED_LABEL}
             disabled={checkedAvailableKeys.length === 0}
             onClick={() => add(checkedAvailableKeys)}
           >
             →
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            title={ADD_ALL_LABEL}
-            aria-label={ADD_ALL_LABEL}
+          </TransferButton>
+          <TransferButton
+            label={ADD_ALL_LABEL}
             disabled={visibleAvailable.length === 0}
             onClick={() => add(visibleAvailable.map(({ key }) => key))}
           >
             ⇒
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            title={REMOVE_SELECTED_LABEL}
-            aria-label={REMOVE_SELECTED_LABEL}
+          </TransferButton>
+          <TransferButton
+            label={REMOVE_SELECTED_LABEL}
             disabled={checkedSelectedKeys.length === 0}
             onClick={() => remove(checkedSelectedKeys)}
           >
             ←
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            title={REMOVE_ALL_LABEL}
-            aria-label={REMOVE_ALL_LABEL}
+          </TransferButton>
+          <TransferButton
+            label={REMOVE_ALL_LABEL}
             disabled={selectedKeys.length === 0}
             onClick={() => remove(selectedKeys)}
           >
             ⇐
-          </Button>
+          </TransferButton>
         </div>
         <ProjectList
           title={SELECTED_LIST_TITLE}

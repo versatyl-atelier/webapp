@@ -3,6 +3,7 @@
 import { Mail, MapPin, Phone, Plus } from "lucide-react";
 import { useId, useState } from "react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { ContactDialog } from "@/components/ContactDialog";
 import { ProjectLocationDialog } from "@/components/ProjectLocationDialog";
 import { RowTitle } from "@/components/RowTitle";
@@ -59,11 +60,15 @@ export function ProjectContacts({
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(var(--container-contact),1fr))] gap-3.5">
         <li className={CARD_CLASS}>
           <p className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
-            <span
-              aria-hidden
-              title={projectColorLabel(project.color)}
-              style={projectColorStyle(project.color)}
-              className="size-2 shrink-0 rounded-full bg-(--project-color)"
+            <ActionTooltip
+              label={projectColorLabel(project.color)}
+              render={
+                <span
+                  aria-hidden
+                  style={projectColorStyle(project.color)}
+                  className="size-2 shrink-0 rounded-full bg-(--project-color)"
+                />
+              }
             />
             {PROJECT_CARD_ROLE_LABEL}
           </p>

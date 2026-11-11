@@ -13,7 +13,7 @@ import { ACTION_TONE_CLASSES, type ActionTone } from "@/constants/actions";
 type ActionTooltipProps = {
   label: string;
   render: ReactElement;
-  children: ReactNode;
+  children?: ReactNode;
 };
 
 type DisabledActionProps = {

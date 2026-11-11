@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import {
   Collapsible,
   CollapsibleContent,
@@ -63,13 +64,18 @@ function ProjectGroup({ label, projects, tab }: ProjectGroupProps) {
             {projects.map(({ id, name, color }) => (
               <SidebarMenuItem key={id}>
                 <SidebarMenuButton
-                  render={<Link href={projectPath(id, tab)} title={name} />}
+                  render={<Link href={projectPath(id, tab)} />}
+                  tooltip={{ children: name, hidden: false }}
                 >
-                  <span
-                    aria-hidden
-                    title={projectColorLabel(color)}
-                    style={projectColorStyle(color)}
-                    className="size-2 shrink-0 rounded-full bg-(--project-color)"
+                  <ActionTooltip
+                    label={projectColorLabel(color)}
+                    render={
+                      <span
+                        aria-hidden
+                        style={projectColorStyle(color)}
+                        className="size-2 shrink-0 rounded-full bg-(--project-color)"
+                      />
+                    }
                   />
                   <span className="truncate">{name}</span>
                 </SidebarMenuButton>

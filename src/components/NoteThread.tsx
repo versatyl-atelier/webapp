@@ -10,17 +10,13 @@ import {
 } from "react";
 
 import { deleteNote, editNote, restoreNote } from "@/actions/projects";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { FieldErrors } from "@/components/FieldErrors";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import { submitFormOnShortcut } from "@/components/NoteComposer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   CANCEL_LABEL,
   CURRENT_USER_LABEL,
@@ -63,16 +59,20 @@ function AuthorTag({ author, currentUser }: AuthorTagProps) {
       ? CURRENT_USER_LABEL
       : (author?.name ?? UNKNOWN_AUTHOR_LABEL);
   return (
-    <span
-      title={label}
-      className={cn(
-        "text-2xs mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-white select-none",
-        authorColorClass(author),
-      )}
+    <ActionTooltip
+      label={label}
+      render={
+        <span
+          className={cn(
+            "text-2xs mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-white select-none",
+            authorColorClass(author),
+          )}
+        />
+      }
     >
       <span aria-hidden>{authorInitials(author)}</span>
       <span className="sr-only">{label}</span>
-    </span>
+    </ActionTooltip>
   );
 }
 
@@ -111,13 +111,17 @@ function NoteRow({
       </p>
       <div className="sm:w-note-meta flex shrink-0 items-center gap-2 max-sm:basis-full max-sm:pl-14 sm:pl-2.5">
         <div className="text-muted-foreground flex min-w-0 flex-1 flex-col items-start gap-0.5 text-xs">
-          <time
-            dateTime={version.createdAt.toISOString()}
-            title={formatNoteFullTime(version.createdAt)}
-            className="whitespace-nowrap"
+          <ActionTooltip
+            label={formatNoteFullTime(version.createdAt)}
+            render={
+              <time
+                dateTime={version.createdAt.toISOString()}
+                className="whitespace-nowrap"
+              />
+            }
           >
             {formatNoteTime(version.createdAt, now)}
-          </time>
+          </ActionTooltip>
           {status}
         </div>
         {actions && (
@@ -253,60 +257,72 @@ export function NoteThread({ note, currentUser, now }: NoteThreadProps) {
   );
 
   const actions = note.isDeleted ? (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon-xs"
-      aria-label={RESTORE_NOTE_LABEL}
-      title={RESTORE_NOTE_LABEL}
-      disabled={pending}
-      onClick={() =>
-        startTransition(async () => {
-          await restoreNote(note.id);
-          setHistoryOpen(false);
-        })
+    <ActionTooltip
+      label={RESTORE_NOTE_LABEL}
+      render={
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          aria-label={RESTORE_NOTE_LABEL}
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              await restoreNote(note.id);
+              setHistoryOpen(false);
+            })
+          }
+        />
       }
     >
       <RotateCcw />
-    </Button>
+    </ActionTooltip>
   ) : (
     <>
-      <Tooltip>
-        <TooltipTrigger render={<span tabIndex={0} className="rounded-md" />}>
+      <ActionTooltip
+        label={LINK_EMAIL_LABEL}
+        render={<span tabIndex={0} className="rounded-md" />}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          aria-label={LINK_EMAIL_LABEL}
+          disabled
+        >
+          <Link />
+        </Button>
+      </ActionTooltip>
+      <ActionTooltip
+        label={EDIT_NOTE_LABEL}
+        render={
           <Button
             type="button"
             variant="ghost"
             size="icon-xs"
-            aria-label={LINK_EMAIL_LABEL}
-            disabled
-          >
-            <Link />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{LINK_EMAIL_LABEL}</TooltipContent>
-      </Tooltip>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-xs"
-        aria-label={EDIT_NOTE_LABEL}
-        title={EDIT_NOTE_LABEL}
-        disabled={pending}
-        onClick={() => setEditing(true)}
+            aria-label={EDIT_NOTE_LABEL}
+            disabled={pending}
+            onClick={() => setEditing(true)}
+          />
+        }
       >
         <Pencil />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-xs"
-        aria-label={DELETE_NOTE_LABEL}
-        title={DELETE_NOTE_LABEL}
-        disabled={pending}
-        onClick={() => setConfirmingDelete(true)}
+      </ActionTooltip>
+      <ActionTooltip
+        label={DELETE_NOTE_LABEL}
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={DELETE_NOTE_LABEL}
+            disabled={pending}
+            onClick={() => setConfirmingDelete(true)}
+          />
+        }
       >
         <Trash2 />
-      </Button>
+      </ActionTooltip>
     </>
   );
 

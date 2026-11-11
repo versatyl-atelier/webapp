@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { loadDayOccurrences, saveCalendarEvent } from "@/actions/calendar";
 import { CalendarDayOrderPreview } from "@/components/CalendarDayOrderPreview";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { FieldErrors } from "@/components/FieldErrors";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import {
@@ -452,11 +453,15 @@ export function CalendarEventForm({
               <ComboboxList>
                 {(item: LinkableProject) => (
                   <ComboboxItem key={item.id} value={item}>
-                    <span
-                      aria-hidden
-                      title={projectColorLabel(item.color)}
-                      style={projectColorStyle(item.color)}
-                      className="size-2 shrink-0 rounded-full bg-(--project-color)"
+                    <ActionTooltip
+                      label={projectColorLabel(item.color)}
+                      render={
+                        <span
+                          aria-hidden
+                          style={projectColorStyle(item.color)}
+                          className="size-2 shrink-0 rounded-full bg-(--project-color)"
+                        />
+                      }
                     />
                     {item.name}
                   </ComboboxItem>
@@ -558,15 +563,19 @@ export function CalendarEventForm({
             className="flex flex-wrap gap-2"
           >
             {EVENT_COLORS.map((eventColor) => (
-              <RadioGroupItem
+              <ActionTooltip
                 key={eventColor}
-                value={eventColor}
-                aria-label={EVENT_COLOR_LABELS[eventColor]}
-                title={EVENT_COLOR_LABELS[eventColor]}
-                className={cn(
-                  "data-checked:ring-foreground data-checked:ring-offset-background size-7 border-0 text-white data-checked:ring-2 data-checked:ring-offset-2",
-                  eventColorClass(eventColor),
-                )}
+                label={EVENT_COLOR_LABELS[eventColor]}
+                render={
+                  <RadioGroupItem
+                    value={eventColor}
+                    aria-label={EVENT_COLOR_LABELS[eventColor]}
+                    className={cn(
+                      "data-checked:ring-foreground data-checked:ring-offset-background size-7 border-0 text-white data-checked:ring-2 data-checked:ring-offset-2",
+                      eventColorClass(eventColor),
+                    )}
+                  />
+                }
               />
             ))}
           </RadioGroup>

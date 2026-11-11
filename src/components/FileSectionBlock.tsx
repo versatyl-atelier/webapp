@@ -22,6 +22,7 @@ import {
   restoreFile,
   restoreFileSection,
 } from "@/actions/projects";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { FileTile, type TileSize } from "@/components/FileTile";
 import { ROW_TITLE_CLASS } from "@/components/RowTitle";
 import { Button } from "@/components/ui/button";
@@ -240,17 +241,21 @@ export function FileSectionBlock({
           <span className="text-muted-foreground text-xs">{files.length}</span>
         )}
         {!isRow && !section.isCustom && section.name === DEBIT_SECTION_NAME && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="xs"
-            disabled
-            title={COMING_SOON_LABEL}
-            className="text-primary bg-primary/10 ml-auto"
+          <ActionTooltip
+            label={COMING_SOON_LABEL}
+            render={<span tabIndex={0} className="ml-auto rounded-md" />}
           >
-            {LISTS_LINK_LABEL}
-            <ArrowRight aria-hidden />
-          </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              disabled
+              className="text-primary bg-primary/10"
+            >
+              {LISTS_LINK_LABEL}
+              <ArrowRight aria-hidden />
+            </Button>
+          </ActionTooltip>
         )}
         {section.isCustom && (
           <Button

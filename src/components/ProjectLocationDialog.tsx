@@ -4,6 +4,7 @@ import { useActionState, useId, useState } from "react";
 import { toast } from "sonner";
 
 import { saveProjectLocation } from "@/actions/projects";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { FieldErrors } from "@/components/FieldErrors";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
 import { Button } from "@/components/ui/button";
@@ -100,13 +101,17 @@ export function ProjectLocationDialog({
               className="flex flex-wrap gap-2"
             >
               {projectColorOptions(initialColor).map(({ value, label }) => (
-                <RadioGroupItem
+                <ActionTooltip
                   key={value}
-                  value={value}
-                  aria-label={label}
-                  title={label}
-                  style={projectColorStyle(value)}
-                  className="data-checked:ring-foreground data-checked:ring-offset-background size-6 border-0 bg-(--project-color) text-white data-checked:bg-(--project-color) data-checked:ring-2 data-checked:ring-offset-2 dark:bg-(--project-color) dark:data-checked:bg-(--project-color)"
+                  label={label}
+                  render={
+                    <RadioGroupItem
+                      value={value}
+                      aria-label={label}
+                      style={projectColorStyle(value)}
+                      className="data-checked:ring-foreground data-checked:ring-offset-background size-6 border-0 bg-(--project-color) text-white data-checked:bg-(--project-color) data-checked:ring-2 data-checked:ring-offset-2 dark:bg-(--project-color) dark:data-checked:bg-(--project-color)"
+                    />
+                  }
                 />
               ))}
             </RadioGroup>

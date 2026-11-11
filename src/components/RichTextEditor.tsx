@@ -3,6 +3,7 @@
 import { Bold, Italic, RemoveFormatting, Underline } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { Button } from "@/components/ui/button";
 import {
   RICH_TEXT_BOLD_CLASS,
@@ -71,17 +72,21 @@ type ToolbarButtonProps = {
 
 function ToolbarButton({ label, onPress, children }: ToolbarButtonProps) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon-xs"
-      aria-label={label}
-      title={label}
-      onMouseDown={(event) => event.preventDefault()}
-      onClick={onPress}
+    <ActionTooltip
+      label={label}
+      render={
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          aria-label={label}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={onPress}
+        />
+      }
     >
       {children}
-    </Button>
+    </ActionTooltip>
   );
 }
 

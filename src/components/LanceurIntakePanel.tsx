@@ -5,6 +5,7 @@ import { useId, useState, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { importLanceurPhases } from "@/actions/lanceur";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { LanceurIntakeFields } from "@/components/LanceurIntakeFields";
 import {
   Autocomplete,
@@ -182,16 +183,20 @@ export function LanceurIntakePanel({
         <span className="min-w-0 flex-1 truncate text-xs font-semibold">
           {project.name}
         </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          aria-label={INTAKE_CLEAR_LABEL}
-          title={INTAKE_CLEAR_LABEL}
-          onClick={reset}
+        <ActionTooltip
+          label={INTAKE_CLEAR_LABEL}
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label={INTAKE_CLEAR_LABEL}
+              onClick={reset}
+            />
+          }
         >
           <X />
-        </Button>
+        </ActionTooltip>
       </div>
       {isMultiple && (
         <p className="text-2xs font-semibold uppercase">

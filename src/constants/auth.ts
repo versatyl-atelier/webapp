@@ -36,6 +36,8 @@ export const FIBER_FAILURE_NAME_PREFIX = "(FiberFailure) ";
 
 export const LOGIN_SUCCESS_MESSAGE = "loginSuccess";
 export const LOGOUT_SUCCESS_MESSAGE = "logoutSuccess";
+export const LOGIN_LABEL = "Connexion";
+export const LOGOUT_LABEL = "Déconnexion";
 export const SWITCH_EMPLOYEE_SUCCESS_MESSAGE = "switchEmployeeSuccess";
 export const CHANGE_PASSWORD_SUCCESS_MESSAGE = "changePasswordSuccess";
 export const CREATE_USER_SUCCESS_MESSAGE = "Compte créé";

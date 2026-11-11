@@ -1,3 +1,4 @@
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
 import {
   occurrenceColorClass,
@@ -32,29 +33,37 @@ export function CalendarEventChip({
 
   if (compact) {
     return (
-      <li
-        title={description}
-        style={chipStyle}
-        className={cn(
-          "h-1.5 w-4/5 shrink-0 rounded-full",
-          occurrenceColorClass(occurrence),
-          HIGHLIGHT_CLASSES[highlight],
-        )}
+      <ActionTooltip
+        label={description}
+        render={
+          <li
+            style={chipStyle}
+            className={cn(
+              "h-1.5 w-4/5 shrink-0 rounded-full",
+              occurrenceColorClass(occurrence),
+              HIGHLIGHT_CLASSES[highlight],
+            )}
+          />
+        }
       >
         <span className="sr-only">{description}</span>
-      </li>
+      </ActionTooltip>
     );
   }
 
   return (
-    <li
-      title={description}
-      style={chipStyle}
-      className={cn(
-        "shrink-0 overflow-hidden rounded-sm px-1.5 pt-0.5 pb-1",
-        occurrenceColorClass(occurrence),
-        HIGHLIGHT_CLASSES[highlight],
-      )}
+    <ActionTooltip
+      label={description}
+      render={
+        <li
+          style={chipStyle}
+          className={cn(
+            "shrink-0 overflow-hidden rounded-sm px-1.5 pt-0.5 pb-1",
+            occurrenceColorClass(occurrence),
+            HIGHLIGHT_CLASSES[highlight],
+          )}
+        />
+      }
     >
       <p className="flex items-center gap-1 text-xs font-semibold">
         <EventCategoryIcon
@@ -66,6 +75,6 @@ export function CalendarEventChip({
       <p className="text-2xs truncate tabular-nums opacity-85">
         {occurrenceSubtitle(occurrence)}
       </p>
-    </li>
+    </ActionTooltip>
   );
 }

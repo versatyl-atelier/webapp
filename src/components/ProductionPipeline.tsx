@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getPipelineProjects } from "@/actions/projects";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -77,17 +78,21 @@ export async function ProductionPipeline({ today }: ProductionPipelineProps) {
                   <ul className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
                     {stageProjects.map(({ id, name, color }) => (
                       <li key={id}>
-                        <Link
-                          href={projectPath(id)}
-                          title={name}
-                          style={projectColorStyle(color)}
-                          className={cn(
-                            "focus-visible:ring-ring block truncate rounded-sm bg-(--project-color) px-2 py-1 text-xs font-medium text-white transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-                            isDone && "opacity-45",
-                          )}
+                        <ActionTooltip
+                          label={name}
+                          render={
+                            <Link
+                              href={projectPath(id)}
+                              style={projectColorStyle(color)}
+                              className={cn(
+                                "focus-visible:ring-ring block truncate rounded-sm bg-(--project-color) px-2 py-1 text-xs font-medium text-white transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                                isDone && "opacity-45",
+                              )}
+                            />
+                          }
                         >
                           {name}
-                        </Link>
+                        </ActionTooltip>
                       </li>
                     ))}
                   </ul>

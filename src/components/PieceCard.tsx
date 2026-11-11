@@ -10,6 +10,7 @@ import {
   PIECE_NOTES_LABEL,
   UNNAMED_PIECE_LABEL,
 } from "@/constants/projects";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { CoverImage } from "@/components/CoverImage";
 import { UPLOADING_LABEL } from "@/constants/projectFiles";
 import { useCoverUpload } from "@/hooks/use-cover-upload";
@@ -78,12 +79,12 @@ export function PieceCard({
           </p>
         )}
         {draggable && (
-          <span
-            title={DRAG_PIECE_LABEL}
-            className="absolute top-2 left-2 cursor-grab"
+          <ActionTooltip
+            label={DRAG_PIECE_LABEL}
+            render={<span className="absolute top-2 left-2 cursor-grab" />}
           >
             <GripVertical aria-hidden className="size-4" />
-          </span>
+          </ActionTooltip>
         )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-3.5">
@@ -110,9 +111,12 @@ export function PieceCard({
             {fields.map(({ label, value }) => (
               <div key={label} className="col-span-2 grid grid-cols-subgrid">
                 <dt className="text-muted-foreground">{label}</dt>
-                <dd className="truncate" title={value}>
+                <ActionTooltip
+                  label={value}
+                  render={<dd className="truncate" />}
+                >
                   {value}
-                </dd>
+                </ActionTooltip>
               </div>
             ))}
           </dl>
