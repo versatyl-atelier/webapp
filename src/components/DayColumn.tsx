@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  startTransition,
-  useActionState,
-  useState,
-  type DragEvent,
-  type PropsWithChildren,
-} from "react";
+import { useState, type DragEvent, type PropsWithChildren } from "react";
 
-import { moveTimeEntry } from "@/actions/timeEntries";
 import {
   COPY_COMMAND,
   DROP_COPY_CLASSES,
@@ -20,11 +13,9 @@ import {
   MOVE_COMMAND,
   TIME_ENTRY_DRAG_TYPE,
   TIME_ENTRY_SOURCE_DATE_DRAG_TYPE,
-  UNDO_LABEL,
-  UNDO_TOAST_DURATION_MS,
 } from "@/constants/timeEntries";
 import { useIsApplePlatform } from "@/hooks/use-apple-platform";
-import { useFormToast } from "@/hooks/use-form-toast";
+import { useTimeEntryDrop } from "@/hooks/use-time-entry-drop";
 import { cn } from "@/lib/utils";
 
 type DropMode = typeof MOVE_COMMAND | typeof COPY_COMMAND;
@@ -60,23 +51,9 @@ export function DayColumn({
   disabled,
   children,
 }: DayColumnProps) {
-  const [state, action, pending] = useActionState(moveTimeEntry, undefined);
+  const { submit, pending } = useTimeEntryDrop();
   const [dropMode, setDropMode] = useState<DropMode | null>(null);
   const isApplePlatform = useIsApplePlatform();
-
-  function submit(fields: Record<string, string>) {
-    const formData = new FormData();
-    Object.entries(fields).forEach(([name, value]) =>
-      formData.set(name, value),
-    );
-    startTransition(() => action(formData));
-  }
-
-  const undo = state?.undo;
-  useFormToast(state, {
-    action: undo && { label: UNDO_LABEL, onClick: () => submit(undo) },
-    duration: undo && UNDO_TOAST_DURATION_MS,
-  });
 
   function acceptsDrop(event: DragEvent<HTMLDivElement>) {
     return !disabled && event.dataTransfer.types.includes(TIME_ENTRY_DRAG_TYPE);

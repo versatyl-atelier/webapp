@@ -35,6 +35,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FreezeForm } from "@/components/FreezeForm";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
 import { TimeEntryDragHint } from "@/components/TimeEntryDragHint";
+import { TimeEntryTrashZone } from "@/components/TimeEntryTrashZone";
+import { Separator } from "@/components/ui/separator";
 import { PageContextProvider } from "./context-provider";
 import { cn } from "@/lib/utils";
 
@@ -258,12 +260,17 @@ export default async function EmployeePage({
           </div>
           {!disabledReason && <TimeEntryDragHint />}
         </div>
-        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
+        <TimeEntryTrashZone
+          disabled={disabledReason}
+          className="grid grid-cols-1 gap-2.5 lg:grid-cols-[1fr_auto_1fr_1fr]"
+        >
           <MultiPunchForm
             employeeId={employeeId}
             activePunch={activePunch}
             disabled={disabledReason}
           />
+          <Separator className="lg:hidden" />
+          <Separator orientation="vertical" className="hidden lg:block" />
           <ManualTimeForm
             employeeId={employeeId}
             dateOptions={dateOptions}
@@ -279,7 +286,7 @@ export default async function EmployeePage({
             hoursDifference={hoursDifference}
             disabled={disabledReason}
           />
-        </div>
+        </TimeEntryTrashZone>
       </div>
     </PageContextProvider>
   );

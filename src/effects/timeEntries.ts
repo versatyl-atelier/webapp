@@ -37,7 +37,9 @@ import {
   COPY_COMMAND,
   COPY_ENTRY_METHOD,
   COPY_UNDONE_MESSAGE,
+  DELETE_COMMAND,
   ENTRY_COPIED_MESSAGE,
+  ENTRY_DELETED_MESSAGE,
   ENTRY_MOVED_MESSAGE,
   ENTRY_NOT_FOUND_MESSAGE,
   MOVE_COMMAND,
@@ -442,6 +444,12 @@ export const moveTimeEntryEffect = Effect.fn("moveTimeEntry")(
     }
     const { employeeId } = entry;
     yield* Effect.annotateLogsScoped({ employeeId });
+
+    if (command === DELETE_COMMAND) {
+      yield* assertWeekNotFrozen(prisma, employeeId, entry.start);
+      yield* deleteTimeEntryEffect(prisma, entryId);
+      return { message: ENTRY_DELETED_MESSAGE };
+    }
 
     if (command === UNDO_COPY_COMMAND) {
       if (entry.entryMethod !== COPY_ENTRY_METHOD) {

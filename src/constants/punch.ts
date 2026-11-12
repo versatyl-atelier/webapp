@@ -7,6 +7,7 @@ export const PUNCH_REPORT_PATH = `${PUNCH_PATH}/rapport`;
 export const PUNCH_REPORT_PRINT_PATH = `${PUNCH_REPORT_PATH}/imprimable`;
 
 export const PUNCH_FINISH_LABEL = "Terminer";
+export const REAL_TIME_PUNCH_TITLE = "Pointage en temps réel";
 export const PUNCH_SELECT_EMPLOYEE_PROMPT = "Sélectionner un employé";
 export const EMPLOYEES_LABEL = "Employés";
 export const EMPLOYEES_FILTER_LABEL = "Filtrer les employés";

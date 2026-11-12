@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import ProjectSelect from "@/components/ProjectSelect";
 import { Field, FieldError } from "./ui/field";
 import Clock from "@/components/Clock";
+import { REAL_TIME_PUNCH_TITLE } from "@/constants/punch";
 import { formatTimeDisplay } from "@/lib/time";
 
 const CUTOFF_HOUR = 16;
@@ -155,7 +156,7 @@ export default function MultiPunchForm({
   return (
     <div className="bg-card flex flex-col rounded-lg border-2 p-2">
       <div className="border-primary mb-2 border-b-2 pb-1 text-center text-xs font-bold">
-        Pointage Multiple
+        {REAL_TIME_PUNCH_TITLE}
       </div>
       {!activePunch ? (
         <form action={startAction}>

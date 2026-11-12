@@ -2,6 +2,7 @@ export const MOVE_COMMAND = "move";
 export const COPY_COMMAND = "copy";
 export const UNDO_MOVE_COMMAND = "undo-move";
 export const UNDO_COPY_COMMAND = "undo-copy";
+export const DELETE_COMMAND = "delete";
 
 export const COPY_ENTRY_METHOD = "copy";
 
@@ -16,8 +17,13 @@ export const DROP_COPY_CLASSES =
 export const DROP_MOVE_LABEL_CLASSES = "text-primary";
 export const DROP_COPY_LABEL_CLASSES = "text-punch-pos-diff";
 
+export const DROP_DELETE_CLASSES =
+  "bg-destructive/15 outline-destructive text-destructive outline-2 -outline-offset-2 outline-dashed";
+export const DROP_DELETE_ACTIVE_CLASSES = "bg-destructive/30";
+
 export const DROP_MOVE_LABEL = "Déplacer ici";
 export const DROP_COPY_LABEL = "Copier ici";
+export const DROP_DELETE_LABEL = "Déposer ici pour supprimer";
 export const DUPLICATE_ENTRY_LABEL = "Dupliquer";
 export const UNDO_LABEL = "Annuler";
 export const UNDO_TOAST_DURATION_MS = 8000;
@@ -34,6 +40,7 @@ export const ENTRY_MOVED_MESSAGE = "Entrée déplacée";
 export const ENTRY_COPIED_MESSAGE = "Entrée copiée";
 export const MOVE_UNDONE_MESSAGE = "Déplacement annulé";
 export const COPY_UNDONE_MESSAGE = "Copie annulée";
+export const ENTRY_DELETED_MESSAGE = "Entrée supprimée";
 export const ENTRY_NOT_FOUND_MESSAGE = "Entrée introuvable";
 export const ACTIVE_PUNCH_NOT_MOVABLE_MESSAGE =
   "Impossible de déplacer un punch en cours";
