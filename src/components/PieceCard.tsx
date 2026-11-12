@@ -1,13 +1,12 @@
 "use client";
 
-import { GripVertical, ImageIcon, StickyNote } from "lucide-react";
+import { GripVertical, ImageIcon } from "lucide-react";
 import { useState } from "react";
 
 import {
   NO_PIECE_DETAILS_LABEL,
   DRAG_PIECE_LABEL,
   PIECE_DRAG_TYPE,
-  PIECE_NOTES_LABEL,
   UNNAMED_PIECE_LABEL,
 } from "@/constants/projects";
 import { ActionTooltip } from "@/components/ActionTooltip";
@@ -120,14 +119,6 @@ export function PieceCard({
               </div>
             ))}
           </dl>
-        )}
-        {piece.noteCount > 0 && (
-          <p className="text-muted-foreground mt-auto flex items-center gap-1 pt-1 text-xs">
-            <StickyNote aria-hidden className="size-3" />
-            <span>
-              {piece.noteCount} {PIECE_NOTES_LABEL.toLowerCase()}
-            </span>
-          </p>
         )}
       </div>
     </li>

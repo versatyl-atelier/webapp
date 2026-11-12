@@ -2,17 +2,6 @@ import type { ExternalToast } from "sonner";
 
 import { ProjectStage } from "@/generated/prisma/enums";
 
-export const PROJECT_TABS = [
-  { value: "structure", label: "Structure" },
-  { value: "dropbox", label: "Dropbox" },
-  { value: "notes", label: "Notes" },
-] as const;
-
-export const NOTES_TAB = PROJECT_TABS[2].value;
-
-export const PROJECT_TAB_PARAM = "tab";
-export const PROJECT_NOTES_PATH_PATTERN = /^\/projets\/[^/]+\/notes\/?$/;
-
 export const PROJECT_TITLE_PLACEHOLDER = "Nom du projet (nom du client)";
 export const PROJECT_TITLE_LABEL = "Nom du projet";
 export const NEW_PROJECT_LABEL = "Nouveau projet";
@@ -77,8 +66,6 @@ export const ADD_PHASE_LABEL = "Ajouter une phase";
 export const ADD_PHASE_SHORT_LABEL = "Phase";
 export const ADD_PIECE_SHORT_LABEL = "Pièce";
 export const ADD_CONTACT_SHORT_LABEL = "Contact";
-export const NOTES_HEADING = "Notes";
-export const NOTES_EMOJI = "📝";
 export const PIECE_COUNT_SINGULAR_LABEL = "pièce";
 export const PIECE_COUNT_PLURAL_LABEL = "pièces";
 export const REMOVE_PHASE_LABEL = "Supprimer cette phase";
@@ -105,13 +92,11 @@ export const PIECE_DUPLICATED_MESSAGE = "Pièce dupliquée";
 export const PIECE_COPY_SUFFIX = " (copie)";
 export const PIECE_REMOVED_SUFFIX = "supprimée";
 export const UNDO_LABEL = "Annuler";
-export const PIECE_NOTES_LABEL = "Notes";
 export const REMOVE_CLADDING_LABEL = "Retirer";
 export const CLADDING_PLACEHOLDER = "Ajouter un matériau";
 export const CLADDING_FORM_FIELD = "cladding";
 export const CLADDING_COMMIT_KEYS = ["Enter", ","] as const;
 export const CLADDING_REMOVE_KEY = "Backspace";
-export const NOTES_LINK_LABEL = "Notes générales";
 export const TOAST_UNDO_DURATION_MS = 5000;
 export const PIECE_TYPE_PLACEHOLDER = "Ex. Cuisine, Salle de bain…";
 export const PIECE_PHASE_LABEL = "Phase";
@@ -123,44 +108,6 @@ export const PIECE_TEXT_FIELDS = [
   { key: "countertop", label: "Comptoir" },
   { key: "drawers", label: "Tiroirs" },
 ] as const;
-
-export const GENERAL_NOTES_HEADING = "Notes générales";
-export const NOTE_SINGULAR_LABEL = "note";
-export const NOTE_PLURAL_LABEL = "notes";
-export const NO_NOTES_LABEL = "Aucune note pour l’instant.";
-export const NEW_NOTE_LABEL = "Nouvelle note";
-export const NEW_NOTE_PLACEHOLDER = "Ajouter une note à";
-export const ADD_NOTE_LABEL = "Ajouter";
-export const SUBMIT_NOTE_HINT = "pour envoyer";
-export const SUBMIT_NOTE_KEYS_DEFAULT = ["Ctrl", "Entrée"] as const;
-export const SUBMIT_NOTE_KEYS_APPLE = ["⌘", "Entrée"] as const;
-export const SUBMIT_NOTE_KEY = "Enter";
-export const EDIT_NOTE_LABEL = "Modifier";
-export const EDITED_NOTE_LABEL = "Modifier la note";
-export const SAVE_NOTE_EDIT_LABEL = "Enregistrer la modification";
-export const DELETE_NOTE_LABEL = "Supprimer";
-export const DELETE_NOTE_CONFIRMATION = "Supprimer cette note ?";
-export const RESTORE_NOTE_LABEL = "Restaurer";
-export const DELETED_NOTE_LABEL = "Supprimée";
-export const SHOW_NOTE_HISTORY_LABEL = "Voir les anciennes versions";
-export const HIDE_NOTE_HISTORY_LABEL = "Masquer les anciennes versions";
-export const LINK_EMAIL_LABEL = "Lier un courriel — bientôt";
-export const CURRENT_USER_LABEL = "Vous";
-export const UNKNOWN_AUTHOR_LABEL = "Auteur inconnu";
-export const UNKNOWN_AUTHOR_INITIALS = "?";
-export const AUTHOR_INITIALS_LENGTH = 2;
-export const JUST_NOW_LABEL = "à l’instant";
-export const NOTE_AUTHOR_COLOR_CLASSES = [
-  "bg-blue-700",
-  "bg-teal-700",
-  "bg-violet-700",
-  "bg-orange-700",
-  "bg-pink-700",
-  "bg-indigo-700",
-  "bg-lime-700",
-  "bg-amber-700",
-] as const;
-export const UNKNOWN_AUTHOR_COLOR_CLASS = "bg-muted-foreground";
 
 export const SUGGESTIONS_LIMIT = 6;
 export const DEFAULT_SUGGESTIONS = {
@@ -229,9 +176,6 @@ export const PIECE_SAVED_MESSAGE = "Pièce enregistrée";
 export const PROJECT_NOT_FOUND_MESSAGE = "Projet introuvable";
 export const PIECE_NOT_FOUND_MESSAGE = "Pièce introuvable";
 export const PHASE_NOT_FOUND_MESSAGE = "Phase introuvable";
-export const NOTE_NOT_FOUND_MESSAGE = "Note introuvable";
-export const NOTE_SAVED_MESSAGE = "Note enregistrée";
-export const NOTE_BODY_REQUIRED_MESSAGE = "La note ne peut pas être vide";
 export const PROJECT_NAME_REQUIRED_MESSAGE = "Le nom du projet est requis";
 export const INVALID_COLOR_MESSAGE = "Couleur invalide";
 export const INVALID_EMAIL_MESSAGE = "Courriel invalide";

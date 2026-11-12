@@ -46,7 +46,6 @@ const piece = (overrides: Partial<PieceRecord>): PieceRecord => ({
   coverX: 50,
   coverY: 50,
   coverZoom: 1,
-  noteCount: 0,
   ...overrides,
 });
 

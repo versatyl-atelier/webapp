@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import { PUNCH_PATH, PUNCH_REPORT_PATH, PUNCH_TOOLS } from "@/constants/punch";
-import { NOTES_TOOL_PATH, PROJECTS_PATH } from "@/constants/tools";
+import { PROJECTS_PATH } from "@/constants/tools";
 import {
   activeSectionHref,
   activeToolHref,
@@ -9,7 +9,6 @@ import {
   employeePath,
   isProtectedPath,
   loginPath,
-  projectNotesPath,
   projectPath,
 } from "@/lib/paths";
 
@@ -82,11 +81,6 @@ describe("projectPath", () => {
   it("builds the project page path", () => {
     expect(projectPath("abc")).toBe("/projets/abc");
   });
-
-  it("points the notes tab to the notes page", () => {
-    expect(projectPath("abc", "notes")).toBe("/projets/abc/notes");
-    expect(projectNotesPath("abc")).toBe("/projets/abc/notes");
-  });
 });
 
 describe("activeSectionHref", () => {
@@ -106,25 +100,11 @@ describe("activeSectionHref", () => {
 });
 
 describe("activeToolHref", () => {
-  it("matches the projects tool without a tab", () => {
-    expect(activeToolHref("/projets/abc", new URLSearchParams())).toBe(
-      PROJECTS_PATH,
-    );
-  });
-
-  it("prefers the notes tool on the notes tab", () => {
-    expect(
-      activeToolHref("/projets/abc", new URLSearchParams("tab=notes")),
-    ).toBe(NOTES_TOOL_PATH);
-  });
-
-  it("treats the notes page as the notes tool", () => {
-    expect(activeToolHref("/projets/abc/notes", new URLSearchParams())).toBe(
-      NOTES_TOOL_PATH,
-    );
+  it("matches the projects tool on project pages", () => {
+    expect(activeToolHref("/projets/abc")).toBe(PROJECTS_PATH);
   });
 
   it("matches nothing outside the tools", () => {
-    expect(activeToolHref("/", new URLSearchParams())).toBeUndefined();
+    expect(activeToolHref("/")).toBeUndefined();
   });
 });

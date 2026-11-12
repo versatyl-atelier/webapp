@@ -77,7 +77,7 @@ export type PieceRecord = Pick<
   | "coverX"
   | "coverY"
   | "coverZoom"
-> & { noteCount: number; dropboxLinked: boolean };
+> & { dropboxLinked: boolean };
 
 export type ProjectFiche = {
   id: string;

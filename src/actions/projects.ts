@@ -12,19 +12,14 @@ import {
   runEffectAsFormAction,
 } from "@/lib/effect";
 import {
-  addNoteEffect,
-  deleteNoteEffect,
-  editNoteEffect,
   getAllProjectsEffect,
   getFicheSuggestionsEffect,
   getPipelineProjectsEffect,
   getProjectEffect,
-  getProjectNotesEffect,
   getProjectsEffect,
   getUpcomingDeliveriesEffect,
   movePieceEffect,
   renamePhaseEffect,
-  restoreNoteEffect,
   deleteContactEffect,
   restoreContactEffect,
   saveContactEffect,
@@ -81,8 +76,6 @@ import {
 } from "@/effects/projectCovers";
 import { projectPath } from "@/lib/paths";
 import {
-  NoteEditFormSchema,
-  NoteFormSchema,
   PieceFormSchema,
   ContactFormSchema,
   CoverImageFormSchema,
@@ -90,10 +83,6 @@ import {
   ProjectLocationFormSchema,
   ProjectCreateFormSchema,
   ProjectHeaderFormSchema,
-  type NoteEditFormErrors,
-  type NoteEditFormState,
-  type NoteFormErrors,
-  type NoteFormState,
   type PieceFormErrors,
   type PieceFormState,
   type ContactFormErrors,
@@ -117,10 +106,6 @@ export const getAllProjects = cachedGetter(getAllProjectsEffect, [
 ]);
 
 export const getProject = cachedGetter(getProjectEffect, [Role.employee]);
-
-export const getProjectNotes = cachedGetter(getProjectNotesEffect, [
-  Role.employee,
-]);
 
 export const getFicheSuggestions = cachedGetter(getFicheSuggestionsEffect, [
   Role.employee,
@@ -236,32 +221,6 @@ export async function savePiece(
   >(formState, formData, PieceFormSchema, savePieceWithFoldersEffect, [
     Role.employee,
   ]);
-  refresh();
-  return state;
-}
-
-export async function addNote(
-  formState: NoteFormState,
-  formData: FormData,
-): Promise<NoteFormState> {
-  const state = await runEffectAsFormAction<
-    NoteFormState,
-    typeof NoteFormSchema,
-    NoteFormErrors
-  >(formState, formData, NoteFormSchema, addNoteEffect, [Role.employee]);
-  refresh();
-  return state;
-}
-
-export async function editNote(
-  formState: NoteEditFormState,
-  formData: FormData,
-): Promise<NoteEditFormState> {
-  const state = await runEffectAsFormAction<
-    NoteEditFormState,
-    typeof NoteEditFormSchema,
-    NoteEditFormErrors
-  >(formState, formData, NoteEditFormSchema, editNoteEffect, [Role.employee]);
   refresh();
   return state;
 }
@@ -408,27 +367,6 @@ export async function deleteFileSection(sectionId: number): Promise<void> {
 
 export async function restoreFileSection(sectionId: number): Promise<void> {
   await restoreFileSectionMutation(sectionId);
-  refresh();
-}
-
-const deleteNoteMutation = protectedEffect(
-  deleteNoteEffect,
-  [Role.employee],
-  "mutation",
-);
-const restoreNoteMutation = protectedEffect(
-  restoreNoteEffect,
-  [Role.employee],
-  "mutation",
-);
-
-export async function deleteNote(noteId: number): Promise<void> {
-  await deleteNoteMutation(noteId);
-  refresh();
-}
-
-export async function restoreNote(noteId: number): Promise<void> {
-  await restoreNoteMutation(noteId);
   refresh();
 }
 

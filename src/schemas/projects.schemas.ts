@@ -22,7 +22,6 @@ import {
   INVALID_CABINET_COUNT_MESSAGE,
   INVALID_EMAIL_MESSAGE,
   NO_PROJECT_STAGE_VALUE,
-  NOTE_BODY_REQUIRED_MESSAGE,
   PROJECT_NAME_REQUIRED_MESSAGE,
 } from "@/constants/projects";
 import { PIECE_TOGGLE_FALSE, PIECE_TOGGLE_TRUE } from "@/constants/trello";
@@ -242,55 +241,8 @@ export type PieceFormState =
     })
   | undefined;
 
-const NoteBodySchema = Schema.Trim.pipe(
-  Schema.minLength(1, { message: () => NOTE_BODY_REQUIRED_MESSAGE }),
-);
-
-export const NoteFormSchema = Schema.Struct({
-  projectId: Schema.String,
-  phaseId: OptionalIdFromFormSchema,
-  body: NoteBodySchema,
-});
-
-export type NoteFormData = typeof NoteFormSchema.Type;
-
-export type NoteFormErrors = {
-  projectId?: string[];
-  phaseId?: string[];
-  body?: string[];
-  dataValidation?: string;
-  schemaValidation?: string;
-};
-
-export type NoteFormState =
-  | (FormState & {
-      errors?: NoteFormErrors;
-    })
-  | undefined;
-
-export const NoteEditFormSchema = Schema.Struct({
-  id: IdFromFormSchema,
-  body: NoteBodySchema,
-});
-
-export type NoteEditFormData = typeof NoteEditFormSchema.Type;
-
-export type NoteEditFormErrors = {
-  id?: string[];
-  body?: string[];
-  dataValidation?: string;
-  schemaValidation?: string;
-};
-
-export type NoteEditFormState =
-  | (FormState & {
-      errors?: NoteEditFormErrors;
-    })
-  | undefined;
-
 export const PhaseIdSchema = Schema.Int;
 export const PieceIdSchema = Schema.Int;
-export const NoteIdSchema = Schema.Int;
 export const PhaseNameSchema = Schema.Trim.pipe(Schema.minLength(1));
 export const FileSectionIdSchema = Schema.Int;
 export const FileSectionNameSchema = Schema.Trim.pipe(Schema.minLength(1));

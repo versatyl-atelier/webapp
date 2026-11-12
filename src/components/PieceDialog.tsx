@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  ArrowRight,
-  Copy,
-  ImageIcon,
-  MoreHorizontal,
-  StickyNote,
-  Trash2,
-} from "lucide-react";
-import Link from "next/link";
+import { Copy, ImageIcon, MoreHorizontal, Trash2 } from "lucide-react";
 import { useActionState, useId, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -64,7 +56,6 @@ import {
   PIECE_DESCRIPTION_PLACEHOLDER,
   PIECE_DIALOG_DESCRIPTION,
   PIECE_DUPLICATED_MESSAGE,
-  PIECE_NOTES_LABEL,
   PIECE_OPTIONS_LABEL,
   PIECE_PHASE_LABEL,
   PIECE_REMOVED_SUFFIX,
@@ -76,7 +67,7 @@ import {
   SAVED_TOAST_OPTIONS,
   UNNAMED_PIECE_LABEL,
 } from "@/constants/projects";
-import { COUNT_SEPARATOR, PIECE_FILES_HEADING } from "@/constants/projectFiles";
+import { PIECE_FILES_HEADING } from "@/constants/projectFiles";
 import {
   PIECE_ATELIER_DESCRIPTION,
   PIECE_ATELIER_HEADING,
@@ -89,7 +80,6 @@ import { useCoverUpload } from "@/hooks/use-cover-upload";
 import { useFileDrop } from "@/hooks/use-file-drop";
 import { useFormDirty } from "@/hooks/use-form-dirty";
 import { usePasteUpload } from "@/hooks/use-paste-upload";
-import { projectNotesPath } from "@/lib/paths";
 import type { FileSectionRecord } from "@/lib/projectFiles";
 import type {
   FicheSuggestions,
@@ -290,18 +280,6 @@ export function PieceDialog({
                   />
                   <FieldErrors errors={errors?.description} />
                 </Field>
-                {piece && (
-                  <Link
-                    href={projectNotesPath(projectId)}
-                    className="bg-primary/10 text-primary focus-visible:ring-ring/50 mt-1 inline-flex w-fit items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium outline-hidden hover:brightness-110 focus-visible:ring-3"
-                  >
-                    <StickyNote aria-hidden className="size-3.5" />
-                    {PIECE_NOTES_LABEL}
-                    {piece.noteCount > 0 &&
-                      `${COUNT_SEPARATOR}${piece.noteCount}`}
-                    <ArrowRight aria-hidden className="size-3.5" />
-                  </Link>
-                )}
               </div>
             </div>
             <div className="grid gap-x-4 gap-y-3.5 border-t pt-5 sm:grid-cols-3">

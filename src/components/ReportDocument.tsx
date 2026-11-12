@@ -12,8 +12,12 @@ import {
   SUMMARY_PROJECTS_LABEL,
   TOTAL_LABEL,
 } from "@/constants/report";
-import { formatNoteFullTime } from "@/lib/projectNotes";
-import { formatReportPeriod, type Report, type ReportRow } from "@/lib/report";
+import {
+  formatReportGeneratedAt,
+  formatReportPeriod,
+  type Report,
+  type ReportRow,
+} from "@/lib/report";
 import { cn } from "@/lib/utils";
 import { formatDecimalHours } from "@/lib/time";
 
@@ -83,7 +87,7 @@ export function ReportDocument({ report, generatedAt }: ReportDocumentProps) {
       <header className="flex flex-col gap-1">
         <h1 className={TITLE_CLASS}>{REPORT_TITLE}</h1>
         <p className={MUTED_CLASS}>
-          {GENERATED_ON_LABEL} {formatNoteFullTime(generatedAt)}
+          {GENERATED_ON_LABEL} {formatReportGeneratedAt(generatedAt)}
         </p>
         <div>
           <PrintButton />

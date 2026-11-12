@@ -18,6 +18,8 @@ import {
   type ReportGrouping,
 } from "@/constants/report";
 import {
+  CALENDAR_LOCALE,
+  CALENDAR_TIME_ZONE,
   END_DATE_BEFORE_START_MESSAGE,
   INVALID_DATE_MESSAGE,
 } from "@/constants/calendar";
@@ -29,6 +31,12 @@ import { normalize } from "@/lib/text";
 import { localDateKeyOf } from "@/lib/timesheet";
 
 const MS_PER_HOUR = 60 * 60 * 1000;
+
+const generatedAtFormatter = new Intl.DateTimeFormat(CALENDAR_LOCALE, {
+  timeZone: CALENDAR_TIME_ZONE,
+  dateStyle: "long",
+  timeStyle: "short",
+});
 
 type ProjectLink = {
   projectType: ProjectType;
@@ -346,4 +354,8 @@ export function formatReportPeriod({
   if (start) return `${PERIOD_FROM_LABEL} ${start}`;
   if (end) return `${PERIOD_UNTIL_LABEL} ${end}`;
   return PERIOD_ALL_LABEL;
+}
+
+export function formatReportGeneratedAt(date: Date): string {
+  return generatedAtFormatter.format(date);
 }
