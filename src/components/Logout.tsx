@@ -6,7 +6,7 @@ import { useActionState } from "react";
 import { logout } from "@/actions/auth";
 import { ActionTooltip } from "@/components/ActionTooltip";
 import { Button } from "@/components/ui/button";
-import { ROLE_LABELS } from "@/constants/auth";
+import { LOGOUT_LABEL, ROLE_LABELS } from "@/constants/auth";
 import { Role } from "@/generated/prisma/enums";
 
 const ROLE_ICONS: Record<Role, LucideIcon> = {
