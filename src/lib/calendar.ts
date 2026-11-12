@@ -1,5 +1,6 @@
 import {
   CALENDAR_DATE_PARAM,
+  CALENDAR_DAYS_PATH,
   CALENDAR_EVENTS_PATH,
   CALENDAR_LOCALE,
   CALENDAR_PATH,
@@ -217,7 +218,7 @@ export function calendarWeekPath(weekStart: DateKey): string {
 }
 
 export function calendarDayPath(date: DateKey): string {
-  return `${CALENDAR_PATH}/${date}`;
+  return `${CALENDAR_DAYS_PATH}/${date}`;
 }
 
 export function newCalendarEventPath(date?: DateKey): string {

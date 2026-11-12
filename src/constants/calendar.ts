@@ -10,6 +10,7 @@ import {
 } from "@/constants/lanceurCalendar";
 
 export const CALENDAR_PATH = "/calendrier";
+export const CALENDAR_DAYS_PATH = `${CALENDAR_PATH}/jour`;
 export const CALENDAR_EVENTS_PATH = `${CALENDAR_PATH}/evenements`;
 export const NEW_CALENDAR_EVENT_PATH = `${CALENDAR_EVENTS_PATH}/nouveau`;
 export const CALENDAR_WEEK_PARAM = "semaine";
