@@ -1,7 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useState, useTransition, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import {
   AlertDialog,
@@ -18,10 +18,10 @@ import { ActionTooltip } from "@/components/ActionTooltip";
 import { Button } from "@/components/ui/button";
 import { ACTION_TONE_CLASSES } from "@/constants/actions";
 import { CANCEL_LABEL, DELETE_LABEL } from "@/constants/tasks";
-import { useFormToast, type ToastableState } from "@/hooks/use-form-toast";
+import { useFieldsAction, type FieldsAction } from "@/hooks/use-fields-action";
 
 type ConfirmDeleteButtonProps = {
-  action: (state: undefined, formData: FormData) => Promise<ToastableState>;
+  action: FieldsAction;
   fields: Record<string, string>;
   title: string;
   description?: string;
@@ -43,19 +43,7 @@ export function ConfirmDeleteButton({
   triggerText,
   onDone,
 }: ConfirmDeleteButtonProps) {
-  const [state, setState] = useState<ToastableState>();
-  const [pending, startTransition] = useTransition();
-  useFormToast(state, { onSuccess: onDone });
-
-  function handleConfirm() {
-    const formData = new FormData();
-    Object.entries(fields).forEach(([name, value]) =>
-      formData.set(name, value),
-    );
-    startTransition(async () => {
-      setState(await action(undefined, formData));
-    });
-  }
+  const { pending, run } = useFieldsAction(action, fields, onDone);
 
   return (
     <AlertDialog>
@@ -103,7 +91,7 @@ export function ConfirmDeleteButton({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{CANCEL_LABEL}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={handleConfirm}>
+          <AlertDialogAction variant="destructive" onClick={run}>
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

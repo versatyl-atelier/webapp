@@ -1,7 +1,13 @@
+import {
+  JOBINE_ICON,
+  JOBINES_DESCRIPTION,
+  JOBINES_TITLE,
+} from "@/constants/jobines";
 import type { Tool } from "@/constants/tools";
 
 export const PUNCH_PATH = "/punch";
 export const PUNCH_TASKS_PATH = `${PUNCH_PATH}/taches`;
+export const PUNCH_JOBINES_PATH = `${PUNCH_PATH}/jobines`;
 export const PUNCH_TIMESHEET_PATH = `${PUNCH_PATH}/feuille-de-temps`;
 export const PUNCH_REPORT_PATH = `${PUNCH_PATH}/rapport`;
 export const PUNCH_REPORT_PRINT_PATH = `${PUNCH_REPORT_PATH}/imprimable`;
@@ -26,6 +32,13 @@ export const PUNCH_TOOLS: Tool[] = [
     icon: "✅",
     title: "Tâches",
     description: "Tâches et sous-tâches",
+    managerOnly: true,
+  },
+  {
+    href: PUNCH_JOBINES_PATH,
+    icon: JOBINE_ICON,
+    title: JOBINES_TITLE,
+    description: JOBINES_DESCRIPTION,
     managerOnly: true,
   },
   {

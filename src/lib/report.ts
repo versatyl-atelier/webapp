@@ -24,9 +24,15 @@ import {
   INVALID_DATE_MESSAGE,
 } from "@/constants/calendar";
 import { DEFAULT_SUBTASK_ID } from "@/constants/tasks";
-import { ProjectType } from "@/generated/prisma/enums";
+import type { ProjectType } from "@/generated/prisma/enums";
 import { isDateKey, type DateKey } from "@/lib/calendar";
 import { stringifyItemKey } from "@/lib/itemKey";
+import {
+  projectLinkItem,
+  projectLinkSource,
+  type ProjectLinkIds,
+  type ProjectLinkSources,
+} from "@/lib/projectLinks";
 import { normalize } from "@/lib/text";
 import { localDateKeyOf } from "@/lib/timesheet";
 
@@ -38,13 +44,8 @@ const generatedAtFormatter = new Intl.DateTimeFormat(CALENDAR_LOCALE, {
   timeStyle: "short",
 });
 
-type ProjectLink = {
-  projectType: ProjectType;
-  projectId: string | null;
-  taskId: number | null;
-  project: { name: string; isDeleted?: boolean } | null;
-  task: { name: string; isDeleted?: boolean } | null;
-};
+type ProjectLink = ProjectLinkIds &
+  ProjectLinkSources<{ name: string; isDeleted?: boolean }>;
 
 export type UsedProjectSource = ProjectLink & {
   timeEntry: { start: Date; end: Date | null };
@@ -108,13 +109,9 @@ function hoursBetween(start: Date, end: Date | null): number {
   return end ? (end.getTime() - start.getTime()) / MS_PER_HOUR : 0;
 }
 
-export function projectKeyOf({
-  projectType,
-  projectId,
-  taskId,
-}: Pick<ProjectLink, "projectType" | "projectId" | "taskId">): string | null {
-  const id = projectType === ProjectType.trello ? projectId : taskId;
-  return id === null ? null : stringifyItemKey({ type: projectType, id });
+export function projectKeyOf(link: ProjectLinkIds): string | null {
+  const item = projectLinkItem(link);
+  return item === null ? null : stringifyItemKey(item);
 }
 
 function compareByName(a: { name: string }, b: { name: string }): number {
@@ -128,8 +125,7 @@ export function usedProjects(
 
   rows.forEach((row) => {
     const key = projectKeyOf(row);
-    const source =
-      row.projectType === ProjectType.trello ? row.project : row.task;
+    const source = projectLinkSource(row);
     if (key === null || !source || !row.timeEntry.end) return;
 
     const day = localDateKeyOf(row.timeEntry.start);
@@ -174,8 +170,7 @@ function reportLines(
     const hours = hoursBetween(entry.start, entry.end);
     const matching = entry.projects.flatMap((link) => {
       const projectKey = projectKeyOf(link);
-      const source =
-        link.projectType === ProjectType.trello ? link.project : link.task;
+      const source = projectLinkSource(link);
       return projectKey !== null && selectedKeys.has(projectKey) && source
         ? [{ projectKey, projectName: source.name }]
         : [];

@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
 import type { PrismaService } from "@/generated/effect-prisma";
-import { TimeEntry, TimeEntryProject } from "@/generated/prisma/client";
+import { TimeEntry } from "@/generated/prisma/client";
 import { ProjectType } from "@/generated/prisma/enums";
 import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
 import {
@@ -50,16 +50,20 @@ import {
 } from "@/constants/timeEntries";
 import { isDateKey } from "@/lib/calendar";
 import { parseItemKey } from "@/lib/itemKey";
+import {
+  projectLinkIds,
+  type ProjectLinkIds,
+  type ProjectOrTask,
+} from "@/lib/projectLinks";
 import { secondsToHours, parseTimeToSeconds, shiftToDay } from "@/lib/time";
 import { assertEmployeeAccess } from "@/effects/auth";
 import { assertWeekNotFrozen, handleWeekFrozen } from "@/effects/frozenWeeks";
-import { ProjectOrTask } from "@/components/ProjectSelect";
 
 const LUNCH_HOURS = 0.5;
 
 type TimeEntryCopy = Pick<TimeEntry, "employeeId" | "start" | "end"> & {
   subtaskId: string;
-  projects: Pick<TimeEntryProject, "projectId" | "taskId" | "projectType">[];
+  projects: ProjectLinkIds[];
 };
 
 const createTimeEntryCopy = Effect.fn("createTimeEntryCopy")(function* (
@@ -79,11 +83,12 @@ const createTimeEntryCopy = Effect.fn("createTimeEntryCopy")(function* (
       };
       const copy = yield* prisma.timeEntry.create(createArgs);
       const createProjectsArgs: TimeEntryProjectCreateManyArgs = {
-        data: projects.map(({ projectId, taskId, projectType }) => ({
+        data: projects.map(({ projectType, projectId, taskId, jobineId }) => ({
           timeEntryId: copy.id,
+          projectType,
           projectId,
           taskId,
-          projectType,
+          jobineId,
         })),
       };
       yield* prisma.timeEntryProject.createMany(createProjectsArgs);
@@ -201,13 +206,12 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
           ? shiftToDay(currentStart, targetDay)
           : currentStart;
         const end = new Date(start.getTime() + hourValue * 3600000);
-        const { id, type } = parseItemKey(String(projectId));
-        if (!id) {
+        const item = parseItemKey(String(projectId));
+        if (!item.id) {
           return { errors: { projectId: [PROJECT_REQUIRED_MESSAGE] } };
         }
-        const strId = id.toString();
         const entrySubtaskId =
-          type === ProjectType.trello && subtaskId
+          item.type === ProjectType.trello && subtaskId
             ? String(subtaskId)
             : DEFAULT_SUBTASK_ID;
         const subtask = yield* prisma.subtask.findFirst({
@@ -225,13 +229,7 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
             start,
             end,
             subtaskId: entrySubtaskId,
-            projects: [
-              {
-                projectType: type,
-                projectId: type === ProjectType.trello ? strId : null,
-                taskId: type === ProjectType.task ? parseInt(strId, 10) : null,
-              },
-            ],
+            projects: [projectLinkIds(item)],
           });
           return { message: ENTRY_COPIED_MESSAGE };
         }
@@ -241,12 +239,7 @@ export const editTimeEntryEffect = Effect.fn("editTimeEntry")(
             start,
             end,
             subtaskId: entrySubtaskId,
-            projects: [
-              {
-                id: type === ProjectType.trello ? strId : parseInt(strId, 10),
-                type,
-              },
-            ],
+            projects: [item],
           }),
         );
         return {
@@ -285,15 +278,10 @@ export const putTimeEntryEffect = Effect.fn("putTimeEntry")(function* (
   };
 
   const createManyTimeEntryProjectArgs: TimeEntryProjectCreateManyArgs = {
-    data: entry.projects.map(({ id, type }) => {
-      const strId = id.toString();
-      return {
-        timeEntryId: entryId,
-        projectId: type === ProjectType.trello ? strId : null,
-        taskId: type === ProjectType.task ? parseInt(strId, 10) : null,
-        projectType: type,
-      };
-    }),
+    data: entry.projects.map((item) => ({
+      timeEntryId: entryId,
+      ...projectLinkIds(item),
+    })),
   };
 
   const args: TimeEntryUpdateArgs = {
@@ -381,11 +369,10 @@ export const addManualTimeEffect = Effect.fn("addManualTime")(
       return { errors: { hours: ["Durée invalide"] } };
     }
 
-    const { id: rawId, type } = parseItemKey(String(projectId));
-    if (!rawId) {
-      return { errors: { projectId: ["Projet requis"] } };
+    const item = parseItemKey(String(projectId));
+    if (!item.id) {
+      return { errors: { projectId: [PROJECT_REQUIRED_MESSAGE] } };
     }
-    const strId = rawId.toString();
 
     const start = dayStart;
     const end = new Date(start.getTime() + hourValue * 3600000);
@@ -397,12 +384,7 @@ export const addManualTimeEffect = Effect.fn("addManualTime")(
         };
         const timeEntry = yield* prisma.timeEntry.create(createArgs);
         const createProjectArgs: TimeEntryProjectCreateArgs = {
-          data: {
-            timeEntryId: timeEntry.id,
-            projectType: type,
-            projectId: type === ProjectType.trello ? strId : null,
-            taskId: type === ProjectType.task ? parseInt(strId, 10) : null,
-          },
+          data: { timeEntryId: timeEntry.id, ...projectLinkIds(item) },
         };
         yield* prisma.timeEntryProject.create(createProjectArgs);
       }),

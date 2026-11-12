@@ -1,7 +1,5 @@
 import { Schema } from "effect";
 
-import { HEX_COLOR_PATTERN } from "@/constants/color";
-import { INVALID_COLOR_MESSAGE } from "@/constants/projects";
 import {
   SUBTASK_NAME_LENGTH_MESSAGE,
   SUBTASK_NAME_MAX_LENGTH,
@@ -9,7 +7,7 @@ import {
   TASK_NAME_MAX_LENGTH,
   TASK_NAME_MIN_LENGTH,
 } from "@/constants/tasks";
-import { FormState } from "@/schemas/forms.schemas";
+import { FormState, HexColorSchema } from "@/schemas/forms.schemas";
 
 const TaskIdSchema = Schema.NumberFromString.pipe(Schema.int());
 
@@ -22,10 +20,6 @@ export const TaskNameSchema = Schema.Trim.pipe(
   }),
 );
 
-export const TaskColorSchema = Schema.String.pipe(
-  Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
-);
-
 export const SubtaskNameSchema = Schema.Trim.pipe(
   Schema.minLength(1, { message: () => SUBTASK_NAME_LENGTH_MESSAGE }),
   Schema.maxLength(SUBTASK_NAME_MAX_LENGTH, {
@@ -35,13 +29,13 @@ export const SubtaskNameSchema = Schema.Trim.pipe(
 
 export const AddTaskFormSchema = Schema.Struct({
   name: TaskNameSchema,
-  color: TaskColorSchema,
+  color: HexColorSchema,
 });
 
 export const EditTaskFormSchema = Schema.Struct({
   taskId: TaskIdSchema,
   name: TaskNameSchema,
-  color: TaskColorSchema,
+  color: HexColorSchema,
 });
 
 export const DeleteTaskFormSchema = Schema.Struct({

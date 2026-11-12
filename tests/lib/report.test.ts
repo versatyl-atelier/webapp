@@ -24,20 +24,37 @@ const trello = (id: string | null, name: string | null, isDeleted = false) => ({
   projectType: ProjectType.trello,
   projectId: id,
   taskId: null,
+  jobineId: null,
   project: name ? { name, isDeleted } : null,
   task: null,
+  jobine: null,
 });
 
 const task = (id: number, name: string) => ({
   projectType: ProjectType.task,
   projectId: null,
   taskId: id,
+  jobineId: null,
   project: null,
   task: { name },
+  jobine: null,
+});
+
+const jobine = (id: number, name: string, isDeleted = false) => ({
+  projectType: ProjectType.jobine,
+  projectId: null,
+  taskId: null,
+  jobineId: id,
+  project: null,
+  task: null,
+  jobine: { name, isDeleted },
 });
 
 const usage = (
-  link: ReturnType<typeof trello> | ReturnType<typeof task>,
+  link:
+    | ReturnType<typeof trello>
+    | ReturnType<typeof task>
+    | ReturnType<typeof jobine>,
   start: Date,
   end: Date | null,
 ): UsedProjectSource => ({ ...link, timeEntry: { start, end } });
@@ -46,6 +63,7 @@ describe("projectKeyOf", () => {
   it("builds the same key as the project selector", () => {
     expect(projectKeyOf(trello("abc", "X"))).toBe("trello:abc");
     expect(projectKeyOf(task(3, "Fabrication"))).toBe("task:3");
+    expect(projectKeyOf(jobine(7, "Tiroir"))).toBe("jobine:7");
   });
 
   it("has no key when the project was deleted", () => {
@@ -82,6 +100,19 @@ describe("usedProjects", () => {
     ]);
   });
 
+  it("lists jobines with their archived state", () => {
+    const [project] = usedProjects([
+      usage(jobine(4, "Tiroir", true), at(26, 8), at(26, 10)),
+    ]);
+    expect(project).toMatchObject({
+      key: "jobine:4",
+      type: ProjectType.jobine,
+      name: "Tiroir",
+      archived: true,
+      hours: 2,
+    });
+  });
+
   it("flags archived projects but keeps them", () => {
     const [project] = usedProjects([
       usage(trello("a", "Vieux projet", true), at(26, 8), at(26, 9)),
@@ -112,13 +143,17 @@ describe("filterProjects", () => {
   const projects = usedProjects([
     usage(trello("a", "Gagné Paradis"), at(26, 8), at(26, 9)),
     usage(task(1, "Fabrication"), at(26, 8), at(26, 9)),
+    usage(jobine(2, "Réparation"), at(26, 8), at(26, 9)),
   ]);
 
   it("filters by type", () => {
     expect(
       filterProjects(projects, "task", "").map(({ name }) => name),
     ).toEqual(["Fabrication"]);
-    expect(filterProjects(projects, "all", "")).toHaveLength(2);
+    expect(
+      filterProjects(projects, "jobine", "").map(({ name }) => name),
+    ).toEqual(["Réparation"]);
+    expect(filterProjects(projects, "all", "")).toHaveLength(3);
   });
 
   it("searches by name ignoring accents and case", () => {

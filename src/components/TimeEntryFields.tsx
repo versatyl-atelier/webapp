@@ -1,7 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import ProjectSelect, { type ProjectOrTask } from "@/components/ProjectSelect";
+import ProjectSelect from "@/components/ProjectSelect";
+import type { ProjectOrTask } from "@/lib/projectLinks";
 import { FieldErrors } from "@/components/FieldErrors";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";

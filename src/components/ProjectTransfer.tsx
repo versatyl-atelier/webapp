@@ -26,6 +26,7 @@ import {
   NO_MATCH_LABEL,
   NO_PROJECTS_USED_LABEL,
   PROJECT_TYPE_FILTERS,
+  PROJECT_TYPE_ICONS,
   PROJECT_TYPE_FILTER_LABELS,
   REMOVE_ALL_LABEL,
   REMOVE_SELECTED_LABEL,
@@ -33,7 +34,6 @@ import {
   TYPE_FILTER_LABEL,
   type ProjectTypeFilter,
 } from "@/constants/report";
-import { ProjectType } from "@/generated/prisma/enums";
 import { formatDecimalHours } from "@/lib/time";
 import { filterProjects, type UsedProject } from "@/lib/report";
 
@@ -86,10 +86,6 @@ function TransferButton({
   );
 }
 
-function typeIcon(type: ProjectType) {
-  return type === ProjectType.task ? "📋" : "🔷";
-}
-
 function ProjectList({
   title,
   searchLabel,
@@ -131,7 +127,7 @@ function ProjectList({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm wrap-break-word">
-                    <span aria-hidden>{typeIcon(project.type)} </span>
+                    <span aria-hidden>{PROJECT_TYPE_ICONS[project.type]} </span>
                     {project.name}
                     {project.archived && (
                       <span className="text-muted-foreground text-xs">

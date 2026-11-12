@@ -13,7 +13,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
-import type { ProjectOrTask } from "@/components/ProjectSelect";
 import TimeEntryFields, { type DateOption } from "@/components/TimeEntryFields";
 import { DEFAULT_SUBTASK_ID } from "@/constants/tasks";
 import {
@@ -24,11 +23,11 @@ import {
 } from "@/constants/timeEntries";
 
 import { useIsCopyModifierPressed } from "@/hooks/use-copy-modifier";
+import { projectLinkItem, projectLinkSource } from "@/lib/projectLinks";
 import { formatTimeDisplay } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
-import { ProjectType } from "@/generated/prisma/enums";
 
 export type EditTimeEntryFormProps = {
   entry: TimeEntryWithRelations;
@@ -58,14 +57,12 @@ export default function EditTimeEntryForm({
     }
   }, [state, router]);
   const firstProject = entry.projects[0];
-  const defaultProject: ProjectOrTask =
-    firstProject?.projectType === ProjectType.trello
-      ? { id: firstProject.projectId || "", type: ProjectType.trello }
-      : { id: firstProject?.taskId || -1, type: ProjectType.task };
-  const projectName =
-    firstProject?.projectType === ProjectType.trello
-      ? firstProject?.project?.name
-      : firstProject?.task?.name;
+  const defaultProject = firstProject
+    ? (projectLinkItem(firstProject) ?? undefined)
+    : undefined;
+  const projectName = firstProject
+    ? projectLinkSource(firstProject)?.name
+    : undefined;
 
   const calculateHours = () => {
     if (!entry.start || !entry.end) return 0;

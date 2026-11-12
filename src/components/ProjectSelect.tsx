@@ -21,14 +21,11 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { usePageContext } from "@/app/punch/employe/[id]/context-provider";
 
+import { JOBINES_TITLE } from "@/constants/jobines";
 import { ProjectType } from "@/generated/prisma/enums";
 import { stringifyItemKey } from "@/lib/itemKey";
+import type { ProjectOrTask } from "@/lib/projectLinks";
 import { projectColorStyle } from "@/lib/projects";
-
-export type ProjectOrTask = {
-  id: string | number;
-  type: ProjectType;
-};
 type ProjectSelectProps = {
   title?: string | null;
   multiple?: boolean;
@@ -72,9 +69,10 @@ export default function ProjectSelect({
   disabled = false,
   onTypeChange,
 }: ProjectSelectProps) {
-  const { projectsPromise, tasksPromise } = usePageContext();
+  const { projectsPromise, tasksPromise, jobinesPromise } = usePageContext();
   const projects = use(projectsPromise) || [];
   const tasks = use(tasksPromise) || [];
+  const jobines = use(jobinesPromise) || [];
   const chipsAnchor = useComboboxAnchor();
 
   const toOption =
@@ -98,6 +96,11 @@ export default function ProjectSelect({
       label: "Tâches",
       type: ProjectType.task,
       items: tasks.map(toOption(ProjectType.task)),
+    },
+    {
+      label: JOBINES_TITLE,
+      type: ProjectType.jobine,
+      items: jobines.map(toOption(ProjectType.jobine)),
     },
     {
       label: "Projets Trello",
@@ -203,9 +206,9 @@ export default function ProjectSelect({
                         value={option}
                         style={projectColorStyle(option.color)}
                         className={
-                          group.type === ProjectType.task
-                            ? "text-md cursor-pointer rounded-none border-b border-l-4 border-l-(--project-color) px-2.5 py-2.5 transition-all hover:translate-x-1"
-                            : "text-md cursor-pointer rounded-none border-r-4 border-b border-l-4 border-l-(--project-color) px-2.5 py-2.5 transition-all hover:translate-x-1 hover:border-r-0"
+                          group.type === ProjectType.trello
+                            ? "text-md cursor-pointer rounded-none border-r-4 border-b border-l-4 border-l-(--project-color) px-2.5 py-2.5 transition-all hover:translate-x-1 hover:border-r-0"
+                            : "text-md cursor-pointer rounded-none border-b border-l-4 border-l-(--project-color) px-2.5 py-2.5 transition-all hover:translate-x-1"
                         }
                       >
                         {option.name}

@@ -1,12 +1,12 @@
 import { Effect } from "effect";
 
 import type { PrismaService } from "@/generated/effect-prisma";
-import { ProjectType } from "@/generated/prisma/enums";
 import type {
   TimeEntryFindManyArgs,
   TimeEntryProjectFindManyArgs,
 } from "@/generated/prisma/models";
 import { parseItemKey } from "@/lib/itemKey";
+import { projectLinkIds } from "@/lib/projectLinks";
 import { buildReport, usedProjects, type ReportRequest } from "@/lib/report";
 import { localDateFromKey } from "@/lib/time";
 
@@ -18,14 +18,23 @@ export const getReportProjectsEffect = Effect.fn("getReportProjects")(
         projectType: true,
         projectId: true,
         taskId: true,
+        jobineId: true,
         project: { select: { name: true, isDeleted: true } },
         task: { select: { name: true, isDeleted: true } },
+        jobine: { select: { name: true, isDeleted: true } },
         timeEntry: { select: { start: true, end: true } },
       },
     } satisfies TimeEntryProjectFindManyArgs;
     return usedProjects(yield* prisma.timeEntryProject.findMany(args));
   },
 );
+
+function presentIds<T extends string | number>(ids: readonly (T | null)[]) {
+  return ids.filter(
+    (id): id is T =>
+      id !== null && !(typeof id === "number" && Number.isNaN(id)),
+  );
+}
 
 function endOfDay(day: string): Date {
   const date = localDateFromKey(day);
@@ -42,14 +51,7 @@ export const getReportEffect = Effect.fn("getReport")(function* (
     groupings: groupings.join(","),
   });
 
-  const links = projects.map(parseItemKey);
-  const projectIds = links
-    .filter(({ type }) => type === ProjectType.trello)
-    .map(({ id }) => String(id));
-  const taskIds = links
-    .filter(({ type }) => type === ProjectType.task)
-    .map(({ id }) => parseInt(String(id), 10))
-    .filter((id) => !Number.isNaN(id));
+  const links = projects.map((key) => projectLinkIds(parseItemKey(key)));
 
   const args = {
     where: {
@@ -66,8 +68,9 @@ export const getReportEffect = Effect.fn("getReport")(function* (
       projects: {
         some: {
           OR: [
-            { projectType: ProjectType.trello, projectId: { in: projectIds } },
-            { projectType: ProjectType.task, taskId: { in: taskIds } },
+            { projectId: { in: presentIds(links.map((l) => l.projectId)) } },
+            { taskId: { in: presentIds(links.map((l) => l.taskId)) } },
+            { jobineId: { in: presentIds(links.map((l) => l.jobineId)) } },
           ],
         },
       },
@@ -88,8 +91,10 @@ export const getReportEffect = Effect.fn("getReport")(function* (
           projectType: true,
           projectId: true,
           taskId: true,
+          jobineId: true,
           project: { select: { name: true } },
           task: { select: { name: true } },
+          jobine: { select: { name: true } },
         },
       },
     },

@@ -1,11 +1,12 @@
 "use client";
 
-import type { Project, Task } from "@/generated/prisma/client";
+import type { Jobine, Project, Task } from "@/generated/prisma/client";
 import { createContext, PropsWithChildren, useContext } from "react";
 
 interface PageContextType {
   projectsPromise: Promise<Project[] | null>;
   tasksPromise: Promise<Task[] | null>;
+  jobinesPromise: Promise<Jobine[] | null>;
 }
 
 const PageContext = createContext<PageContextType | null>(null);
@@ -15,9 +16,12 @@ export function PageContextProvider({
   children,
   projectsPromise,
   tasksPromise,
+  jobinesPromise,
 }: PageContextProviderProps) {
   return (
-    <PageContext.Provider value={{ projectsPromise, tasksPromise }}>
+    <PageContext.Provider
+      value={{ projectsPromise, tasksPromise, jobinesPromise }}
+    >
       {children}
     </PageContext.Provider>
   );

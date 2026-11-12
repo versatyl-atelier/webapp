@@ -22,7 +22,7 @@ import type {
   ProjectPhase,
   ProjectPiece,
 } from "@/generated/prisma/client";
-import { ProjectType, type ProjectStage } from "@/generated/prisma/enums";
+import type { ProjectStage } from "@/generated/prisma/enums";
 import type { CSSProperties } from "react";
 import {
   daysBetween,
@@ -31,19 +31,11 @@ import {
   type DateKey,
 } from "@/lib/calendar";
 import { parseItemKey } from "@/lib/itemKey";
+import { projectLinkIds } from "@/lib/projectLinks";
 import type { FileSectionRecord } from "@/lib/projectFiles";
 
 export function projectIdsToProjectData(projectIds: string[]) {
-  return projectIds.map((projectId) => {
-    const { type, id } = parseItemKey(projectId);
-    const strId = id.toString();
-    const isProject = type === ProjectType.trello;
-    return {
-      projectId: isProject ? strId : null,
-      taskId: isProject ? null : parseInt(strId, 10),
-      projectType: isProject ? ProjectType.trello : ProjectType.task,
-    };
-  });
+  return projectIds.map((projectId) => projectLinkIds(parseItemKey(projectId)));
 }
 
 export type SuggestionField = keyof typeof DEFAULT_SUGGESTIONS;

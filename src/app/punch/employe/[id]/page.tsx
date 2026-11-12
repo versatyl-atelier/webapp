@@ -17,6 +17,7 @@ import { ALL_EMPLOYEES_ACCESS_ROLES } from "@/constants/auth";
 import { PUNCH_FINISH_LABEL, PUNCH_PATH } from "@/constants/punch";
 import { getEmployee } from "@/actions/employees";
 import { getActivePunch } from "@/actions/multiPunch";
+import { getJobines } from "@/actions/jobines";
 import { getProjects } from "@/actions/projects";
 import { getSubtasks, getTasks } from "@/actions/tasks";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
@@ -119,6 +120,7 @@ export default async function EmployeePage({
 
   const projectsPromise = getProjects(employeeId);
   const tasksPromise = getTasks();
+  const jobinesPromise = getJobines();
   const subtasks = await getSubtasks();
 
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
@@ -137,6 +139,7 @@ export default async function EmployeePage({
     <PageContextProvider
       projectsPromise={projectsPromise}
       tasksPromise={tasksPromise}
+      jobinesPromise={jobinesPromise}
     >
       <div className="relative flex flex-1 flex-col gap-2.5 p-1.5">
         <div className="flex items-center justify-between gap-2">

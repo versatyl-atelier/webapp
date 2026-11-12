@@ -9,7 +9,9 @@ import ProjectSelect from "@/components/ProjectSelect";
 import { Field, FieldError } from "./ui/field";
 import Clock from "@/components/Clock";
 import { REAL_TIME_PUNCH_TITLE } from "@/constants/punch";
+import { projectLinkSource } from "@/lib/projectLinks";
 import { formatTimeDisplay } from "@/lib/time";
+import type { TimeEntryWithRelations } from "@/schemas/timeEntries.schemas";
 
 const CUTOFF_HOUR = 16;
 const PUNCH_CUTOFF_NOTICE = `Les punchs s'arrêtent automatiquement à ${CUTOFF_HOUR}h00`;
@@ -26,7 +28,7 @@ type DisplayTime = {
 
 type ActivePunchData = {
   startTime: Date;
-  activePunchProjects: any[];
+  activePunchProjects: TimeEntryWithRelations["projects"];
 } | null;
 
 type MultiPunchFormProps = {
@@ -141,15 +143,7 @@ export default function MultiPunchForm({
 
   const projectNames = activePunch
     ? activePunch.activePunchProjects
-        .map(
-          (activePunchProject: (typeof activePunch.activePunchProjects)[0]) => {
-            return (
-              activePunchProject.project?.name ||
-              activePunchProject.task?.name ||
-              "Unknown"
-            );
-          },
-        )
+        .map((link) => projectLinkSource(link)?.name || "Unknown")
         .join(", ")
     : "";
 

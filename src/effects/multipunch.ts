@@ -11,6 +11,7 @@ import {
 import { DEFAULT_SUBTASK_ID } from "@/constants/tasks";
 import { assertEmployeeAccess } from "@/effects/auth";
 import { assertWeekNotFrozen, handleWeekFrozen } from "@/effects/frozenWeeks";
+import { timeEntryInclude } from "@/schemas/timeEntries.schemas";
 
 export const startMultiPunchEffect = Effect.fn("startMultiPunch")(
   function* (
@@ -58,12 +59,7 @@ export const startMultiPunchEffect = Effect.fn("startMultiPunch")(
           });
 
           yield* prisma.timeEntryProject.create({
-            data: {
-              timeEntryId: timeEntry.id,
-              projectType: project.projectType,
-              projectId: project.projectId,
-              taskId: project.taskId,
-            },
+            data: { timeEntryId: timeEntry.id, ...project },
           });
         }
       }),
@@ -160,18 +156,7 @@ export const getActivePunchEffect = Effect.fn("getActivePunch")(function* (
       end: null,
       isDeleted: false,
     },
-    include: {
-      projects: {
-        include: {
-          project: {
-            select: { name: true },
-          },
-          task: {
-            select: { name: true },
-          },
-        },
-      },
-    },
+    include: { projects: timeEntryInclude.projects },
   });
   return activePunches.length > 0
     ? {

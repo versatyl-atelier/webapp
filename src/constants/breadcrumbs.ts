@@ -26,6 +26,7 @@ export const STATIC_CRUMB_LABELS: Record<string, string> = {
   "/punch/rapport": "Rapports",
   "/punch/rapport/imprimable": "Version imprimable",
   "/punch/taches": "Tâches",
+  "/punch/jobines": "Jobines",
   "/punch/guide-pointage": "Guide de pointage",
   "/projets": "Projets",
   "/lanceur-de-dates": "Lanceur de dates",

@@ -1,4 +1,3 @@
-import { HEX_COLOR_PATTERN } from "@/constants/color";
 import { Schema } from "effect";
 
 import {
@@ -18,7 +17,6 @@ import {
 } from "@/constants/projectFiles";
 import {
   EMAIL_PATTERN,
-  INVALID_COLOR_MESSAGE,
   INVALID_CABINET_COUNT_MESSAGE,
   INVALID_EMAIL_MESSAGE,
   NO_PROJECT_STAGE_VALUE,
@@ -26,7 +24,7 @@ import {
 } from "@/constants/projects";
 import { PIECE_TOGGLE_FALSE, PIECE_TOGGLE_TRUE } from "@/constants/trello";
 import { ProjectStage } from "@/generated/prisma/enums";
-import { FormState } from "@/schemas/forms.schemas";
+import { FormState, HexColorSchema } from "@/schemas/forms.schemas";
 
 const IdFromFormSchema = Schema.NumberFromString.pipe(Schema.int());
 
@@ -122,9 +120,7 @@ export type ProjectLocationFormState =
 
 export const ProjectColorFormSchema = Schema.Struct({
   projectId: Schema.String,
-  color: Schema.String.pipe(
-    Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
-  ),
+  color: HexColorSchema,
 });
 
 export type ProjectColorFormData = typeof ProjectColorFormSchema.Type;

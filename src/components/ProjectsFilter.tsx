@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/sidebar";
 import { projectPath } from "@/lib/paths";
 import { projectColorStyle } from "@/lib/projects";
-import { normalize } from "@/lib/text";
+import { splitArchived } from "@/lib/archive";
+import { matchesQuery } from "@/lib/text";
 
 export type FilterableProject = {
   id: string;
@@ -86,12 +87,8 @@ type ProjectsFilterProps = {
 export function ProjectsFilter({ projects }: ProjectsFilterProps) {
   const inputId = useId();
   const [query, setQuery] = useState("");
-  const needle = normalize(query);
-  const matches = projects.filter(({ name }) =>
-    normalize(name).includes(needle),
-  );
-  const active = matches.filter(({ isDeleted }) => !isDeleted);
-  const archived = matches.filter(({ isDeleted }) => isDeleted);
+  const matches = projects.filter(({ name }) => matchesQuery(query, name));
+  const { active, archived } = splitArchived(matches);
 
   return (
     <>

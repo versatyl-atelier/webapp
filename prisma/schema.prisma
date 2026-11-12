@@ -143,21 +143,25 @@ model TimeEntryProject {
   timeEntryId Int
   projectId   String?
   taskId      Int?
+  jobineId    Int?
   projectType ProjectType
 
   timeEntry TimeEntry @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
   project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
   task      Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  jobine    Jobine?   @relation(fields: [jobineId], references: [id], onDelete: SetNull)
 
   @@unique([timeEntryId, projectId, taskId])
   @@index([projectId])
   @@index([taskId])
+  @@index([jobineId])
   @@map("timeEntryProjects")
 }
 
 enum ProjectType {
   trello
   task
+  jobine
 }
 
 enum Role {
@@ -867,6 +871,22 @@ model Task {
   timeEntryProjects TimeEntryProject[]
 
   @@map("tasks")
+}
+
+model Jobine {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String    @default("")
+  color       String    @default("#C9850C")
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  timeEntryProjects TimeEntryProject[]
+
+  @@map("jobines")
 }
 
 model Setting {

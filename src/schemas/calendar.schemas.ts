@@ -8,15 +8,14 @@ import {
   REPEATS_VALUE,
   TITLE_REQUIRED_MESSAGE,
 } from "@/constants/calendar";
-import { COLOR_NAMES, HEX_COLOR_PATTERN } from "@/constants/color";
-import { INVALID_COLOR_MESSAGE } from "@/constants/projects";
+import { COLOR_NAMES } from "@/constants/color";
 import {
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
 } from "@/generated/prisma/enums";
 import { isDateKey } from "@/lib/calendar";
-import { FormState } from "@/schemas/forms.schemas";
+import { FormState, HexColorSchema } from "@/schemas/forms.schemas";
 
 const DateKeySchema = Schema.String.pipe(
   Schema.filter((value) => isDateKey(value) || INVALID_DATE_MESSAGE),
@@ -40,9 +39,7 @@ export const CalendarEventFormSchema = Schema.Struct({
       message: () => INVALID_HOUR_MESSAGE,
     }),
   ),
-  color: Schema.String.pipe(
-    Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
-  ),
+  color: HexColorSchema,
   projectId: Schema.String,
   repeats: Schema.optional(Schema.Literal(REPEATS_VALUE)),
   frequency: Schema.Enums(RecurrenceFrequency),

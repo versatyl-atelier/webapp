@@ -113,6 +113,9 @@ export const timeEntryInclude = {
       task: {
         select: { name: true },
       },
+      jobine: {
+        select: { name: true },
+      },
     },
   },
 };
