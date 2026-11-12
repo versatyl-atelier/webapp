@@ -41,7 +41,7 @@ export const MANAGER_NAV_ITEMS = [
   { href: TRELLO_PAGE_PATH, icon: "🗂️", title: "Trello" },
 ] as const;
 
-export const TOOLS: Tool[] = [
+export const EMPLOYEE_TOOLS: Tool[] = [
   {
     href: "/calendrier",
     icon: "📅",
@@ -76,3 +76,4 @@ export const TOOLS: Tool[] = [
     description: "Notes des projets",
   },
 ];
+export const KBD_CLASSES = "bg-muted text-2xs rounded-sm border px-1 font-sans";

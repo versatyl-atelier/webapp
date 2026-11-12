@@ -12,4 +12,4 @@ When writing code, follow the project's coding guidelines by reading the appropr
 
 When troubleshooting an issue, find the root cause and confirm with the user before trying to implement a solution.
 
-Never run the dev server or a db in the background without asking me.
+Never run the dev server or a db in the background without asking me. You'll often find them running already anyways.

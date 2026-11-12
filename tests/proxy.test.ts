@@ -13,7 +13,7 @@ function requestFor(pathname: string, cookie?: string) {
 
 describe("proxy", () => {
   it("allows unprotected routes through even without a session", async () => {
-    const response = await proxy(requestFor("/"));
+    const response = await proxy(requestFor("/login"));
 
     expect(response.headers.get("location")).toBeNull();
   });

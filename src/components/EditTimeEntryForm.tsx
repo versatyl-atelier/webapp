@@ -16,8 +16,14 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import type { ProjectOrTask } from "@/components/ProjectSelect";
 import TimeEntryFields, { type DateOption } from "@/components/TimeEntryFields";
 import { DEFAULT_SUBTASK_ID } from "@/constants/tasks";
-import { TIME_ENTRY_DRAG_TYPE } from "@/constants/timeEntries";
+import {
+  COPY_COMMAND,
+  DUPLICATE_ENTRY_LABEL,
+  TIME_ENTRY_DRAG_TYPE,
+  TIME_ENTRY_SOURCE_DATE_DRAG_TYPE,
+} from "@/constants/timeEntries";
 
+import { useIsCopyModifierPressed } from "@/hooks/use-copy-modifier";
 import { formatTimeDisplay } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -43,12 +49,10 @@ export default function EditTimeEntryForm({
   const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const canDrag = !disabled && !!entry.end;
+  const isCopyModifierPressed = useIsCopyModifierPressed();
   const [state, action, pending] = useActionState(editTimeEntry, undefined);
   useEffect(() => {
-    if (
-      state &&
-      (state.message === "Supprimé" || state.message === "Sauvegardé")
-    ) {
+    if (state?.message) {
       router.refresh();
       setIsOpen(false);
     }
@@ -76,6 +80,7 @@ export default function EditTimeEntryForm({
     if (event.target !== event.currentTarget) return;
     event.dataTransfer.effectAllowed = "copyMove";
     event.dataTransfer.setData(TIME_ENTRY_DRAG_TYPE, String(entry.id));
+    event.dataTransfer.setData(TIME_ENTRY_SOURCE_DATE_DRAG_TYPE, date);
     setIsDragging(true);
   }
 
@@ -95,11 +100,17 @@ export default function EditTimeEntryForm({
         <DialogTrigger className="block w-full">
           <div
             key={entry.id}
-            className="hover:shadow-primary/50 mb-0.5 cursor-pointer rounded p-0.5 text-center text-white transition-all hover:scale-110 hover:shadow-lg sm:mb-1 sm:p-1"
+            className={cn(
+              "hover:shadow-primary/50 mb-0.5 rounded p-0.5 text-center text-white transition-all hover:scale-110 hover:shadow-lg sm:mb-1 sm:p-1",
+              !canDrag && "cursor-pointer",
+              canDrag && isCopyModifierPressed && "cursor-copy",
+              canDrag &&
+                !isCopyModifierPressed &&
+                "cursor-grab active:cursor-grabbing",
+            )}
             style={{
               backgroundColor: getProjectColor(projectName),
             }}
-            title={`${projectName} - ${formatTimeDisplay(calculateHours())}`}
           >
             <div className="text-xs font-bold wrap-anywhere">{projectName}</div>
             {entry.subtaskId !== DEFAULT_SUBTASK_ID && (
@@ -110,7 +121,7 @@ export default function EditTimeEntryForm({
             <div className="text-xs">{formatTimeDisplay(calculateHours())}</div>
           </div>
         </DialogTrigger>
-        <DialogContent className="border-2">
+        <DialogContent className="border-2 sm:w-max sm:max-w-[calc(100%-2rem)] sm:min-w-sm">
           <DialogHeader className="border-primary mb-4 border-b-4 pb-2.5 text-center">
             <DialogTitle className="text-lg font-bold">
               {"Modifier l'entrée de temps"}
@@ -147,7 +158,7 @@ export default function EditTimeEntryForm({
                 disabled={pending || !!disabled}
               />
             </FieldGroup>
-            <DialogFooter className="mt-5 flex justify-center gap-2.5 border-t-0 bg-transparent">
+            <DialogFooter className="mt-5 flex flex-row flex-wrap justify-center gap-2.5 border-t-0 bg-transparent sm:justify-center">
               <Button
                 type="submit"
                 disabled={pending || !!disabled}
@@ -157,6 +168,16 @@ export default function EditTimeEntryForm({
                 className="rounded-sm px-5 py-2.5 text-xs font-bold"
               >
                 Sauvegarder
+              </Button>
+              <Button
+                type="submit"
+                disabled={pending || !!disabled}
+                name="command"
+                value={COPY_COMMAND}
+                variant="secondary"
+                className="rounded-sm px-5 py-2.5 text-xs font-bold"
+              >
+                {DUPLICATE_ENTRY_LABEL}
               </Button>
               <Button
                 type="submit"

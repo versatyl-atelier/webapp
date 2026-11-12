@@ -1,5 +1,10 @@
 import { Schema } from "effect";
-import { COPY_COMMAND, MOVE_COMMAND } from "@/constants/timeEntries";
+import {
+  COPY_COMMAND,
+  MOVE_COMMAND,
+  UNDO_COPY_COMMAND,
+  UNDO_MOVE_COMMAND,
+} from "@/constants/timeEntries";
 import { FormState } from "@/schemas/forms.schemas";
 import { TimeEntryGetPayload } from "@/generated/prisma/models";
 
@@ -10,7 +15,7 @@ export const EditTimeEntryFormSchema = Schema.Struct({
   hours: Schema.String,
   date: Schema.optional(Schema.String),
   subtaskId: Schema.optional(Schema.String),
-  command: Schema.Literal("save", "delete"),
+  command: Schema.Literal("save", "delete", COPY_COMMAND),
 });
 
 export type EditTimeEntryFormErrors = {
@@ -54,18 +59,32 @@ export type AddManualTimeFormState =
 export const MoveTimeEntryFormSchema = Schema.Struct({
   timeEntryId: Schema.String,
   date: Schema.String,
-  command: Schema.Literal(MOVE_COMMAND, COPY_COMMAND),
+  sourceDate: Schema.optional(Schema.String),
+  command: Schema.Literal(
+    MOVE_COMMAND,
+    COPY_COMMAND,
+    UNDO_MOVE_COMMAND,
+    UNDO_COPY_COMMAND,
+  ),
 });
 
 export type MoveTimeEntryFormErrors = {
   timeEntryId?: string[];
   date?: string[];
+  sourceDate?: string[];
   command?: string[];
+};
+
+export type MoveTimeEntryUndo = {
+  timeEntryId: string;
+  date: string;
+  command: typeof UNDO_MOVE_COMMAND | typeof UNDO_COPY_COMMAND;
 };
 
 export type MoveTimeEntryFormState =
   | (FormState & {
       errors?: MoveTimeEntryFormErrors;
+      undo?: MoveTimeEntryUndo;
     })
   | undefined;
 

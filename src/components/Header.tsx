@@ -26,34 +26,40 @@ export async function Header() {
         <h1 className="inline-block font-bold">
           <Link href={HOME_PATH}>{APP_NAME}</Link>
         </h1>
-        <Button
-          render={<Link href={SEARCH_PATH} aria-label={HEADER_SEARCH_LABEL} />}
-          nativeButton={false}
-          variant="ghost"
-          size="icon"
-          className="sm:hidden"
-        >
-          <Search />
-        </Button>
-        <Link
-          href={SEARCH_PATH}
-          aria-label={HEADER_SEARCH_LABEL}
-          className="hidden sm:block"
-        >
-          <InputGroup>
-            <InputGroupInput
-              readOnly
-              tabIndex={-1}
-              placeholder={HEADER_SEARCH_LABEL}
-              className="cursor-pointer"
-            />
-            <InputGroupAddon align="inline-end">
-              <SearchShortcutHint />
-            </InputGroupAddon>
-          </InputGroup>
-        </Link>
+        {session?.role && (
+          <>
+            <Button
+              render={
+                <Link href={SEARCH_PATH} aria-label={HEADER_SEARCH_LABEL} />
+              }
+              nativeButton={false}
+              variant="ghost"
+              size="icon"
+              className="sm:hidden"
+            >
+              <Search />
+            </Button>
+            <Link
+              href={SEARCH_PATH}
+              aria-label={HEADER_SEARCH_LABEL}
+              className="hidden sm:block"
+            >
+              <InputGroup>
+                <InputGroupInput
+                  readOnly
+                  tabIndex={-1}
+                  placeholder={HEADER_SEARCH_LABEL}
+                  className="cursor-pointer"
+                />
+                <InputGroupAddon align="inline-end">
+                  <SearchShortcutHint />
+                </InputGroupAddon>
+              </InputGroup>
+            </Link>
+          </>
+        )}
       </div>
-      <SearchShortcut />
+      {session?.role && <SearchShortcut />}
       <div className="my-auto flex items-center gap-2">
         {session ? (
           <LogoutForm name={session.name} role={session.role} />

@@ -26,6 +26,7 @@ export const PROTECTED_PATH_PREFIXES = [
   "/calendrier",
   "/projets",
   "/lanceur-de-dates",
+  "/recherche",
   CHANGE_PASSWORD_PATH,
 ];
 
