@@ -21,6 +21,7 @@ import {
   formatDayNumber,
   isOccurrenceVisible,
   matchesSearch,
+  occurrenceHref,
   type CalendarDay,
   type CalendarWeek,
 } from "@/lib/calendar";
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 
 type CalendarViewProps = {
   weeks: CalendarWeek[];
+  canEdit: boolean;
 };
 
 function useFittingWeekCount(maxWeeks: number) {
@@ -55,7 +57,7 @@ function useFittingWeekCount(maxWeeks: number) {
   return { containerRef, weekCount };
 }
 
-export function CalendarView({ weeks }: CalendarViewProps) {
+export function CalendarView({ weeks, canEdit }: CalendarViewProps) {
   const { query, activeFilters } = useCalendarFilters();
   const { containerRef, weekCount } = useFittingWeekCount(weeks.length);
   const visibleWeeks = weeks.slice(0, weekCount);
@@ -97,6 +99,7 @@ export function CalendarView({ weeks }: CalendarViewProps) {
                   day={day}
                   query={query}
                   activeFilters={activeFilters}
+                  canEdit={canEdit}
                 />
               ))}
             </ol>
@@ -111,60 +114,70 @@ type CalendarDayCellProps = {
   day: CalendarDay;
   query: string;
   activeFilters: ReadonlySet<CalendarFilterKey>;
+  canEdit: boolean;
 };
 
-function CalendarDayCell({ day, query, activeFilters }: CalendarDayCellProps) {
+function CalendarDayCell({
+  day,
+  query,
+  activeFilters,
+  canEdit,
+}: CalendarDayCellProps) {
   const occurrences = day.occurrences.filter((occurrence) =>
     isOccurrenceVisible(occurrence, activeFilters),
   );
   const hasQuery = query.trim().length > 0;
+  const dayPath = calendarDayPath(day.date);
 
   return (
-    <li className="min-h-0 min-w-0 border-r border-b last:border-r-0">
+    <li
+      className={cn(
+        "relative flex min-h-0 min-w-0 flex-col gap-1 overflow-hidden border-r border-b p-1.5 last:border-r-0",
+        day.isWeekend ? "bg-muted/60 items-center px-0.5" : "bg-card",
+        day.isMonthStart && "border-l-foreground border-l-3",
+      )}
+    >
       <Link
-        href={calendarDayPath(day.date)}
+        href={dayPath}
         scroll={false}
         aria-label={`${formatDayLabel(day.date)}, ${eventCountLabel(occurrences.length)}`}
         aria-current={day.isToday ? "date" : undefined}
+        className="hover:bg-muted focus-visible:ring-ring absolute inset-0 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
+      />
+      <span
+        aria-hidden
         className={cn(
-          "hover:bg-muted focus-visible:ring-ring flex h-full flex-col gap-1 overflow-hidden p-1.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset",
-          day.isWeekend ? "bg-muted/60 items-center px-0.5" : "bg-card",
-          day.isMonthStart && "border-l-foreground border-l-3",
+          "pointer-events-none relative flex h-5 min-w-5 shrink-0 items-center justify-center self-end rounded-full px-1.5 text-xs font-medium whitespace-nowrap tabular-nums",
+          day.isWeekend && "text-2xs self-center",
+          day.isToday
+            ? "bg-primary text-primary-foreground font-semibold"
+            : "text-muted-foreground",
         )}
       >
-        <span
-          className={cn(
-            "flex h-5 min-w-5 shrink-0 items-center justify-center self-end rounded-full px-1.5 text-xs font-medium whitespace-nowrap tabular-nums",
-            day.isWeekend && "text-2xs self-center",
-            day.isToday
-              ? "bg-primary text-primary-foreground font-semibold"
-              : "text-muted-foreground",
-          )}
-        >
-          {formatDayNumber(day.date)}
-        </span>
-        <ul
-          className={cn(
-            "flex min-h-0 w-full flex-1 scrollbar-thin flex-col gap-1 overflow-x-hidden overflow-y-auto",
-            day.isWeekend && "items-center",
-          )}
-        >
-          {occurrences.map((occurrence) => (
-            <CalendarEventChip
-              key={occurrence.key}
-              occurrence={occurrence}
-              compact={day.isWeekend}
-              highlight={
-                hasQuery
-                  ? matchesSearch(occurrence, query)
-                    ? "match"
-                    : "dim"
-                  : "none"
-              }
-            />
-          ))}
-        </ul>
-      </Link>
+        {formatDayNumber(day.date)}
+      </span>
+      <ul
+        className={cn(
+          "pointer-events-none relative flex min-h-0 w-full flex-1 scrollbar-thin flex-col gap-1 overflow-x-hidden overflow-y-auto",
+          day.isWeekend && "items-center",
+        )}
+      >
+        {occurrences.map((occurrence) => (
+          <CalendarEventChip
+            key={occurrence.key}
+            occurrence={occurrence}
+            href={occurrenceHref(occurrence, canEdit) ?? dayPath}
+            compact={day.isWeekend}
+            highlight={
+              hasQuery
+                ? matchesSearch(occurrence, query)
+                  ? "match"
+                  : "dim"
+                : "none"
+            }
+          />
+        ))}
+      </ul>
     </li>
   );
 }

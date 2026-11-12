@@ -158,7 +158,7 @@ export default function EditTimeEntryForm({
                 disabled={pending || !!disabled}
               />
             </FieldGroup>
-            <DialogFooter className="mt-5 flex flex-row flex-wrap justify-center gap-2.5 border-t-0 bg-transparent sm:justify-center">
+            <DialogFooter className="bg-popover mt-5 flex flex-row flex-wrap justify-center gap-2.5 border-t-0 sm:justify-center">
               <Button
                 type="submit"
                 disabled={pending || !!disabled}

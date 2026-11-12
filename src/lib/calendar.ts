@@ -17,6 +17,7 @@ import {
   NOON_HOUR,
   NOON_LABEL,
   OCCURRENCE_DETAIL_SEPARATOR,
+  PROJECT_TITLE_SEPARATOR,
   RECURRENT_CATEGORY,
   REPEATABLE_EVENT_TYPES,
   WEEK_LABEL_RANGE_SEPARATOR,
@@ -47,6 +48,7 @@ export type CalendarEventRecord = {
   title: string;
   detail: string;
   date: DateKey;
+  spanEndDate: DateKey | null;
   hour: number;
   color: CalendarEventColor;
   frequency: RecurrenceFrequency | null;
@@ -56,6 +58,7 @@ export type CalendarEventRecord = {
   endDate: DateKey | null;
   endCount: number | null;
   projectId: string | null;
+  projectName: string | null;
   ownerId: string | null;
 };
 
@@ -89,11 +92,6 @@ export type CalendarWeek = {
 };
 
 export type LinkableProject = { id: string; name: string; color: string };
-
-export type EventTemplate = Pick<
-  CalendarEventRecord,
-  "title" | "color" | "type"
->;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MONTHS_PER_YEAR = 12;
@@ -220,6 +218,15 @@ export function calendarDayPath(date: DateKey): string {
   return `${CALENDAR_PATH}/${date}`;
 }
 
+export function occurrenceHref(
+  occurrence: Pick<CalendarOccurrence, "href" | "eventId">,
+  canEdit: boolean,
+): string | null {
+  return (
+    occurrence.href ?? (canEdit ? calendarEventPath(occurrence.eventId) : null)
+  );
+}
+
 export function newCalendarEventPath(date?: DateKey): string {
   if (!date) {
     return NEW_CALENDAR_EVENT_PATH;
@@ -287,13 +294,39 @@ export function matchesRecurrence(
   }
 }
 
+export function hasSpan(
+  event: Pick<CalendarEventRecord, "date" | "spanEndDate">,
+): boolean {
+  return !!event.spanEndDate && event.spanEndDate > event.date;
+}
+
+function spanDates(
+  event: Pick<CalendarEventRecord, "date" | "spanEndDate">,
+  from: DateKey,
+  to: DateKey,
+): DateKey[] {
+  const { date: start, spanEndDate } = event;
+  const end = spanEndDate && spanEndDate > start ? spanEndDate : start;
+  const dates: DateKey[] = [];
+  for (
+    let date = start > from ? start : from;
+    date <= end && date <= to;
+    date = addDays(date, 1)
+  ) {
+    if (date === start || !isWeekend(date)) {
+      dates.push(date);
+    }
+  }
+  return dates;
+}
+
 export function occurrenceDates(
   event: CalendarEventRecord,
   from: DateKey,
   to: DateKey,
 ): DateKey[] {
   if (event.frequency === null) {
-    return event.date >= from && event.date <= to ? [event.date] : [];
+    return spanDates(event, from, to);
   }
   const countsOccurrences = event.endType === RecurrenceEnd.count;
   const last =
@@ -322,12 +355,23 @@ export function canRepeat(type: CalendarEventType): boolean {
   return REPEATABLE_EVENT_TYPES.includes(type);
 }
 
+export function occurrenceTitle(
+  title: string,
+  projectName: string | null,
+): string {
+  if (!projectName) {
+    return title;
+  }
+  const normalize = (value: string) => value.toLocaleLowerCase(CALENDAR_LOCALE);
+  return normalize(title).includes(normalize(projectName))
+    ? title
+    : `${projectName}${PROJECT_TITLE_SEPARATOR}${title}`;
+}
+
 export function eventCategory(
   event: Pick<CalendarEventRecord, "type" | "frequency">,
 ): EventCategory {
-  return event.frequency !== null && event.type === CalendarEventType.manuel
-    ? RECURRENT_CATEGORY
-    : event.type;
+  return event.frequency !== null ? RECURRENT_CATEGORY : event.type;
 }
 
 export function compareOccurrences(
@@ -354,7 +398,7 @@ export function expandOccurrences(
         date,
         category: eventCategory(event),
         subcategory: event.subcategory,
-        title: event.title,
+        title: occurrenceTitle(event.title, event.projectName),
         detail: event.detail,
         hour: event.hour,
         allDay: false,
@@ -500,10 +544,6 @@ export function formatDayNumber(date: DateKey): string {
     : String(dayOfMonth);
 }
 
-export function ordinal(position: number): string {
-  return position === 1 ? "1er" : `${position}e`;
-}
-
 export function eventColorClass(color: CalendarEventColor): string {
   return EVENT_COLOR_BG_CLASSES[color];
 }
@@ -567,21 +607,6 @@ export function fittingWeekCount(
   );
 }
 
-export type DayOrderPreview<T> = {
-  items: (T & { isNew: boolean })[];
-  position: number;
-};
-
-export function dayOrderPreview<
-  T extends Pick<CalendarOccurrence, "date" | "hour" | "title">,
->(existing: T[], draft: T): DayOrderPreview<T> {
-  const items = [
-    ...existing.map((item) => ({ ...item, isNew: false })),
-    { ...draft, isNew: true },
-  ].toSorted((a, b) => a.hour - b.hour || (a.isNew ? 1 : b.isNew ? -1 : 0));
-  return { items, position: items.findIndex(({ isNew }) => isNew) + 1 };
-}
-
 export function parseWeekdays(value: string, separator: string): number[] {
   return [
     ...new Set(
@@ -594,14 +619,6 @@ export function parseWeekdays(value: string, separator: string): number[] {
         ),
     ),
   ].toSorted((a, b) => a - b);
-}
-
-export function uniqueTemplates(templates: EventTemplate[]): EventTemplate[] {
-  return [
-    ...new Map(
-      templates.map((template) => [template.title, template]),
-    ).values(),
-  ].toSorted((a, b) => a.title.localeCompare(b.title, CALENDAR_LOCALE));
 }
 
 export function isOneOf<T extends string>(

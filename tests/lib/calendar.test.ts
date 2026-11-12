@@ -14,7 +14,6 @@ import {
   calendarDayPath,
   calendarEventPath,
   calendarWeekPath,
-  dayOrderPreview,
   eventCategory,
   eventColorClass,
   eventCountLabel,
@@ -37,16 +36,16 @@ import {
   newCalendarEventPath,
   occurrenceDates,
   occurrenceDescription,
+  occurrenceHref,
   occurrenceMeta,
   occurrenceSubtitle,
-  ordinal,
   parseDateParam,
   parseWeekParam,
   parseWeekdays,
   toLocalDateKey,
   toLocalHour,
   toggleFilter,
-  uniqueTemplates,
+  occurrenceTitle,
   weekRangeEnd,
   type CalendarEventRecord,
 } from "@/lib/calendar";
@@ -55,11 +54,12 @@ const event = (
   overrides: Partial<CalendarEventRecord> = {},
 ): CalendarEventRecord => ({
   id: 1,
-  type: CalendarEventType.manuel,
+  type: CalendarEventType.divers,
   subcategory: "",
   title: "Réunion d'équipe",
   detail: "",
   date: "2026-07-06",
+  spanEndDate: null,
   hour: 8,
   color: CalendarEventColor.indigo,
   frequency: null,
@@ -69,6 +69,7 @@ const event = (
   endDate: null,
   endCount: null,
   projectId: null,
+  projectName: null,
   ownerId: null,
   ...overrides,
 });
@@ -256,19 +257,19 @@ describe("expandOccurrences and buildWeeks", () => {
     expect(eventCategory(events[1])).toBe("livraison");
   });
 
-  it("keeps the type of recurring divers and personal events", () => {
+  it("puts every recurring divers and personal event in recurrent", () => {
     for (const type of [
       CalendarEventType.divers,
       CalendarEventType.personnel,
     ]) {
       expect(
         eventCategory({ type, frequency: RecurrenceFrequency.weekly }),
-      ).toBe(type);
+      ).toBe("recurrent");
+      expect(eventCategory({ type, frequency: null })).toBe(type);
     }
   });
 
-  it("only lets manual, divers and personal events repeat", () => {
-    expect(canRepeat(CalendarEventType.manuel)).toBe(true);
+  it("only lets divers and personal events repeat", () => {
     expect(canRepeat(CalendarEventType.divers)).toBe(true);
     expect(canRepeat(CalendarEventType.personnel)).toBe(true);
     expect(canRepeat(CalendarEventType.livraison)).toBe(false);
@@ -365,8 +366,6 @@ describe("formatting", () => {
     expect(formatWeekLabel("2026-09-14")).toMatch(/^14-20 sept\.?$/);
     expect(formatDayNumber("2026-07-14")).toBe("14");
     expect(formatDayNumber("2026-07-01")).toMatch(/^1 juil/);
-    expect(ordinal(1)).toBe("1er");
-    expect(ordinal(3)).toBe("3e");
   });
 
   it("finds the first week of the displayed month", () => {
@@ -402,8 +401,8 @@ describe("filters", () => {
   });
 
   it("shows everything when no filter is active", () => {
-    expect(isFilterVisible("manuel", new Set())).toBe(true);
-    expect(isFilterVisible("manuel", new Set(["livraison"]))).toBe(false);
+    expect(isFilterVisible("divers", new Set())).toBe(true);
+    expect(isFilterVisible("divers", new Set(["livraison"]))).toBe(false);
   });
 
   it("resets when every filter is toggled on", () => {
@@ -419,45 +418,73 @@ describe("filters", () => {
   });
 });
 
-describe("dayOrderPreview", () => {
-  const item = (title: string, hour: number) => ({
-    title,
-    hour,
-    date: "2026-07-14",
-  });
-
-  it("places the draft after existing events at the same hour", () => {
-    const { items, position } = dayOrderPreview(
-      [item("A", 8), item("B", 10), item("C", 9)],
-      item("Nouveau", 9),
-    );
-    expect(items.map(({ title }) => title)).toEqual(["A", "C", "Nouveau", "B"]);
-    expect(position).toBe(3);
-  });
-
-  it("is first on an empty day", () => {
-    expect(dayOrderPreview([], item("Nouveau", 9)).position).toBe(1);
-  });
-});
-
 describe("parseWeekdays", () => {
   it("keeps unique valid weekdays in order", () => {
     expect(parseWeekdays("4,1,,9,1,x", ",")).toEqual([1, 4]);
   });
 });
 
-describe("uniqueTemplates", () => {
-  it("keeps the last template per title, sorted", () => {
+describe("occurrenceDates for a span", () => {
+  it("repeats every weekday until the span end", () => {
     expect(
-      uniqueTemplates([
-        { title: "Côté", color: "blue", type: "livraison" },
-        { title: "Arsenault", color: "teal", type: "manuel" },
-        { title: "Côté", color: "pink", type: "installation" },
-      ]),
-    ).toEqual([
-      { title: "Arsenault", color: "teal", type: "manuel" },
-      { title: "Côté", color: "pink", type: "installation" },
-    ]);
+      occurrenceDates(
+        event({ date: "2026-11-05", spanEndDate: "2026-11-10" }),
+        "2026-11-01",
+        "2026-11-30",
+      ),
+    ).toEqual(["2026-11-05", "2026-11-06", "2026-11-09", "2026-11-10"]);
+  });
+
+  it("keeps a weekend start day and clips to the range", () => {
+    expect(
+      occurrenceDates(
+        event({ date: "2026-11-07", spanEndDate: "2026-11-12" }),
+        "2026-11-01",
+        "2026-11-10",
+      ),
+    ).toEqual(["2026-11-07", "2026-11-09", "2026-11-10"]);
+    expect(
+      occurrenceDates(
+        event({ date: "2026-11-05", spanEndDate: "2026-11-10" }),
+        "2026-11-09",
+        "2026-11-15",
+      ),
+    ).toEqual(["2026-11-09", "2026-11-10"]);
+  });
+
+  it("ignores a span end before the start", () => {
+    expect(
+      occurrenceDates(
+        event({ date: "2026-11-05", spanEndDate: "2026-11-01" }),
+        "2026-11-01",
+        "2026-11-30",
+      ),
+    ).toEqual(["2026-11-05"]);
+  });
+});
+
+describe("occurrenceTitle", () => {
+  it("prefixes the linked project name", () => {
+    expect(occurrenceTitle("Livraison", "Gagné Paradis")).toBe(
+      "Gagné Paradis · Livraison",
+    );
+    expect(occurrenceTitle("Livraison", null)).toBe("Livraison");
+  });
+
+  it("does not repeat a project name already in the title", () => {
+    expect(occurrenceTitle("gagné paradis — cuisine", "Gagné Paradis")).toBe(
+      "gagné paradis — cuisine",
+    );
+  });
+
+  it("is used when expanding occurrences", () => {
+    expect(
+      expandOccurrences(
+        [event({ projectName: "Côté" })],
+        "2026-07-06",
+        "2026-07-06",
+      )[0].title,
+    ).toBe("Côté · Réunion d'équipe");
   });
 });
 
@@ -490,5 +517,20 @@ describe("linkableProjects", () => {
       { id: "a", name: "A", color: "#3B7DD8" },
       { id: "c", name: "C", color: "#3B7DD8" },
     ]);
+  });
+});
+
+describe("occurrenceHref", () => {
+  it("opens the event form for managers only", () => {
+    expect(occurrenceHref({ href: null, eventId: 7 }, true)).toBe(
+      calendarEventPath(7),
+    );
+    expect(occurrenceHref({ href: null, eventId: 7 }, false)).toBeNull();
+  });
+
+  it("keeps the own link of generated occurrences", () => {
+    expect(occurrenceHref({ href: "/lanceur", eventId: 0 }, false)).toBe(
+      "/lanceur",
+    );
   });
 });

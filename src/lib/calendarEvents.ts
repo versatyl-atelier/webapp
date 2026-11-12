@@ -3,6 +3,7 @@ import {
   INVALID_DATE_MESSAGE,
   INVALID_END_COUNT_MESSAGE,
   REPEATS_VALUE,
+  SPAN_REPEATS_NOTE,
   TRELLO_COLOR_SHADE_SEPARATOR,
   WEEKDAYS_SEPARATOR,
 } from "@/constants/calendar";
@@ -38,6 +39,14 @@ export type CalendarEventData = Omit<
 
 export type TrelloEventData = CalendarEventData & { trelloCardId: string };
 
+export type CalendarEventWithProject = CalendarEvent & {
+  project: { name: string } | null;
+};
+
+type SpanResult =
+  | { spanEndDate: Date | null; errors?: never }
+  | { errors: CalendarEventFormErrors };
+
 const ONE_OFF: Pick<
   CalendarEventData,
   "frequency" | "interval" | "weekdays" | "endType" | "endDate" | "endCount"
@@ -50,7 +59,9 @@ const ONE_OFF: Pick<
   endCount: null,
 };
 
-export function eventRecordFromDb(event: CalendarEvent): CalendarEventRecord {
+export function eventRecordFromDb(
+  event: CalendarEventWithProject,
+): CalendarEventRecord {
   return {
     id: event.id,
     type: event.type,
@@ -58,6 +69,7 @@ export function eventRecordFromDb(event: CalendarEvent): CalendarEventRecord {
     title: event.title,
     detail: event.detail,
     date: toDateKey(event.date),
+    spanEndDate: event.spanEndDate ? toDateKey(event.spanEndDate) : null,
     hour: event.hour,
     color: event.color,
     frequency: event.frequency,
@@ -67,8 +79,29 @@ export function eventRecordFromDb(event: CalendarEvent): CalendarEventRecord {
     endDate: event.endDate ? toDateKey(event.endDate) : null,
     endCount: event.endCount,
     projectId: event.projectId,
+    projectName: event.project?.name ?? null,
     ownerId: event.ownerId,
   };
+}
+
+function isRepeating(form: CalendarEventFormData): boolean {
+  return canRepeat(form.type) && form.repeats === REPEATS_VALUE;
+}
+
+function spanFromForm(form: CalendarEventFormData): SpanResult {
+  if (!form.spanEndDate || form.spanEndDate === form.date) {
+    return { spanEndDate: null };
+  }
+  if (!isDateKey(form.spanEndDate)) {
+    return { errors: { spanEndDate: [INVALID_DATE_MESSAGE] } };
+  }
+  if (form.spanEndDate < form.date) {
+    return { errors: { spanEndDate: [END_DATE_BEFORE_START_MESSAGE] } };
+  }
+  if (isRepeating(form)) {
+    return { errors: { spanEndDate: [SPAN_REPEATS_NOTE] } };
+  }
+  return { spanEndDate: toDbDate(form.spanEndDate) };
 }
 
 function recurrenceFromForm(
@@ -76,8 +109,7 @@ function recurrenceFromForm(
 ):
   | { recurrence: typeof ONE_OFF; errors?: never }
   | { errors: CalendarEventFormErrors } {
-  const repeats = canRepeat(form.type) && form.repeats === REPEATS_VALUE;
-  if (!repeats) {
+  if (!isRepeating(form)) {
     return { recurrence: ONE_OFF };
   }
   const weekdays = parseWeekdays(form.weekdays, WEEKDAYS_SEPARATOR);
@@ -137,6 +169,10 @@ export function eventDataFromForm(
   form: CalendarEventFormData,
   userId: string,
 ): { data: CalendarEventData } | { errors: CalendarEventFormErrors } {
+  const span = spanFromForm(form);
+  if (span.errors) {
+    return { errors: span.errors };
+  }
   const result = recurrenceFromForm(form);
   if (result.errors) {
     return { errors: result.errors };
@@ -149,6 +185,7 @@ export function eventDataFromForm(
       title: form.title,
       detail: form.detail,
       date: toDbDate(form.date),
+      spanEndDate: span.spanEndDate,
       hour: form.hour,
       color: form.color,
       projectId: form.projectId || null,
@@ -185,6 +222,7 @@ export function trelloCardToEventData(
     title: card.name.trim(),
     detail: board.detail,
     date: toDbDate(toLocalDateKey(due)),
+    spanEndDate: null,
     hour: toLocalHour(due),
     color: labelColor ?? board.color,
     projectId: projectIds.has(card.id) ? card.id : null,

@@ -684,7 +684,6 @@ model ProjectFileSection {
 enum CalendarEventType {
   livraison
   installation
-  manuel
   divers
   personnel
 }
@@ -720,6 +719,7 @@ model CalendarEvent {
   title       String
   detail      String             @default("")
   date        DateTime           @db.Date
+  spanEndDate DateTime?          @db.Date
   hour        Int
   color       CalendarEventColor
 

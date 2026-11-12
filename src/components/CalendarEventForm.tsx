@@ -1,22 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  useActionState,
-  useEffect,
-  useId,
-  useState,
-  useTransition,
-} from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useActionState, useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 
-import { loadDayOccurrences, saveCalendarEvent } from "@/actions/calendar";
-import { CalendarDayOrderPreview } from "@/components/CalendarDayOrderPreview";
+import { saveCalendarEvent } from "@/actions/calendar";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
 import { ActionTooltip } from "@/components/ActionTooltip";
 import { FieldErrors } from "@/components/FieldErrors";
+import { FormActionBar } from "@/components/FormActionBar";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
+import { UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +24,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Combobox,
   ComboboxContent,
@@ -71,10 +74,12 @@ import {
   DELETE_EVENT_LABEL,
   DETAIL_LABEL,
   DETAIL_PLACEHOLDER,
+  EDIT_EVENT_LABEL,
   END_LABEL,
   EVENT_CATEGORY_LABELS,
   EVENT_COLOR_LABELS,
   EVENT_DELETED_MESSAGE,
+  EVENT_DIALOG_DESCRIPTION,
   EVENT_SAVED_MESSAGE,
   EVENT_SUBCATEGORIES,
   FREQUENCY_LABEL,
@@ -86,26 +91,27 @@ import {
   HOUR_MODES,
   HOURS_PER_DAY,
   INTERVAL_LABEL_PREFIX,
-  LANCEUR_EVENT_TYPES,
-  LANCEUR_NOTE,
   LINKED_PROJECT_HINT,
   LINKED_PROJECT_LABEL,
   LINKED_PROJECT_PLACEHOLDER,
   MIDNIGHT_HOUR,
+  NEW_CALENDAR_EVENT_PATH,
   NEW_EVENT_LABEL,
   NOON_HOUR,
   OCCURRENCES_LABEL,
   PERSONAL_NOTE,
   PM_LABEL,
   PROJECT_SEARCH_EMPTY,
-  PROJECT_SEARCH_HINT,
-  PROJECT_SEARCH_LABEL,
-  PROJECT_SEARCH_PLACEHOLDER,
   RECURRENCE_END_LABELS,
   REPEATS_LABEL,
+  REPEATS_SPAN_NOTE,
   REPEATS_VALUE,
   SAVE_EVENT_LABEL,
   SERIES_EDIT_NOTE,
+  SPAN_EDIT_NOTE,
+  SPAN_END_DATE_HINT,
+  SPAN_END_DATE_LABEL,
+  SPAN_REPEATS_NOTE,
   START_DATE_LABEL,
   SUBCATEGORY_LABEL,
   SUBCATEGORY_OTHER_LABEL,
@@ -125,19 +131,19 @@ import {
   RecurrenceEnd,
   RecurrenceFrequency,
 } from "@/generated/prisma/enums";
+import { useFormDirty } from "@/hooks/use-form-dirty";
 import {
+  calendarEventPath,
   calendarWeekPath,
   canRepeat,
-  dayOrderPreview,
   eventColorClass,
   formatHour,
+  hasSpan,
   isOneOf,
   mondayOf,
   weekdayOf,
   type CalendarEventRecord,
-  type CalendarOccurrence,
   type DateKey,
-  type EventTemplate,
   type LinkableProject,
 } from "@/lib/calendar";
 import { projectColorLabel, projectColorStyle } from "@/lib/projects";
@@ -146,10 +152,9 @@ import { cn } from "@/lib/utils";
 type CalendarEventFormProps = {
   event?: CalendarEventRecord;
   initialDate: DateKey;
-  initialDayOccurrences: CalendarOccurrence[];
-  templates: EventTemplate[];
   projects: LinkableProject[];
   cancelHref: string;
+  isModal?: boolean;
 };
 
 const EVENT_TYPES = Object.values(CalendarEventType);
@@ -161,28 +166,29 @@ const HOUR_ITEMS = HOURS.map((hour) => ({
   value: String(hour),
   label: formatHour(hour),
 }));
-const DRAFT_KEY = "draft";
 const PILL_CLASS =
   "data-pressed:border-primary data-pressed:bg-primary/10 data-pressed:text-primary rounded-full px-3";
 
 export function CalendarEventForm({
   event,
   initialDate,
-  initialDayOccurrences,
-  templates,
   projects,
   cancelHref,
+  isModal = false,
 }: CalendarEventFormProps) {
   const formId = useId();
   const router = useRouter();
+  const pathname = usePathname();
   const [state, action, saving] = useActionState(saveCalendarEvent, undefined);
-  const [previewPending, startPreviewTransition] = useTransition();
+  const { ref: formRef, isDirty, submit } = useFormDirty();
+  const [confirmingClose, setConfirmingClose] = useState(false);
 
   const [type, setType] = useState(event?.type ?? DEFAULT_EVENT_TYPE);
   const [subcategory, setSubcategory] = useState(event?.subcategory ?? "");
   const [title, setTitle] = useState(event?.title ?? "");
   const [detail, setDetail] = useState(event?.detail ?? "");
   const [date, setDate] = useState(event?.date ?? initialDate);
+  const [spanEndDate, setSpanEndDate] = useState(event?.spanEndDate ?? "");
   const [hour, setHour] = useState(event?.hour ?? DEFAULT_EVENT_HOUR);
   const [hourMode, setHourMode] = useState<HourMode>("24h");
   const [color, setColor] = useState(event?.color ?? DEFAULT_EVENT_COLOR);
@@ -202,7 +208,6 @@ export function CalendarEventForm({
   const [endCount, setEndCount] = useState(
     String(event?.endCount ?? DEFAULT_END_COUNT),
   );
-  const [dayOccurrences, setDayOccurrences] = useState(initialDayOccurrences);
 
   useEffect(() => {
     if (
@@ -213,37 +218,37 @@ export function CalendarEventForm({
       return;
     }
     toast.success(state.message, { position: "top-left", icon: "✅" });
-    router.push(calendarWeekPath(mondayOf(state.date)));
+    router.replace(calendarWeekPath(mondayOf(state.date)));
   }, [state, router]);
 
   const repeatable = canRepeat(type);
   const isRecurring = repeatable && repeats;
+  const isSpan = !isRecurring && hasSpan({ date, spanEndDate });
   const isPresetSubcategory = isOneOf(EVENT_SUBCATEGORIES, subcategory);
   const errors = state?.errors;
+  const heading = event ? EDIT_EVENT_LABEL : NEW_EVENT_LABEL;
+  const dialogPath = event
+    ? calendarEventPath(event.id)
+    : NEW_CALENDAR_EVENT_PATH;
+
+  const close = () => router.back();
+
+  const requestClose = () => {
+    if (saving) {
+      return;
+    }
+    if (isDirty()) {
+      setConfirmingClose(true);
+      return;
+    }
+    close();
+  };
 
   const selectType = (value: CalendarEventType) => {
     setType(value);
     if (!canRepeat(value)) {
       setRepeats(false);
     }
-  };
-
-  const applyTemplate = (template: EventTemplate) => {
-    setTitle(template.title);
-    setColor(template.color);
-    if (LANCEUR_EVENT_TYPES.includes(template.type)) {
-      selectType(template.type);
-    }
-  };
-
-  const changeDate = (value: DateKey) => {
-    setDate(value);
-    if (!value) {
-      return;
-    }
-    startPreviewTransition(async () => {
-      setDayOccurrences(await loadDayOccurrences(value));
-    });
   };
 
   const changeRepeats = (checked: boolean) => {
@@ -253,543 +258,546 @@ export function CalendarEventForm({
     }
   };
 
-  const preview = dayOrderPreview(
-    dayOccurrences.flatMap(({ eventId, key, date, hour, color, title }) =>
-      eventId === event?.id ? [] : [{ key, date, hour, color, title }],
-    ),
-    {
-      key: DRAFT_KEY,
-      date,
-      hour,
-      color,
-      title: title.trim() || NEW_EVENT_LABEL,
-    },
-  );
+  const form = (
+    <form
+      id={formId}
+      ref={formRef}
+      action={action}
+      className="flex w-full min-w-0 flex-col gap-5"
+    >
+      <FormValidationAlerts errors={errors} />
+      {event && <input type="hidden" name="id" value={event.id} />}
+      <input type="hidden" name="type" value={type} />
+      <input type="hidden" name="subcategory" value={subcategory} />
+      <input type="hidden" name="hour" value={hour} />
+      <input type="hidden" name="color" value={color} />
+      <input type="hidden" name="projectId" value={project?.id ?? ""} />
+      <input
+        type="hidden"
+        name="spanEndDate"
+        value={isRecurring ? "" : spanEndDate}
+      />
+      {isRecurring && (
+        <input type="hidden" name="repeats" value={REPEATS_VALUE} />
+      )}
+      <input type="hidden" name="frequency" value={frequency} />
+      <input type="hidden" name="interval" value={interval} />
+      <input
+        type="hidden"
+        name="weekdays"
+        value={weekdays.join(WEEKDAYS_SEPARATOR)}
+      />
+      <input type="hidden" name="endType" value={endType} />
+      <input type="hidden" name="endDate" value={endDate} />
+      <input type="hidden" name="endCount" value={endCount} />
 
-  return (
-    <div className="flex w-full flex-col items-start gap-8 md:flex-row">
-      <form
-        id={formId}
-        action={action}
-        className="flex w-full min-w-0 flex-col gap-5 md:flex-[1.3]"
-      >
-        <FormValidationAlerts errors={errors} />
-        {event && <input type="hidden" name="id" value={event.id} />}
-        <input type="hidden" name="type" value={type} />
-        <input type="hidden" name="subcategory" value={subcategory} />
-        <input type="hidden" name="hour" value={hour} />
-        <input type="hidden" name="color" value={color} />
-        <input type="hidden" name="projectId" value={project?.id ?? ""} />
-        {isRecurring && (
-          <input type="hidden" name="repeats" value={REPEATS_VALUE} />
-        )}
-        <input type="hidden" name="frequency" value={frequency} />
-        <input type="hidden" name="interval" value={interval} />
-        <input
-          type="hidden"
-          name="weekdays"
-          value={weekdays.join(WEEKDAYS_SEPARATOR)}
-        />
-        <input type="hidden" name="endType" value={endType} />
-        <input type="hidden" name="endDate" value={endDate} />
-        <input type="hidden" name="endCount" value={endCount} />
-
-        {templates.length > 0 && (
-          <Field>
-            <FieldLabel htmlFor={`${formId}-template`}>
-              {PROJECT_SEARCH_LABEL}
-            </FieldLabel>
-            <Combobox
-              items={templates}
-              itemToStringLabel={(template: EventTemplate) => template.title}
-              onValueChange={(template) => {
-                if (template) {
-                  applyTemplate(template);
-                }
-              }}
-            >
-              <ComboboxInput
-                id={`${formId}-template`}
-                placeholder={PROJECT_SEARCH_PLACEHOLDER}
-                showClear
-              />
-              <ComboboxContent>
-                <ComboboxEmpty>{PROJECT_SEARCH_EMPTY}</ComboboxEmpty>
-                <ComboboxList>
-                  {(template: EventTemplate) => (
-                    <ComboboxItem key={template.title} value={template}>
+      <Field>
+        <FieldLabel htmlFor={`${formId}-project`}>
+          {LINKED_PROJECT_LABEL}
+        </FieldLabel>
+        <Combobox
+          items={projects}
+          value={project}
+          onValueChange={setProject}
+          isItemEqualToValue={(a: LinkableProject, b: LinkableProject) =>
+            a.id === b.id
+          }
+          itemToStringLabel={(item: LinkableProject) => item.name}
+          itemToStringValue={(item: LinkableProject) => item.id}
+        >
+          <ComboboxInput
+            id={`${formId}-project`}
+            placeholder={LINKED_PROJECT_PLACEHOLDER}
+            aria-invalid={!!errors?.projectId}
+            showClear
+          />
+          <ComboboxContent>
+            <ComboboxEmpty>{PROJECT_SEARCH_EMPTY}</ComboboxEmpty>
+            <ComboboxList>
+              {(item: LinkableProject) => (
+                <ComboboxItem key={item.id} value={item}>
+                  <ActionTooltip
+                    label={projectColorLabel(item.color)}
+                    render={
                       <span
                         aria-hidden
-                        className={cn(
-                          "size-2 rounded-full",
-                          eventColorClass(template.color),
-                        )}
+                        style={projectColorStyle(item.color)}
+                        className="size-2 shrink-0 rounded-full bg-(--project-color)"
                       />
-                      {template.title}
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
-            <FieldDescription>{PROJECT_SEARCH_HINT}</FieldDescription>
-          </Field>
-        )}
+                    }
+                  />
+                  {item.name}
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+        <FieldDescription>{LINKED_PROJECT_HINT}</FieldDescription>
+        <FieldErrors errors={errors?.projectId} />
+      </Field>
 
+      <FieldSet>
+        <FieldLegend variant="label">{TYPE_LABEL}</FieldLegend>
+        <ToggleGroup
+          variant="outline"
+          value={[type]}
+          onValueChange={([value]) => {
+            if (isOneOf(EVENT_TYPES, value)) {
+              selectType(value);
+            }
+          }}
+          className="flex-wrap"
+        >
+          {EVENT_TYPES.map((eventType) => (
+            <ToggleGroupItem
+              key={eventType}
+              value={eventType}
+              className={PILL_CLASS}
+            >
+              <EventCategoryIcon category={eventType} />
+              {EVENT_CATEGORY_LABELS[eventType]}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        {type === CalendarEventType.personnel && (
+          <p className="bg-muted text-muted-foreground rounded-sm px-2.5 py-1.5 text-xs">
+            {PERSONAL_NOTE}
+          </p>
+        )}
+        <FieldErrors errors={errors?.type} />
+      </FieldSet>
+
+      {type === CalendarEventType.divers && (
         <FieldSet>
-          <FieldLegend variant="label">{TYPE_LABEL}</FieldLegend>
+          <FieldLegend variant="label">{SUBCATEGORY_LABEL}</FieldLegend>
+          <div className="flex flex-wrap items-center gap-2">
+            <ToggleGroup
+              variant="outline"
+              value={isPresetSubcategory ? [subcategory] : []}
+              onValueChange={([value]) => setSubcategory(value ?? "")}
+              className="flex-wrap"
+            >
+              {EVENT_SUBCATEGORIES.map((preset) => (
+                <ToggleGroupItem
+                  key={preset}
+                  value={preset}
+                  className={PILL_CLASS}
+                >
+                  {preset}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            <Input
+              aria-label={SUBCATEGORY_OTHER_LABEL}
+              placeholder={SUBCATEGORY_OTHER_PLACEHOLDER}
+              value={isPresetSubcategory ? "" : subcategory}
+              onChange={(e) => setSubcategory(e.target.value)}
+              className="h-8 w-32 rounded-full px-3"
+            />
+          </div>
+          <FieldErrors errors={errors?.subcategory} />
+        </FieldSet>
+      )}
+
+      <Field>
+        <FieldLabel htmlFor={`${formId}-title`}>{TITLE_LABEL}</FieldLabel>
+        <Input
+          id={`${formId}-title`}
+          name="title"
+          placeholder={TITLE_PLACEHOLDER}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          aria-invalid={!!errors?.title}
+        />
+        <FieldErrors errors={errors?.title} />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor={`${formId}-detail`}>{DETAIL_LABEL}</FieldLabel>
+        <Input
+          id={`${formId}-detail`}
+          name="detail"
+          placeholder={DETAIL_PLACEHOLDER}
+          value={detail}
+          onChange={(e) => setDetail(e.target.value)}
+        />
+        <FieldErrors errors={errors?.detail} />
+      </Field>
+
+      <div className="flex flex-wrap gap-4">
+        <Field className="flex-1">
+          <FieldLabel htmlFor={`${formId}-date`}>
+            {isRecurring || isSpan ? START_DATE_LABEL : DATE_LABEL}
+          </FieldLabel>
+          <Input
+            id={`${formId}-date`}
+            name="date"
+            type="date"
+            required
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            aria-invalid={!!errors?.date}
+          />
+          <FieldErrors errors={errors?.date} />
+        </Field>
+        <Field className="flex-1" data-disabled={isRecurring}>
+          <FieldLabel htmlFor={`${formId}-span-end`}>
+            {SPAN_END_DATE_LABEL}
+          </FieldLabel>
+          <Input
+            id={`${formId}-span-end`}
+            type="date"
+            min={date}
+            disabled={isRecurring}
+            value={isRecurring ? "" : spanEndDate}
+            onChange={(e) => setSpanEndDate(e.target.value)}
+            aria-invalid={!!errors?.spanEndDate}
+          />
+          <FieldDescription>
+            {isRecurring ? REPEATS_SPAN_NOTE : SPAN_END_DATE_HINT}
+          </FieldDescription>
+          <FieldErrors errors={errors?.spanEndDate} />
+        </Field>
+        <FieldSet className="flex-1">
+          <FieldLegend variant="label">{HOUR_LABEL}</FieldLegend>
           <ToggleGroup
             variant="outline"
-            value={[type]}
+            size="sm"
+            spacing={0}
+            value={[hourMode]}
             onValueChange={([value]) => {
-              if (isOneOf(EVENT_TYPES, value)) {
-                selectType(value);
+              if (isOneOf(HOUR_MODES, value)) {
+                setHourMode(value);
               }
             }}
-            className="flex-wrap"
           >
-            {EVENT_TYPES.map((eventType) => (
-              <ToggleGroupItem
-                key={eventType}
-                value={eventType}
-                className={PILL_CLASS}
-              >
-                <EventCategoryIcon category={eventType} />
-                {EVENT_CATEGORY_LABELS[eventType]}
+            {HOUR_MODES.map((mode) => (
+              <ToggleGroupItem key={mode} value={mode}>
+                {HOUR_MODE_LABELS[mode]}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          {LANCEUR_EVENT_TYPES.includes(type) && (
-            <p className="bg-muted text-muted-foreground rounded-sm px-2.5 py-1.5 text-xs">
-              {LANCEUR_NOTE}
-            </p>
-          )}
-          {type === CalendarEventType.personnel && (
-            <p className="bg-muted text-muted-foreground rounded-sm px-2.5 py-1.5 text-xs">
-              {PERSONAL_NOTE}
-            </p>
-          )}
-          <FieldErrors errors={errors?.type} />
-        </FieldSet>
-
-        {type === CalendarEventType.divers && (
-          <FieldSet>
-            <FieldLegend variant="label">{SUBCATEGORY_LABEL}</FieldLegend>
-            <div className="flex flex-wrap items-center gap-2">
-              <ToggleGroup
-                variant="outline"
-                value={isPresetSubcategory ? [subcategory] : []}
-                onValueChange={([value]) => setSubcategory(value ?? "")}
-                className="flex-wrap"
-              >
-                {EVENT_SUBCATEGORIES.map((preset) => (
-                  <ToggleGroupItem
-                    key={preset}
-                    value={preset}
-                    className={PILL_CLASS}
-                  >
-                    {preset}
-                  </ToggleGroupItem>
+          {hourMode === "24h" ? (
+            <Select
+              items={HOUR_ITEMS}
+              value={String(hour)}
+              onValueChange={(value) => {
+                if (value !== null) {
+                  setHour(Number(value));
+                }
+              }}
+            >
+              <SelectTrigger aria-label={HOUR_LABEL} className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {HOUR_ITEMS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
                 ))}
-              </ToggleGroup>
-              <Input
-                aria-label={SUBCATEGORY_OTHER_LABEL}
-                placeholder={SUBCATEGORY_OTHER_PLACEHOLDER}
-                value={isPresetSubcategory ? "" : subcategory}
-                onChange={(e) => setSubcategory(e.target.value)}
-                className="h-8 w-32 rounded-full px-3"
-              />
-            </div>
-            <FieldErrors errors={errors?.subcategory} />
-          </FieldSet>
-        )}
-
-        <Field>
-          <FieldLabel htmlFor={`${formId}-title`}>{TITLE_LABEL}</FieldLabel>
-          <Input
-            id={`${formId}-title`}
-            name="title"
-            placeholder={TITLE_PLACEHOLDER}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            aria-invalid={!!errors?.title}
-          />
-          <FieldErrors errors={errors?.title} />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor={`${formId}-detail`}>{DETAIL_LABEL}</FieldLabel>
-          <Input
-            id={`${formId}-detail`}
-            name="detail"
-            placeholder={DETAIL_PLACEHOLDER}
-            value={detail}
-            onChange={(e) => setDetail(e.target.value)}
-          />
-          <FieldErrors errors={errors?.detail} />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor={`${formId}-project`}>
-            {LINKED_PROJECT_LABEL}
-          </FieldLabel>
-          <Combobox
-            items={projects}
-            value={project}
-            onValueChange={setProject}
-            isItemEqualToValue={(a: LinkableProject, b: LinkableProject) =>
-              a.id === b.id
-            }
-            itemToStringLabel={(item: LinkableProject) => item.name}
-            itemToStringValue={(item: LinkableProject) => item.id}
-          >
-            <ComboboxInput
-              id={`${formId}-project`}
-              placeholder={LINKED_PROJECT_PLACEHOLDER}
-              aria-invalid={!!errors?.projectId}
-              showClear
-            />
-            <ComboboxContent>
-              <ComboboxEmpty>{PROJECT_SEARCH_EMPTY}</ComboboxEmpty>
-              <ComboboxList>
-                {(item: LinkableProject) => (
-                  <ComboboxItem key={item.id} value={item}>
-                    <ActionTooltip
-                      label={projectColorLabel(item.color)}
-                      render={
-                        <span
-                          aria-hidden
-                          style={projectColorStyle(item.color)}
-                          className="size-2 shrink-0 rounded-full bg-(--project-color)"
-                        />
-                      }
-                    />
-                    {item.name}
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
-          <FieldDescription>{LINKED_PROJECT_HINT}</FieldDescription>
-          <FieldErrors errors={errors?.projectId} />
-        </Field>
-
-        <div className="flex flex-wrap gap-4">
-          <Field className="flex-1">
-            <FieldLabel htmlFor={`${formId}-date`}>
-              {isRecurring ? START_DATE_LABEL : DATE_LABEL}
-            </FieldLabel>
-            <Input
-              id={`${formId}-date`}
-              name="date"
-              type="date"
-              required
-              value={date}
-              onChange={(e) => changeDate(e.target.value)}
-              aria-invalid={!!errors?.date}
-            />
-            <FieldErrors errors={errors?.date} />
-          </Field>
-          <FieldSet className="flex-1">
-            <FieldLegend variant="label">{HOUR_LABEL}</FieldLegend>
+              </SelectContent>
+            </Select>
+          ) : (
             <ToggleGroup
               variant="outline"
               size="sm"
               spacing={0}
-              value={[hourMode]}
+              aria-label={HOUR_LABEL}
+              value={[hour < NOON_HOUR ? AM_LABEL : PM_LABEL]}
               onValueChange={([value]) => {
-                if (isOneOf(HOUR_MODES, value)) {
-                  setHourMode(value);
+                if (value) {
+                  setHour(value === AM_LABEL ? MIDNIGHT_HOUR : NOON_HOUR);
                 }
               }}
             >
-              {HOUR_MODES.map((mode) => (
-                <ToggleGroupItem key={mode} value={mode}>
-                  {HOUR_MODE_LABELS[mode]}
-                </ToggleGroupItem>
-              ))}
+              <ToggleGroupItem value={AM_LABEL}>{AM_LABEL}</ToggleGroupItem>
+              <ToggleGroupItem value={PM_LABEL}>{PM_LABEL}</ToggleGroupItem>
             </ToggleGroup>
-            {hourMode === "24h" ? (
+          )}
+          <FieldDescription>{HOUR_HINT}</FieldDescription>
+          <FieldErrors errors={errors?.hour} />
+        </FieldSet>
+      </div>
+
+      <FieldSet>
+        <FieldLegend variant="label">{COLOR_LABEL}</FieldLegend>
+        <RadioGroup
+          value={color}
+          onValueChange={(value) => {
+            if (isOneOf(EVENT_COLORS, value)) {
+              setColor(value);
+            }
+          }}
+          className="flex flex-wrap gap-2"
+        >
+          {EVENT_COLORS.map((eventColor) => (
+            <ActionTooltip
+              key={eventColor}
+              label={EVENT_COLOR_LABELS[eventColor]}
+              render={
+                <RadioGroupItem
+                  value={eventColor}
+                  aria-label={EVENT_COLOR_LABELS[eventColor]}
+                  className={cn(
+                    "data-checked:ring-foreground data-checked:ring-offset-background size-7 border-0 text-white data-checked:ring-2 data-checked:ring-offset-2",
+                    eventColorClass(eventColor),
+                  )}
+                />
+              }
+            />
+          ))}
+        </RadioGroup>
+        <FieldDescription>{COLOR_HINT}</FieldDescription>
+        <FieldErrors errors={errors?.color} />
+      </FieldSet>
+
+      {repeatable && (
+        <Field orientation="horizontal" data-disabled={isSpan}>
+          <Checkbox
+            id={`${formId}-repeats`}
+            checked={isRecurring}
+            disabled={isSpan}
+            onCheckedChange={(checked) => changeRepeats(checked === true)}
+          />
+          <FieldLabel htmlFor={`${formId}-repeats`}>{REPEATS_LABEL}</FieldLabel>
+          {isSpan && <FieldDescription>{SPAN_REPEATS_NOTE}</FieldDescription>}
+        </Field>
+      )}
+
+      {isSpan && event && hasSpan(event) && (
+        <p className="text-muted-foreground text-xs">{SPAN_EDIT_NOTE}</p>
+      )}
+
+      {isRecurring && (
+        <div className="bg-muted flex flex-col gap-4 rounded-lg border p-4">
+          <div className="flex flex-wrap gap-4">
+            <Field className="flex-1">
+              <FieldLabel htmlFor={`${formId}-frequency`}>
+                {FREQUENCY_LABEL}
+              </FieldLabel>
               <Select
-                items={HOUR_ITEMS}
-                value={String(hour)}
+                items={FREQUENCY_LABELS}
+                value={frequency}
                 onValueChange={(value) => {
-                  if (value !== null) {
-                    setHour(Number(value));
+                  if (value !== null && isOneOf(FREQUENCIES, value)) {
+                    setFrequency(value);
                   }
                 }}
               >
-                <SelectTrigger aria-label={HOUR_LABEL} className="w-36">
+                <SelectTrigger
+                  id={`${formId}-frequency`}
+                  className="bg-background w-full"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {HOUR_ITEMS.map(({ value, label }) => (
+                  {FREQUENCIES.map((value) => (
                     <SelectItem key={value} value={value}>
-                      {label}
+                      {FREQUENCY_LABELS[value]}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            ) : (
+              <FieldErrors errors={errors?.frequency} />
+            </Field>
+            <Field className="flex-1">
+              <FieldLabel htmlFor={`${formId}-interval`}>
+                {INTERVAL_LABEL_PREFIX} {FREQUENCY_UNIT_LABELS[frequency]}
+              </FieldLabel>
+              <Input
+                id={`${formId}-interval`}
+                type="number"
+                min={1}
+                className="bg-background"
+                value={interval}
+                onChange={(e) => setIntervalValue(e.target.value)}
+                aria-invalid={!!errors?.interval}
+              />
+              <FieldErrors errors={errors?.interval} />
+            </Field>
+          </div>
+
+          {frequency === RecurrenceFrequency.weekly && (
+            <FieldSet>
+              <FieldLegend variant="label">{WEEKDAYS_LABEL}</FieldLegend>
               <ToggleGroup
+                multiple
                 variant="outline"
                 size="sm"
-                spacing={0}
-                aria-label={HOUR_LABEL}
-                value={[hour < NOON_HOUR ? AM_LABEL : PM_LABEL]}
-                onValueChange={([value]) => {
-                  if (value) {
-                    setHour(value === AM_LABEL ? MIDNIGHT_HOUR : NOON_HOUR);
-                  }
-                }}
+                value={weekdays.map(String)}
+                onValueChange={(values) => setWeekdays(values.map(Number))}
+                className="flex-wrap"
               >
-                <ToggleGroupItem value={AM_LABEL}>{AM_LABEL}</ToggleGroupItem>
-                <ToggleGroupItem value={PM_LABEL}>{PM_LABEL}</ToggleGroupItem>
-              </ToggleGroup>
-            )}
-            <FieldDescription>{HOUR_HINT}</FieldDescription>
-            <FieldErrors errors={errors?.hour} />
-          </FieldSet>
-        </div>
-
-        <FieldSet>
-          <FieldLegend variant="label">{COLOR_LABEL}</FieldLegend>
-          <RadioGroup
-            value={color}
-            onValueChange={(value) => {
-              if (isOneOf(EVENT_COLORS, value)) {
-                setColor(value);
-              }
-            }}
-            className="flex flex-wrap gap-2"
-          >
-            {EVENT_COLORS.map((eventColor) => (
-              <ActionTooltip
-                key={eventColor}
-                label={EVENT_COLOR_LABELS[eventColor]}
-                render={
-                  <RadioGroupItem
-                    value={eventColor}
-                    aria-label={EVENT_COLOR_LABELS[eventColor]}
-                    className={cn(
-                      "data-checked:ring-foreground data-checked:ring-offset-background size-7 border-0 text-white data-checked:ring-2 data-checked:ring-offset-2",
-                      eventColorClass(eventColor),
-                    )}
-                  />
-                }
-              />
-            ))}
-          </RadioGroup>
-          <FieldDescription>{COLOR_HINT}</FieldDescription>
-          <FieldErrors errors={errors?.color} />
-        </FieldSet>
-
-        {repeatable && (
-          <Field orientation="horizontal">
-            <Checkbox
-              id={`${formId}-repeats`}
-              checked={repeats}
-              onCheckedChange={(checked) => changeRepeats(checked === true)}
-            />
-            <FieldLabel htmlFor={`${formId}-repeats`}>
-              {REPEATS_LABEL}
-            </FieldLabel>
-          </Field>
-        )}
-
-        {isRecurring && (
-          <div className="bg-muted flex flex-col gap-4 rounded-lg border p-4">
-            <div className="flex flex-wrap gap-4">
-              <Field className="flex-1">
-                <FieldLabel htmlFor={`${formId}-frequency`}>
-                  {FREQUENCY_LABEL}
-                </FieldLabel>
-                <Select
-                  items={FREQUENCY_LABELS}
-                  value={frequency}
-                  onValueChange={(value) => {
-                    if (value !== null && isOneOf(FREQUENCIES, value)) {
-                      setFrequency(value);
-                    }
-                  }}
-                >
-                  <SelectTrigger
-                    id={`${formId}-frequency`}
-                    className="bg-background w-full"
+                {WEEKDAY_NUMBERS_FROM_MONDAY.map((day, index) => (
+                  <ToggleGroupItem
+                    key={day}
+                    value={String(day)}
+                    className="bg-background data-pressed:bg-primary data-pressed:text-primary-foreground w-10"
                   >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FREQUENCIES.map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {FREQUENCY_LABELS[value]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldErrors errors={errors?.frequency} />
-              </Field>
-              <Field className="flex-1">
-                <FieldLabel htmlFor={`${formId}-interval`}>
-                  {INTERVAL_LABEL_PREFIX} {FREQUENCY_UNIT_LABELS[frequency]}
-                </FieldLabel>
-                <Input
-                  id={`${formId}-interval`}
-                  type="number"
-                  min={1}
-                  className="bg-background"
-                  value={interval}
-                  onChange={(e) => setIntervalValue(e.target.value)}
-                  aria-invalid={!!errors?.interval}
-                />
-                <FieldErrors errors={errors?.interval} />
-              </Field>
-            </div>
-
-            {frequency === RecurrenceFrequency.weekly && (
-              <FieldSet>
-                <FieldLegend variant="label">{WEEKDAYS_LABEL}</FieldLegend>
-                <ToggleGroup
-                  multiple
-                  variant="outline"
-                  size="sm"
-                  value={weekdays.map(String)}
-                  onValueChange={(values) => setWeekdays(values.map(Number))}
-                  className="flex-wrap"
-                >
-                  {WEEKDAY_NUMBERS_FROM_MONDAY.map((day, index) => (
-                    <ToggleGroupItem
-                      key={day}
-                      value={String(day)}
-                      className="bg-background data-pressed:bg-primary data-pressed:text-primary-foreground w-10"
-                    >
-                      {WEEKDAY_LABELS[index]}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-                <FieldErrors errors={errors?.weekdays} />
-              </FieldSet>
-            )}
-
-            <FieldSet>
-              <FieldLegend variant="label">{END_LABEL}</FieldLegend>
-              <RadioGroup
-                value={endType}
-                onValueChange={(value) => {
-                  if (isOneOf(RECURRENCE_ENDS, value)) {
-                    setEndType(value);
-                  }
-                }}
-              >
-                {RECURRENCE_ENDS.map((value) => (
-                  <div key={value} className="flex items-center gap-2">
-                    <RadioGroupItem
-                      id={`${formId}-end-${value}`}
-                      value={value}
-                    />
-                    <Label htmlFor={`${formId}-end-${value}`}>
-                      {RECURRENCE_END_LABELS[value]}
-                    </Label>
-                    {value === RecurrenceEnd.date && (
-                      <Input
-                        type="date"
-                        aria-label={END_LABEL}
-                        className="bg-background w-44"
-                        value={endDate}
-                        onChange={(e) => {
-                          setEndDate(e.target.value);
-                          setEndType(RecurrenceEnd.date);
-                        }}
-                        aria-invalid={!!errors?.endDate}
-                      />
-                    )}
-                    {value === RecurrenceEnd.count && (
-                      <>
-                        <Input
-                          type="number"
-                          min={1}
-                          aria-label={OCCURRENCES_LABEL}
-                          className="bg-background w-20"
-                          value={endCount}
-                          onChange={(e) => {
-                            setEndCount(e.target.value);
-                            setEndType(RecurrenceEnd.count);
-                          }}
-                          aria-invalid={!!errors?.endCount}
-                        />
-                        <span className="text-sm">{OCCURRENCES_LABEL}</span>
-                      </>
-                    )}
-                  </div>
+                    {WEEKDAY_LABELS[index]}
+                  </ToggleGroupItem>
                 ))}
-              </RadioGroup>
-              <FieldErrors errors={errors?.endDate} />
-              <FieldErrors errors={errors?.endCount} />
+              </ToggleGroup>
+              <FieldErrors errors={errors?.weekdays} />
             </FieldSet>
+          )}
 
-            {event?.frequency && (
-              <p className="text-muted-foreground text-xs">
-                {SERIES_EDIT_NOTE}
-              </p>
-            )}
-          </div>
-        )}
-
-        <footer className="flex flex-wrap justify-end gap-2.5 border-t pt-3">
-          {event && (
-            <AlertDialog>
-              <AlertDialogTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="mr-auto"
-                    disabled={saving}
-                  />
+          <FieldSet>
+            <FieldLegend variant="label">{END_LABEL}</FieldLegend>
+            <RadioGroup
+              value={endType}
+              onValueChange={(value) => {
+                if (isOneOf(RECURRENCE_ENDS, value)) {
+                  setEndType(value);
                 }
+              }}
+            >
+              {RECURRENCE_ENDS.map((value) => (
+                <div key={value} className="flex items-center gap-2">
+                  <RadioGroupItem id={`${formId}-end-${value}`} value={value} />
+                  <Label htmlFor={`${formId}-end-${value}`}>
+                    {RECURRENCE_END_LABELS[value]}
+                  </Label>
+                  {value === RecurrenceEnd.date && (
+                    <Input
+                      type="date"
+                      aria-label={END_LABEL}
+                      className="bg-background w-44"
+                      value={endDate}
+                      onChange={(e) => {
+                        setEndDate(e.target.value);
+                        setEndType(RecurrenceEnd.date);
+                      }}
+                      aria-invalid={!!errors?.endDate}
+                    />
+                  )}
+                  {value === RecurrenceEnd.count && (
+                    <>
+                      <Input
+                        type="number"
+                        min={1}
+                        aria-label={OCCURRENCES_LABEL}
+                        className="bg-background w-20"
+                        value={endCount}
+                        onChange={(e) => {
+                          setEndCount(e.target.value);
+                          setEndType(RecurrenceEnd.count);
+                        }}
+                        aria-invalid={!!errors?.endCount}
+                      />
+                      <span className="text-sm">{OCCURRENCES_LABEL}</span>
+                    </>
+                  )}
+                </div>
+              ))}
+            </RadioGroup>
+            <FieldErrors errors={errors?.endDate} />
+            <FieldErrors errors={errors?.endCount} />
+          </FieldSet>
+
+          {event?.frequency && (
+            <p className="text-muted-foreground text-xs">{SERIES_EDIT_NOTE}</p>
+          )}
+        </div>
+      )}
+    </form>
+  );
+
+  const actions = (
+    <>
+      {event && (
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={
+              <Button
+                type="button"
+                variant="destructive"
+                className="mr-auto"
+                disabled={saving}
+              />
+            }
+          >
+            {DELETE_EVENT_LABEL}
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {DELETE_EVENT_LABEL} « {event.title} » ?
+              </AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{CANCEL_LABEL}</AlertDialogCancel>
+              <AlertDialogAction
+                type="submit"
+                form={formId}
+                name="command"
+                value="delete"
+                variant="destructive"
               >
                 {DELETE_EVENT_LABEL}
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {DELETE_EVENT_LABEL} « {event.title} » ?
-                  </AlertDialogTitle>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{CANCEL_LABEL}</AlertDialogCancel>
-                  <AlertDialogAction
-                    type="submit"
-                    form={formId}
-                    name="command"
-                    value="delete"
-                    variant="destructive"
-                  >
-                    {DELETE_EVENT_LABEL}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <Button
-            render={<Link href={cancelHref} />}
-            nativeButton={false}
-            variant="ghost"
-          >
-            {CANCEL_LABEL}
-          </Button>
-          <Button type="submit" name="command" value="save" disabled={saving}>
-            {event ? SAVE_EVENT_LABEL : CREATE_EVENT_LABEL}
-          </Button>
-        </footer>
-      </form>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+      {isModal ? (
+        <Button type="button" variant="ghost" onClick={close}>
+          {CANCEL_LABEL}
+        </Button>
+      ) : (
+        <Button
+          render={<Link href={cancelHref} />}
+          nativeButton={false}
+          variant="ghost"
+        >
+          {CANCEL_LABEL}
+        </Button>
+      )}
+      <Button
+        type="submit"
+        form={formId}
+        name="command"
+        value="save"
+        disabled={saving}
+      >
+        {event ? SAVE_EVENT_LABEL : CREATE_EVENT_LABEL}
+      </Button>
+    </>
+  );
 
-      <div className="w-full md:sticky md:top-4 md:min-w-64 md:flex-1">
-        <CalendarDayOrderPreview
-          date={date || initialDate}
-          preview={preview}
-          pending={previewPending}
-        />
+  if (!isModal) {
+    return (
+      <div className="flex w-full max-w-2xl flex-col gap-6">
+        <h1 className="text-base font-semibold tracking-tight">{heading}</h1>
+        {form}
+        <FormActionBar>{actions}</FormActionBar>
       </div>
-    </div>
+    );
+  }
+
+  if (pathname !== dialogPath) {
+    return null;
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && requestClose()}>
+      <DialogContent className="max-h-11/12 gap-0 p-0 sm:max-w-2xl">
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <DialogTitle className="text-lg">{heading}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {EVENT_DIALOG_DESCRIPTION}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="px-6 pb-6">{form}</div>
+        <DialogFooter className="mx-0 px-6 py-4">{actions}</DialogFooter>
+        <UnsavedChangesDialog
+          open={confirmingClose}
+          onOpenChange={setConfirmingClose}
+          onSave={submit}
+          onDiscard={close}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }

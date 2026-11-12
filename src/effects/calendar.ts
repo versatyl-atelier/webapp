@@ -10,13 +10,14 @@ import { getLanceurRowsEffect } from "@/effects/lanceur";
 import { accessibleProjectsWhere } from "@/effects/projects";
 import type { PrismaService } from "@/generated/effect-prisma";
 import { CalendarEventType, Role } from "@/generated/prisma/enums";
-import { SortOrder } from "@/generated/prisma/internal/prismaNamespace";
-import type { CalendarEventWhereInput } from "@/generated/prisma/models";
+import type {
+  CalendarEventInclude,
+  CalendarEventWhereInput,
+} from "@/generated/prisma/models";
 import {
   compareOccurrences,
   expandOccurrences,
   toDbDate,
-  uniqueTemplates,
   type DateKey,
 } from "@/lib/calendar";
 import { eventDataFromForm, eventRecordFromDb } from "@/lib/calendarEvents";
@@ -29,7 +30,14 @@ import type {
 function eventsInRange(from: DateKey, to: DateKey): CalendarEventWhereInput {
   return {
     OR: [
-      { frequency: null, date: { gte: toDbDate(from), lte: toDbDate(to) } },
+      {
+        frequency: null,
+        date: { lte: toDbDate(to) },
+        OR: [
+          { date: { gte: toDbDate(from) } },
+          { spanEndDate: { gte: toDbDate(from) } },
+        ],
+      },
       {
         frequency: { not: null },
         date: { lte: toDbDate(to) },
@@ -38,6 +46,10 @@ function eventsInRange(from: DateKey, to: DateKey): CalendarEventWhereInput {
     ],
   };
 }
+
+const EVENT_PROJECT_INCLUDE = {
+  project: { select: { name: true } },
+} satisfies CalendarEventInclude;
 
 const visibleEventsWhere = Effect.fn("visibleEventsWhere")(function* () {
   const session = yield* getActiveSession();
@@ -56,6 +68,7 @@ export const getCalendarOccurrencesEffect = Effect.fn("getCalendarOccurrences")(
       [
         prisma.calendarEvent.findMany({
           where: { AND: [eventsInRange(from, to), visible] },
+          include: EVENT_PROJECT_INCLUDE,
         }),
         getLanceurRowsEffect(prisma),
       ],
@@ -97,6 +110,7 @@ export const getProjectOccurrencesEffect = Effect.fn("getProjectOccurrences")(
     const visible = yield* visibleEventsWhere();
     const events = yield* prisma.calendarEvent.findMany({
       where: { AND: [eventsInRange(from, to), accessible, visible] },
+      include: EVENT_PROJECT_INCLUDE,
     });
     yield* Effect.annotateLogsScoped({
       calendarFrom: from,
@@ -114,21 +128,10 @@ export const getCalendarEventEffect = Effect.fn("getCalendarEvent")(function* (
   const visible = yield* visibleEventsWhere();
   const event = yield* prisma.calendarEvent.findFirst({
     where: { AND: [{ id }, visible] },
+    include: EVENT_PROJECT_INCLUDE,
   });
   return event ? eventRecordFromDb(event) : null;
 });
-
-export const getEventTemplatesEffect = Effect.fn("getEventTemplates")(
-  function* (prisma: PrismaService) {
-    const visible = yield* visibleEventsWhere();
-    const templates = yield* prisma.calendarEvent.findMany({
-      where: visible,
-      select: { title: true, color: true, type: true },
-      orderBy: { updatedAt: SortOrder.asc },
-    });
-    return uniqueTemplates(templates);
-  },
-);
 
 const deleteCalendarEvent = Effect.fn("deleteCalendarEvent")(function* (
   prisma: PrismaService,

@@ -33,6 +33,7 @@ export const CalendarEventFormSchema = Schema.Struct({
   ),
   detail: Schema.Trim,
   date: DateKeySchema,
+  spanEndDate: Schema.String,
   hour: IntFromFormSchema.pipe(
     Schema.between(0, HOURS_PER_DAY - 1, {
       message: () => INVALID_HOUR_MESSAGE,
@@ -63,6 +64,7 @@ export type CalendarEventFormErrors = {
   title?: string[];
   detail?: string[];
   date?: string[];
+  spanEndDate?: string[];
   hour?: string[];
   color?: string[];
   projectId?: string[];

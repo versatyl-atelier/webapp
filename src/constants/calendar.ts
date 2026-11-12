@@ -34,7 +34,7 @@ export const MIDNIGHT_HOUR = 0;
 export const NOON_HOUR = 12;
 export const DEFAULT_EVENT_HOUR = 9;
 export const DEFAULT_EVENT_COLOR = CalendarEventColor.blue;
-export const DEFAULT_EVENT_TYPE = CalendarEventType.manuel;
+export const DEFAULT_EVENT_TYPE = CalendarEventType.divers;
 export const DEFAULT_FREQUENCY = RecurrenceFrequency.weekly;
 export const DEFAULT_INTERVAL = 1;
 export const DEFAULT_END_COUNT = 10;
@@ -52,7 +52,6 @@ export const EVENT_CATEGORIES: readonly EventCategory[] = [
   CalendarEventType.livraison,
   CalendarEventType.installation,
   RECURRENT_CATEGORY,
-  CalendarEventType.manuel,
   CalendarEventType.divers,
   CalendarEventType.personnel,
 ];
@@ -76,7 +75,6 @@ export const EVENT_CATEGORY_LABELS: Record<EventCategory, string> = {
   livraison: "Livraison",
   installation: "Installation",
   recurrent: "Récurrent",
-  manuel: "Manuel",
   divers: "Divers",
   personnel: "Personnel",
   lanceur: "Lanceur de dates",
@@ -88,13 +86,7 @@ export const EVENT_TYPE_EMOJIS: Partial<Record<EventCategory, string>> = {
   lanceur: "☄️",
 };
 
-export const LANCEUR_EVENT_TYPES: readonly CalendarEventType[] = [
-  CalendarEventType.livraison,
-  CalendarEventType.installation,
-];
-
 export const REPEATABLE_EVENT_TYPES: readonly CalendarEventType[] = [
-  CalendarEventType.manuel,
   CalendarEventType.divers,
   CalendarEventType.personnel,
 ];
@@ -107,6 +99,7 @@ export const EVENT_SUBCATEGORIES = [
 ] as const;
 
 export const OCCURRENCE_DETAIL_SEPARATOR = " · ";
+export const PROJECT_TITLE_SEPARATOR = " · ";
 
 export const EVENT_COLOR_BG_CLASSES: Record<CalendarEventColor, string> = {
   blue: "bg-blue-700 dark:bg-blue-700 data-checked:bg-blue-700 dark:data-checked:bg-blue-700",
@@ -187,26 +180,22 @@ export const SEARCH_PLACEHOLDER = "Rechercher un événement, un client…";
 export const SEARCH_LABEL = "Rechercher dans le calendrier";
 export const CATEGORY_FILTER_LABEL = "Filtrer par type d'événement";
 export const NEW_EVENT_LABEL = "Nouvel événement";
+export const NEW_EVENT_SHORTCUT_HINT = "Entrée";
 export const EDIT_EVENT_LABEL = "Modifier l'événement";
+export const EVENT_DIALOG_DESCRIPTION =
+  "Titre, date, heure et répétition de l'événement.";
 export const ADD_EVENT_LABEL = "Ajouter";
 export const EMPTY_DAY_LABEL = "Aucun événement ce jour.";
 export const MIDNIGHT_LABEL = "Minuit";
 export const NOON_LABEL = "Midi";
 export const HOUR_SUFFIX = "h";
 
-export const PROJECT_SEARCH_LABEL = "Rechercher un projet existant";
-export const PROJECT_SEARCH_PLACEHOLDER =
-  "Tape un nom de client pour réutiliser un projet…";
-export const PROJECT_SEARCH_HINT =
-  "Reprend le titre et la couleur d'un événement existant. Sinon, remplis les champs ci-dessous.";
 export const PROJECT_SEARCH_EMPTY = "Aucun projet trouvé";
 export const LINKED_PROJECT_LABEL = "Projet lié (optionnel)";
 export const LINKED_PROJECT_PLACEHOLDER = "Aucun projet";
 export const LINKED_PROJECT_HINT =
   "Les employés voient sur l'accueil les événements des projets auxquels ils ont accès.";
 export const TYPE_LABEL = "Type";
-export const LANCEUR_NOTE =
-  "Normalement généré automatiquement par le Lanceur — à utiliser seulement pour un cas particulier.";
 export const PERSONAL_NOTE = "Visible seulement par vous.";
 export const SUBCATEGORY_LABEL = "Sous-catégorie";
 export const SUBCATEGORY_OTHER_LABEL = "Autre sous-catégorie";
@@ -217,6 +206,13 @@ export const DETAIL_LABEL = "Détail (2e ligne, optionnel)";
 export const DETAIL_PLACEHOLDER = "Ex. Camion 5T — quai 2";
 export const DATE_LABEL = "Date";
 export const START_DATE_LABEL = "Date de départ";
+export const SPAN_END_DATE_LABEL = "Date de fin (optionnel)";
+export const SPAN_END_DATE_HINT =
+  "Pour un événement de plusieurs jours : il s'affiche chaque jour ouvrable jusqu'à cette date.";
+export const SPAN_REPEATS_NOTE =
+  "Une plage de plusieurs jours ne peut pas se répéter.";
+export const REPEATS_SPAN_NOTE =
+  "Un événement qui se répète ne peut pas durer plusieurs jours.";
 export const HOUR_LABEL = "Heure";
 export const HOUR_HINT = "Détermine l'ordre de l'événement dans la journée.";
 export const COLOR_LABEL = "Couleur";
@@ -232,15 +228,11 @@ export const CANCEL_LABEL = "Annuler";
 export const CREATE_EVENT_LABEL = "Créer l'événement";
 export const SAVE_EVENT_LABEL = "Enregistrer";
 export const DELETE_EVENT_LABEL = "Supprimer";
+export const SPAN_EDIT_NOTE =
+  "Les modifications s'appliquent à tous les jours de la plage.";
 export const SERIES_EDIT_NOTE =
   "Les modifications s'appliquent à toutes les occurrences de la série.";
 export const BACK_TO_CALENDAR_LABEL = "Retour au calendrier";
-
-export const PREVIEW_EYEBROW = "Ordre dans la journée";
-export const PREVIEW_NEW_BADGE = "Nouveau";
-export const PREVIEW_POSITION_PREFIX = "Ce sera le";
-export const PREVIEW_POSITION_SUFFIX = "événement de la journée";
-export const PREVIEW_POSITION_OUT_OF = "sur";
 
 export const EVENT_SAVED_MESSAGE = "Événement enregistré";
 export const EVENT_DELETED_MESSAGE = "Événement supprimé";
