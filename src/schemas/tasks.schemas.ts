@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
-import { HEX_COLOR_PATTERN, INVALID_COLOR_MESSAGE } from "@/constants/projects";
+import { HEX_COLOR_PATTERN } from "@/constants/color";
+import { INVALID_COLOR_MESSAGE } from "@/constants/projects";
 import {
   SUBTASK_NAME_LENGTH_MESSAGE,
   SUBTASK_NAME_MAX_LENGTH,

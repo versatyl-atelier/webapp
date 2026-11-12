@@ -8,8 +8,9 @@ import {
   REPEATS_VALUE,
   TITLE_REQUIRED_MESSAGE,
 } from "@/constants/calendar";
+import { COLOR_NAMES, HEX_COLOR_PATTERN } from "@/constants/color";
+import { INVALID_COLOR_MESSAGE } from "@/constants/projects";
 import {
-  CalendarEventColor,
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
@@ -39,7 +40,9 @@ export const CalendarEventFormSchema = Schema.Struct({
       message: () => INVALID_HOUR_MESSAGE,
     }),
   ),
-  color: Schema.Enums(CalendarEventColor),
+  color: Schema.String.pipe(
+    Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
+  ),
   projectId: Schema.String,
   repeats: Schema.optional(Schema.Literal(REPEATS_VALUE)),
   frequency: Schema.Enums(RecurrenceFrequency),
@@ -111,12 +114,12 @@ export const TrelloBoardConfigSchema = Schema.Struct({
   apiKey: Schema.String,
   apiToken: Schema.String,
   type: Schema.Enums(CalendarEventType),
-  color: Schema.Enums(CalendarEventColor),
+  color: Schema.Literal(...COLOR_NAMES),
   detail: Schema.optionalWith(Schema.String, { default: () => "" }),
   labelColors: Schema.optionalWith(
     Schema.Record({
       key: Schema.String,
-      value: Schema.Enums(CalendarEventColor),
+      value: Schema.Literal(...COLOR_NAMES),
     }),
     { default: () => ({}) },
   ),

@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   CABINET_COUNT_READ_LABEL,
-  CURRENT_COLOR_LABEL,
-  PROJECT_COLOR_SWATCHES,
   DEFAULT_SUGGESTIONS,
   PROJECT_STAGES,
   UNNAMED_CONTACT_LABEL,
@@ -24,7 +22,6 @@ import {
   pieceReadFields,
   piecesByPhase,
   projectColorLabel,
-  projectColorOptions,
   projectsByStage,
   upcomingDeliveries,
   type DeliveryProject,
@@ -177,22 +174,13 @@ describe("nextSortOrder", () => {
   });
 });
 
-describe("projectColorOptions", () => {
-  it("returns the palette alone when the current color is one of its swatches", () => {
-    expect(projectColorOptions("#3b7dd8")).toEqual(PROJECT_COLOR_SWATCHES);
-  });
-
-  it("keeps a custom color as an extra option", () => {
-    expect(projectColorOptions("#d11595").at(-1)).toEqual({
-      value: "#d11595",
-      label: `${CURRENT_COLOR_LABEL} (#d11595)`,
-    });
-  });
-});
-
 describe("projectColorLabel", () => {
   it("names palette colors", () => {
     expect(projectColorLabel("#3B7DD8")).toBe("Bleu");
+  });
+
+  it("shows the hex code of custom colors", () => {
+    expect(projectColorLabel("#d11595")).toBe("#D11595");
   });
 });
 

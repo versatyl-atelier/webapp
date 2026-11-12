@@ -1,3 +1,4 @@
+import { HEX_COLOR_PATTERN } from "@/constants/color";
 import { Schema } from "effect";
 
 import {
@@ -17,7 +18,6 @@ import {
 } from "@/constants/projectFiles";
 import {
   EMAIL_PATTERN,
-  HEX_COLOR_PATTERN,
   INVALID_COLOR_MESSAGE,
   INVALID_CABINET_COUNT_MESSAGE,
   INVALID_EMAIL_MESSAGE,
@@ -103,9 +103,6 @@ export type ContactFormState =
 
 export const ProjectLocationFormSchema = Schema.Struct({
   projectId: Schema.String,
-  color: Schema.String.pipe(
-    Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
-  ),
   address: Schema.Trim,
 });
 
@@ -113,7 +110,6 @@ export type ProjectLocationFormData = typeof ProjectLocationFormSchema.Type;
 
 export type ProjectLocationFormErrors = {
   projectId?: string[];
-  color?: string[];
   address?: string[];
   dataValidation?: string;
   schemaValidation?: string;
@@ -122,6 +118,28 @@ export type ProjectLocationFormErrors = {
 export type ProjectLocationFormState =
   | (FormState & {
       errors?: ProjectLocationFormErrors;
+    })
+  | undefined;
+
+export const ProjectColorFormSchema = Schema.Struct({
+  projectId: Schema.String,
+  color: Schema.String.pipe(
+    Schema.pattern(HEX_COLOR_PATTERN, { message: () => INVALID_COLOR_MESSAGE }),
+  ),
+});
+
+export type ProjectColorFormData = typeof ProjectColorFormSchema.Type;
+
+export type ProjectColorFormErrors = {
+  projectId?: string[];
+  color?: string[];
+  dataValidation?: string;
+  schemaValidation?: string;
+};
+
+export type ProjectColorFormState =
+  | (FormState & {
+      errors?: ProjectColorFormErrors;
     })
   | undefined;
 

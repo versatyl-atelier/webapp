@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import { EVENT_COLOR_BG_CLASSES } from "@/constants/calendar";
+import { NAMED_COLORS } from "@/constants/color";
 import {
-  CalendarEventColor,
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
@@ -15,7 +14,6 @@ import {
   calendarEventPath,
   calendarWeekPath,
   eventCategory,
-  eventColorClass,
   eventCountLabel,
   expandOccurrences,
   fittingWeekCount,
@@ -61,7 +59,7 @@ const event = (
   date: "2026-07-06",
   spanEndDate: null,
   hour: 8,
-  color: CalendarEventColor.indigo,
+  color: NAMED_COLORS.indigo,
   frequency: null,
   interval: 1,
   weekdays: [],
@@ -70,6 +68,7 @@ const event = (
   endCount: null,
   projectId: null,
   projectName: null,
+  projectColor: null,
   ownerId: null,
   ...overrides,
 });
@@ -379,12 +378,6 @@ describe("formatting", () => {
     expect(eventCountLabel(1)).toBe("1 événement");
     expect(eventCountLabel(3)).toBe("3 événements");
   });
-
-  it("maps colors to background classes", () => {
-    expect(eventColorClass(CalendarEventColor.teal)).toBe(
-      EVENT_COLOR_BG_CLASSES.teal,
-    );
-  });
 });
 
 describe("filters", () => {
@@ -475,6 +468,16 @@ describe("occurrenceTitle", () => {
     expect(occurrenceTitle("gagné paradis — cuisine", "Gagné Paradis")).toBe(
       "gagné paradis — cuisine",
     );
+  });
+
+  it("uses the linked project color over the event color", () => {
+    const [linked, unlinked] = expandOccurrences(
+      [event({ id: 1, projectColor: "#112233" }), event({ id: 2, hour: 9 })],
+      "2026-07-06",
+      "2026-07-06",
+    );
+    expect(linked.color).toBe("#112233");
+    expect(unlinked.color).toBe(NAMED_COLORS.indigo);
   });
 
   it("is used when expanding occurrences", () => {

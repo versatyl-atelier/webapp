@@ -44,6 +44,8 @@ import {
   type PieceFormState,
   type ContactFormData,
   type ContactFormState,
+  type ProjectColorFormData,
+  type ProjectColorFormState,
   type ProjectLocationFormData,
   type ProjectLocationFormState,
   type ProjectHeaderFormData,
@@ -338,6 +340,16 @@ export const saveProjectLocationEffect = Effect.fn("saveProjectLocation")(
     return { message: PROJECT_SAVED_MESSAGE };
   },
 );
+
+export const saveProjectColorEffect = Effect.fn("saveProjectColor")(function* (
+  prisma: PrismaService,
+  _formState: ProjectColorFormState,
+  { projectId, color }: ProjectColorFormData,
+) {
+  yield* assertProjectAccess(prisma, projectId);
+  yield* prisma.project.update({ where: { id: projectId }, data: { color } });
+  return { message: PROJECT_SAVED_MESSAGE };
+});
 
 export const saveContactEffect = Effect.fn("saveContact")(function* (
   prisma: PrismaService,

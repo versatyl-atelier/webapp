@@ -22,12 +22,13 @@ import {
 import {
   addDays,
   calendarDayPath,
-  eventColorClass,
   formatDayMonth,
   formatHour,
+  occurrenceColorClass,
   occurrenceDescription,
   type DateKey,
 } from "@/lib/calendar";
+import { occurrenceColorStyle } from "@/lib/projects";
 import { cn } from "@/lib/utils";
 
 type TodayEventsProps = {
@@ -87,9 +88,10 @@ export async function TodayEvents({ today }: TodayEventsProps) {
                     {isToday ? formatHour(occurrence.hour) : TOMORROW_LABEL}
                   </span>
                   <span
+                    style={occurrenceColorStyle(occurrence)}
                     className={cn(
-                      "flex size-5 shrink-0 items-center justify-center rounded-sm text-white",
-                      eventColorClass(occurrence.color),
+                      "flex size-5 shrink-0 items-center justify-center rounded-sm",
+                      occurrenceColorClass(occurrence),
                     )}
                   >
                     <EventCategoryIcon

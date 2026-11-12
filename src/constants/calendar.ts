@@ -1,5 +1,4 @@
 import {
-  CalendarEventColor,
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
@@ -8,6 +7,7 @@ import {
   LANCEUR_DATE_KINDS,
   type LanceurDateKind,
 } from "@/constants/lanceurCalendar";
+import { NAMED_COLORS } from "@/constants/color";
 
 export const CALENDAR_PATH = "/calendrier";
 export const CALENDAR_EVENTS_PATH = `${CALENDAR_PATH}/evenements`;
@@ -33,7 +33,7 @@ export const HOURS_PER_DAY = 24;
 export const MIDNIGHT_HOUR = 0;
 export const NOON_HOUR = 12;
 export const DEFAULT_EVENT_HOUR = 9;
-export const DEFAULT_EVENT_COLOR = CalendarEventColor.blue;
+export const DEFAULT_EVENT_COLOR = NAMED_COLORS.blue;
 export const DEFAULT_EVENT_TYPE = CalendarEventType.divers;
 export const DEFAULT_FREQUENCY = RecurrenceFrequency.weekly;
 export const DEFAULT_INTERVAL = 1;
@@ -100,32 +100,6 @@ export const EVENT_SUBCATEGORIES = [
 
 export const OCCURRENCE_DETAIL_SEPARATOR = " · ";
 export const PROJECT_TITLE_SEPARATOR = " · ";
-
-export const EVENT_COLOR_BG_CLASSES: Record<CalendarEventColor, string> = {
-  blue: "bg-blue-700 dark:bg-blue-700 data-checked:bg-blue-700 dark:data-checked:bg-blue-700",
-  teal: "bg-teal-700 dark:bg-teal-700 data-checked:bg-teal-700 dark:data-checked:bg-teal-700",
-  purple:
-    "bg-violet-700 dark:bg-violet-700 data-checked:bg-violet-700 dark:data-checked:bg-violet-700",
-  orange:
-    "bg-orange-700 dark:bg-orange-700 data-checked:bg-orange-700 dark:data-checked:bg-orange-700",
-  pink: "bg-pink-700 dark:bg-pink-700 data-checked:bg-pink-700 dark:data-checked:bg-pink-700",
-  indigo:
-    "bg-indigo-700 dark:bg-indigo-700 data-checked:bg-indigo-700 dark:data-checked:bg-indigo-700",
-  lime: "bg-lime-700 dark:bg-lime-700 data-checked:bg-lime-700 dark:data-checked:bg-lime-700",
-  amber:
-    "bg-amber-700 dark:bg-amber-700 data-checked:bg-amber-700 dark:data-checked:bg-amber-700",
-};
-
-export const EVENT_COLOR_LABELS: Record<CalendarEventColor, string> = {
-  blue: "Bleu",
-  teal: "Sarcelle",
-  purple: "Violet",
-  orange: "Orange",
-  pink: "Rose",
-  indigo: "Indigo",
-  lime: "Lime",
-  amber: "Ambre",
-};
 
 export const FREQUENCY_LABELS: Record<RecurrenceFrequency, string> = {
   daily: "Quotidien",
@@ -216,8 +190,7 @@ export const REPEATS_SPAN_NOTE =
 export const HOUR_LABEL = "Heure";
 export const HOUR_HINT = "Détermine l'ordre de l'événement dans la journée.";
 export const COLOR_LABEL = "Couleur";
-export const COLOR_HINT =
-  "Un jour, la couleur viendra automatiquement du projet. En attendant : choix manuel.";
+export const PROJECT_COLOR_NOTE = "L'événement prend la couleur du projet lié.";
 export const REPEATS_LABEL = "Cet événement se répète";
 export const FREQUENCY_LABEL = "Fréquence";
 export const INTERVAL_LABEL_PREFIX = "Tous les";

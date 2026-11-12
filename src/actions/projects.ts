@@ -28,6 +28,7 @@ import {
   deleteContactEffect,
   restoreContactEffect,
   saveContactEffect,
+  saveProjectColorEffect,
   saveProjectLocationEffect,
 } from "@/effects/projects";
 import {
@@ -85,6 +86,7 @@ import {
   PieceFormSchema,
   ContactFormSchema,
   CoverImageFormSchema,
+  ProjectColorFormSchema,
   ProjectLocationFormSchema,
   ProjectCreateFormSchema,
   ProjectHeaderFormSchema,
@@ -98,6 +100,8 @@ import {
   type ContactFormState,
   type CoverImageFormErrors,
   type CoverImageFormState,
+  type ProjectColorFormErrors,
+  type ProjectColorFormState,
   type ProjectLocationFormErrors,
   type ProjectLocationFormState,
   type ProjectCreateFormErrors,
@@ -175,6 +179,21 @@ export async function createProject(
   if (state?.projectId) {
     redirect(projectPath(state.projectId));
   }
+  return state;
+}
+
+export async function saveProjectColor(
+  formState: ProjectColorFormState,
+  formData: FormData,
+): Promise<ProjectColorFormState> {
+  const state = await runEffectAsFormAction<
+    ProjectColorFormState,
+    typeof ProjectColorFormSchema,
+    ProjectColorFormErrors
+  >(formState, formData, ProjectColorFormSchema, saveProjectColorEffect, [
+    Role.employee,
+  ]);
+  refresh();
   return state;
 }
 

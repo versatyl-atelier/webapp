@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { saveCalendarEvent } from "@/actions/calendar";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
 import { ActionTooltip } from "@/components/ActionTooltip";
+import { ColorPicker } from "@/components/ColorPicker";
 import { FieldErrors } from "@/components/FieldErrors";
 import { FormActionBar } from "@/components/FormActionBar";
 import { FormValidationAlerts } from "@/components/FormValidationAlerts";
@@ -61,7 +62,6 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   AM_LABEL,
   CANCEL_LABEL,
-  COLOR_HINT,
   COLOR_LABEL,
   CREATE_EVENT_LABEL,
   DATE_LABEL,
@@ -77,7 +77,6 @@ import {
   EDIT_EVENT_LABEL,
   END_LABEL,
   EVENT_CATEGORY_LABELS,
-  EVENT_COLOR_LABELS,
   EVENT_DELETED_MESSAGE,
   EVENT_DIALOG_DESCRIPTION,
   EVENT_SAVED_MESSAGE,
@@ -101,6 +100,7 @@ import {
   OCCURRENCES_LABEL,
   PERSONAL_NOTE,
   PM_LABEL,
+  PROJECT_COLOR_NOTE,
   PROJECT_SEARCH_EMPTY,
   RECURRENCE_END_LABELS,
   REPEATS_LABEL,
@@ -126,7 +126,6 @@ import {
   type HourMode,
 } from "@/constants/calendar";
 import {
-  CalendarEventColor,
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
@@ -136,7 +135,6 @@ import {
   calendarEventPath,
   calendarWeekPath,
   canRepeat,
-  eventColorClass,
   formatHour,
   hasSpan,
   isOneOf,
@@ -146,8 +144,7 @@ import {
   type DateKey,
   type LinkableProject,
 } from "@/lib/calendar";
-import { projectColorLabel, projectColorStyle } from "@/lib/projects";
-import { cn } from "@/lib/utils";
+import { projectColorStyle } from "@/lib/projects";
 
 type CalendarEventFormProps = {
   event?: CalendarEventRecord;
@@ -158,7 +155,6 @@ type CalendarEventFormProps = {
 };
 
 const EVENT_TYPES = Object.values(CalendarEventType);
-const EVENT_COLORS = Object.values(CalendarEventColor);
 const FREQUENCIES = Object.values(RecurrenceFrequency);
 const RECURRENCE_ENDS = Object.values(RecurrenceEnd);
 const HOURS = Array.from({ length: HOURS_PER_DAY }, (_, hour) => hour);
@@ -316,15 +312,10 @@ export function CalendarEventForm({
             <ComboboxList>
               {(item: LinkableProject) => (
                 <ComboboxItem key={item.id} value={item}>
-                  <ActionTooltip
-                    label={projectColorLabel(item.color)}
-                    render={
-                      <span
-                        aria-hidden
-                        style={projectColorStyle(item.color)}
-                        className="size-2 shrink-0 rounded-full bg-(--project-color)"
-                      />
-                    }
+                  <span
+                    aria-hidden
+                    style={projectColorStyle(item.color)}
+                    className="size-2 shrink-0 rounded-full bg-(--project-color)"
                   />
                   {item.name}
                 </ComboboxItem>
@@ -522,33 +513,18 @@ export function CalendarEventForm({
 
       <FieldSet>
         <FieldLegend variant="label">{COLOR_LABEL}</FieldLegend>
-        <RadioGroup
-          value={color}
-          onValueChange={(value) => {
-            if (isOneOf(EVENT_COLORS, value)) {
-              setColor(value);
-            }
-          }}
-          className="flex flex-wrap gap-2"
-        >
-          {EVENT_COLORS.map((eventColor) => (
-            <ActionTooltip
-              key={eventColor}
-              label={EVENT_COLOR_LABELS[eventColor]}
-              render={
-                <RadioGroupItem
-                  value={eventColor}
-                  aria-label={EVENT_COLOR_LABELS[eventColor]}
-                  className={cn(
-                    "data-checked:ring-foreground data-checked:ring-offset-background size-7 border-0 text-white data-checked:ring-2 data-checked:ring-offset-2",
-                    eventColorClass(eventColor),
-                  )}
-                />
-              }
+        {project ? (
+          <p className="flex items-center gap-2 text-sm">
+            <span
+              aria-hidden
+              style={projectColorStyle(project.color)}
+              className="size-5 shrink-0 rounded-full bg-(--project-color)"
             />
-          ))}
-        </RadioGroup>
-        <FieldDescription>{COLOR_HINT}</FieldDescription>
+            {PROJECT_COLOR_NOTE}
+          </p>
+        ) : (
+          <ColorPicker value={color} onChange={setColor} />
+        )}
         <FieldErrors errors={errors?.color} />
       </FieldSet>
 

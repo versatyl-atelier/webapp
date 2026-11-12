@@ -48,7 +48,7 @@ function eventsInRange(from: DateKey, to: DateKey): CalendarEventWhereInput {
 }
 
 const EVENT_PROJECT_INCLUDE = {
-  project: { select: { name: true } },
+  project: { select: { name: true, color: true } },
 } satisfies CalendarEventInclude;
 
 const visibleEventsWhere = Effect.fn("visibleEventsWhere")(function* () {

@@ -8,8 +8,8 @@ import {
   WEEKDAYS_SEPARATOR,
 } from "@/constants/calendar";
 import type { CalendarEvent } from "@/generated/prisma/client";
+import { NAMED_COLORS } from "@/constants/color";
 import {
-  CalendarEventColor,
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
@@ -40,7 +40,7 @@ export type CalendarEventData = Omit<
 export type TrelloEventData = CalendarEventData & { trelloCardId: string };
 
 export type CalendarEventWithProject = CalendarEvent & {
-  project: { name: string } | null;
+  project: { name: string; color: string } | null;
 };
 
 type SpanResult =
@@ -80,6 +80,7 @@ export function eventRecordFromDb(
     endCount: event.endCount,
     projectId: event.projectId,
     projectName: event.project?.name ?? null,
+    projectColor: event.project?.color ?? null,
     ownerId: event.ownerId,
   };
 }
@@ -198,9 +199,10 @@ export function eventDataFromForm(
 function trelloLabelColor(
   color: string,
   { labelColors }: TrelloBoardConfig,
-): CalendarEventColor | undefined {
+): string | undefined {
   const [baseColor] = color.split(TRELLO_COLOR_SHADE_SEPARATOR);
-  return labelColors[color] ?? labelColors[baseColor];
+  const name = labelColors[color] ?? labelColors[baseColor];
+  return name && NAMED_COLORS[name];
 }
 
 export function trelloCardToEventData(
@@ -224,7 +226,7 @@ export function trelloCardToEventData(
     date: toDbDate(toLocalDateKey(due)),
     spanEndDate: null,
     hour: toLocalHour(due),
-    color: labelColor ?? board.color,
+    color: labelColor ?? NAMED_COLORS[board.color],
     projectId: projectIds.has(card.id) ? card.id : null,
     ownerId: null,
     ...ONE_OFF,

@@ -688,17 +688,6 @@ enum CalendarEventType {
   personnel
 }
 
-enum CalendarEventColor {
-  blue
-  teal
-  purple
-  orange
-  pink
-  indigo
-  lime
-  amber
-}
-
 enum RecurrenceFrequency {
   daily
   weekly
@@ -721,7 +710,7 @@ model CalendarEvent {
   date        DateTime           @db.Date
   spanEndDate DateTime?          @db.Date
   hour        Int
-  color       CalendarEventColor
+  color       String
 
   frequency RecurrenceFrequency?
   interval  Int                  @default(1)

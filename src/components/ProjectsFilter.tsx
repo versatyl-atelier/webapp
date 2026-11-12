@@ -24,7 +24,7 @@ import {
 import { PROJECT_TAB_PARAM } from "@/constants/projects";
 import { projectPath, withProjectTab } from "@/lib/paths";
 import { findProjectTab, type ProjectTab } from "@/lib/projectTabs";
-import { projectColorLabel, projectColorStyle } from "@/lib/projects";
+import { projectColorStyle } from "@/lib/projects";
 import { normalize } from "@/lib/text";
 
 export type FilterableProject = {
@@ -67,15 +67,10 @@ function ProjectGroup({ label, projects, tab }: ProjectGroupProps) {
                   render={<Link href={projectPath(id, tab)} />}
                   tooltip={{ children: name, hidden: false }}
                 >
-                  <ActionTooltip
-                    label={projectColorLabel(color)}
-                    render={
-                      <span
-                        aria-hidden
-                        style={projectColorStyle(color)}
-                        className="size-2 shrink-0 rounded-full bg-(--project-color)"
-                      />
-                    }
+                  <span
+                    aria-hidden
+                    style={projectColorStyle(color)}
+                    className="size-2 shrink-0 rounded-full bg-(--project-color)"
                   />
                   <span className="truncate">{name}</span>
                 </SidebarMenuButton>

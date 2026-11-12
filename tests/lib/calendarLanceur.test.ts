@@ -5,7 +5,6 @@ import {
   EVENT_CATEGORIES,
   type CalendarFilterKey,
 } from "@/constants/calendar";
-import { CalendarEventColor } from "@/generated/prisma/enums";
 import {
   isOccurrenceVisible,
   occurrenceColorClass,
@@ -58,7 +57,7 @@ describe("lanceurOccurrences", () => {
       category: "lanceur",
       title: "Peter Rose · PDM",
       subcategory: "(lanceur de dates)",
-      customColor: "#51e898",
+      color: "#51e898",
     });
   });
 
@@ -70,7 +69,7 @@ describe("lanceurOccurrences", () => {
     );
     expect(occurrences).toHaveLength(1);
     expect(occurrences[0].filterKey).toBe("lanceur:delivery");
-    expect(occurrences[0].customColor).toBe("#71717a");
+    expect(occurrences[0].color).toBe("#71717a");
   });
 
   it("names the phase only for multi-phase projects", () => {
@@ -138,26 +137,9 @@ describe("occurrence colors", () => {
   });
 
   it("uses a readable text color on custom colors", () => {
-    expect(
-      occurrenceColorClass({
-        color: CalendarEventColor.blue,
-        customColor: "#f2d600",
-      }),
-    ).toContain("text-neutral-950");
-    expect(
-      occurrenceColorClass({
-        color: CalendarEventColor.blue,
-        customColor: "#0079bf",
-      }),
-    ).toContain("text-white");
-  });
-
-  it("keeps the fixed palette for regular events", () => {
-    expect(
-      occurrenceColorClass({
-        color: CalendarEventColor.blue,
-        customColor: null,
-      }),
-    ).toContain("bg-blue-700");
+    expect(occurrenceColorClass({ color: "#f2d600" })).toContain(
+      "text-neutral-950",
+    );
+    expect(occurrenceColorClass({ color: "#0079bf" })).toContain("text-white");
   });
 });

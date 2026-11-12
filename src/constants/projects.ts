@@ -1,6 +1,5 @@
 import type { ExternalToast } from "sonner";
 
-import { EVENT_COLOR_LABELS } from "@/constants/calendar";
 import { ProjectStage } from "@/generated/prisma/enums";
 
 export const PROJECT_TABS = [
@@ -21,19 +20,10 @@ export const CREATE_PROJECT_LABEL = "Créer le projet";
 export const NEW_PROJECT_DIALOG_DESCRIPTION =
   "Le dossier Dropbox du projet est créé en même temps.";
 export const PROJECT_COLOR_LABEL = "Couleur du projet";
-export const CURRENT_COLOR_LABEL = "Couleur actuelle";
+export const PROJECT_COLOR_EDIT_LABEL = "Changer la couleur du projet";
+export const PROJECT_COLOR_DIALOG_DESCRIPTION =
+  "Cette couleur identifie le projet dans les listes et le calendrier.";
 export const PROJECT_COLOR_VAR = "--project-color";
-export const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
-export const PROJECT_COLOR_SWATCHES = [
-  { value: "#3B7DD8", label: EVENT_COLOR_LABELS.blue },
-  { value: "#0F9E7B", label: EVENT_COLOR_LABELS.teal },
-  { value: "#8B5CF6", label: EVENT_COLOR_LABELS.purple },
-  { value: "#E07C3A", label: EVENT_COLOR_LABELS.orange },
-  { value: "#C2507A", label: EVENT_COLOR_LABELS.pink },
-  { value: "#4F63D2", label: EVENT_COLOR_LABELS.indigo },
-  { value: "#5F9E3A", label: EVENT_COLOR_LABELS.lime },
-  { value: "#C9850C", label: EVENT_COLOR_LABELS.amber },
-] as const;
 export const PROJECT_STAGES = Object.values(ProjectStage);
 export const NEW_PROJECT_STAGE = ProjectStage.venteDesign;
 export const DONE_PROJECT_STAGE = ProjectStage.termine;

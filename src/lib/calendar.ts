@@ -7,7 +7,6 @@ import {
   CALENDAR_WEEK_PARAM,
   DATE_KEY_PATTERN,
   DAYS_PER_WEEK,
-  EVENT_COLOR_BG_CLASSES,
   EVENT_PLURAL_LABEL,
   EVENT_SINGULAR_LABEL,
   HOUR_SUFFIX,
@@ -36,7 +35,6 @@ import {
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
-  type CalendarEventColor,
 } from "@/generated/prisma/enums";
 
 export type DateKey = string;
@@ -50,7 +48,7 @@ export type CalendarEventRecord = {
   date: DateKey;
   spanEndDate: DateKey | null;
   hour: number;
-  color: CalendarEventColor;
+  color: string;
   frequency: RecurrenceFrequency | null;
   interval: number;
   weekdays: number[];
@@ -59,6 +57,7 @@ export type CalendarEventRecord = {
   endCount: number | null;
   projectId: string | null;
   projectName: string | null;
+  projectColor: string | null;
   ownerId: string | null;
 };
 
@@ -71,9 +70,8 @@ export type CalendarOccurrence = {
   title: string;
   detail: string;
   hour: number;
-  color: CalendarEventColor;
+  color: string;
   allDay: boolean;
-  customColor: string | null;
   href: string | null;
   filterKey: CalendarFilterKey;
 };
@@ -402,8 +400,7 @@ export function expandOccurrences(
         detail: event.detail,
         hour: event.hour,
         allDay: false,
-        color: event.color,
-        customColor: null,
+        color: event.projectColor ?? event.color,
         href: null,
         filterKey: eventCategory(event),
       })),
@@ -544,10 +541,6 @@ export function formatDayNumber(date: DateKey): string {
     : String(dayOfMonth);
 }
 
-export function eventColorClass(color: CalendarEventColor): string {
-  return EVENT_COLOR_BG_CLASSES[color];
-}
-
 export function matchesSearch(
   occurrence: Pick<CalendarOccurrence, "title" | "subcategory" | "detail">,
   query: string,
@@ -566,16 +559,14 @@ export function isOccurrenceVisible(
 }
 
 export function occurrenceColorClass(
-  occurrence: Pick<CalendarOccurrence, "color" | "customColor">,
+  occurrence: Pick<CalendarOccurrence, "color">,
 ): string {
-  return occurrence.customColor
-    ? cn(
-        CUSTOM_EVENT_BG_CLASS,
-        isLightColor(occurrence.customColor)
-          ? LIGHT_EVENT_TEXT_CLASS
-          : DARK_EVENT_TEXT_CLASS,
-      )
-    : cn(EVENT_COLOR_BG_CLASSES[occurrence.color], DARK_EVENT_TEXT_CLASS);
+  return cn(
+    CUSTOM_EVENT_BG_CLASS,
+    isLightColor(occurrence.color)
+      ? LIGHT_EVENT_TEXT_CLASS
+      : DARK_EVENT_TEXT_CLASS,
+  );
 }
 
 export function isFilterVisible<T>(value: T, active: ReadonlySet<T>): boolean {
