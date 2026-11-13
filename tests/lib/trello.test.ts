@@ -8,6 +8,7 @@ import {
 } from "@/generated/prisma/enums";
 import {
   atelierVariants,
+  boardWebhookStatus,
   cardEventFromAction,
   designCardName,
   designSubjects,
@@ -493,6 +494,35 @@ describe("webhookStatus", () => {
         remoteKnown: true,
         callbackUrl: current,
       }).status,
+    ).toBe("missing");
+  });
+
+  it("prefers the webhook calling the current address on a board", () => {
+    const remote = [
+      {
+        idModel: "b1",
+        callbackURL: "https://old.example/api/trello/webhook",
+        consecutiveFailures: 12,
+      },
+      { idModel: "b1", callbackURL: current },
+      { idModel: "b2", callbackURL: "https://old.example/api/trello/webhook" },
+    ];
+    const saved = new Set<string>();
+    expect(
+      boardWebhookStatus({
+        boardId: "b1",
+        saved,
+        remote,
+        callbackUrl: current,
+      }),
+    ).toEqual({ status: "active", failures: 0 });
+    expect(
+      boardWebhookStatus({ boardId: "b2", saved, remote, callbackUrl: current })
+        .status,
+    ).toBe("stale");
+    expect(
+      boardWebhookStatus({ boardId: "b3", saved, remote, callbackUrl: current })
+        .status,
     ).toBe("missing");
   });
 

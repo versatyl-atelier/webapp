@@ -25,7 +25,9 @@ export async function POST(request: NextRequest) {
     withWideEvent(
       Effect.gen(function* () {
         const prisma = yield* PrismaService;
-        return yield* handleTrelloWebhookEffect(prisma, body, signature);
+        const code = yield* handleTrelloWebhookEffect(prisma, body, signature);
+        yield* Effect.annotateLogsScoped({ statusCode: code });
+        return code;
       }),
       {
         message: "Trello webhook",
