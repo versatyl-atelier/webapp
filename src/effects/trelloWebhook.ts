@@ -22,6 +22,10 @@ export const handleTrelloWebhookEffect = Effect.fn("handleTrelloWebhook")(
         signature,
       )
     ) {
+      yield* Effect.annotateLogsScoped({
+        signaturePresent: signature !== null,
+        nonAsciiBody: Buffer.byteLength(body) !== body.length,
+      });
       return TRELLO_WEBHOOK_STATUS.unauthorized;
     }
     const payload = yield* Schema.decodeUnknown(
