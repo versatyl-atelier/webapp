@@ -6,7 +6,7 @@ export const EMPLOYEE_ID_PARAM = "id";
 export const PROJECT_CRUMB_PATTERN = "/projets/[id]";
 export const PROJECT_ID_PARAM = "id";
 
-export const CALENDAR_DAY_CRUMB_PATTERN = "/calendrier/[date]";
+export const CALENDAR_DAY_CRUMB_PATTERN = "/calendrier/jour/[date]";
 export const CALENDAR_DATE_PARAM = "date";
 export const CALENDAR_EVENT_CRUMB_PATTERN = "/calendrier/evenements/[id]";
 export const CALENDAR_EVENT_ID_PARAM = "id";
@@ -17,7 +17,6 @@ export const STATIC_CRUMB_LABELS: Record<string, string> = {
   "/gestionnaire": "Interface gestionnaire",
   "/gestionnaire/trello": "Trello",
   "/calendrier": "Calendrier",
-  "/calendrier/evenements": "Événements",
   "/calendrier/evenements/nouveau": "Nouvel événement",
   "/change-password": "Changer le mot de passe",
   "/login": "Connexion",
