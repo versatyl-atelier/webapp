@@ -13,6 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Logo } from "@/components/Logo";
 import { HOME_LABEL, HOME_PATH } from "@/constants/tools";
 import type { Role } from "@/generated/prisma/enums";
 import { activeToolHref } from "@/lib/paths";
@@ -36,14 +37,9 @@ export function AppSidebar({ role }: AppSidebarProps) {
             <SidebarMenuButton
               render={<Link href={HOME_PATH} />}
               tooltip={{ children: HOME_LABEL, hidden: false }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground justify-center p-1 [&_svg]:size-5"
+              className="group border-input justify-center rounded-lg border p-1 [&_svg]:size-6"
             >
-              <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden>
-                <rect x="1" y="1" width="4" height="4" rx="1" />
-                <rect x="7" y="1" width="4" height="4" rx="1" />
-                <rect x="1" y="7" width="4" height="4" rx="1" />
-                <rect x="7" y="7" width="4" height="4" rx="1" />
-              </svg>
+              <Logo />
               <span className="sr-only">{HOME_LABEL}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

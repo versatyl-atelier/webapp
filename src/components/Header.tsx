@@ -6,12 +6,7 @@ import { LoginButton } from "@/components/Login";
 import { LogoutForm } from "@/components/Logout";
 import { getSession } from "@/lib/session";
 import { Search } from "lucide-react";
-import {
-  APP_NAME,
-  HEADER_SEARCH_LABEL,
-  HOME_PATH,
-  SEARCH_PATH,
-} from "@/constants/tools";
+import { HEADER_SEARCH_LABEL, SEARCH_PATH } from "@/constants/tools";
 import {
   InputGroup,
   InputGroupAddon,
@@ -23,9 +18,6 @@ export async function Header() {
   return (
     <header className="bg-background z-30 flex h-12 w-full shrink-0 justify-between px-4 print:hidden">
       <div className="flex items-center gap-3">
-        <h1 className="inline-block font-bold">
-          <Link href={HOME_PATH}>{APP_NAME}</Link>
-        </h1>
         {session?.role && (
           <>
             <Button

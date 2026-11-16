@@ -15,7 +15,6 @@ export const HOME_PATH = "/";
 export const PROJECTS_PATH = "/projets";
 export const LANCEUR_PATH = "/lanceur-de-dates";
 export const HOME_LABEL = "Accueil";
-export const APP_NAME = "Versatyl";
 export const HEADER_SEARCH_LABEL = "Rechercher";
 export const SEARCH_PATH = "/recherche";
 export const SEARCH_SHORTCUT_KEY = "k";
