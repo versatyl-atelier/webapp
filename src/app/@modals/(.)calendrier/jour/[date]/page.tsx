@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { type CalendarDayPageProps } from "@/app/calendrier/[date]/page";
+import { type CalendarDayPageProps } from "@/app/calendrier/jour/[date]/page";
 import { CalendarDayDetail } from "@/components/CalendarDayDetail";
 import { Modal } from "@/components/Modal";
 import { calendarDayPath, isDateKey } from "@/lib/calendar";

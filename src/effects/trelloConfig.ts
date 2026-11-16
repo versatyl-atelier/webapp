@@ -12,10 +12,9 @@ import {
 import {
   TRELLO_BOARDS_UNAVAILABLE_MESSAGE,
   TRELLO_LIST_TAKEN_MESSAGE,
-  TRELLO_WEBHOOK_PATH,
 } from "@/constants/trello";
 import type { PrismaService } from "@/generated/effect-prisma";
-import { webhookStatus } from "@/lib/trello";
+import { boardWebhookStatus } from "@/lib/trello";
 import {
   TrelloDestinationKeySchema,
   TrelloIdSchema,
@@ -57,13 +56,10 @@ export const getTrelloConfigEffect = Effect.fn("getTrelloConfig")(function* (
       boardId,
       boardName,
       saved: saved.has(boardId),
-      ...webhookStatus({
-        saved: saved.has(boardId),
-        remote: remoteHooks?.find(
-          ({ idModel, callbackURL }) =>
-            idModel === boardId && callbackURL.endsWith(TRELLO_WEBHOOK_PATH),
-        ),
-        remoteKnown: remoteHooks !== null,
+      ...boardWebhookStatus({
+        boardId,
+        saved,
+        remote: remoteHooks,
         callbackUrl,
       }),
     })),
@@ -147,19 +143,27 @@ export const registerTrelloWebhooksEffect = Effect.fn("registerTrelloWebhooks")(
       prisma.trelloStageList.findMany({ select: { boardId: true } }),
       prisma.trelloWebhook.findMany({ select: { boardId: true } }),
     ]);
-    const registered = new Set(webhooks.map(({ boardId }) => boardId));
-    const missing = new Set(
+    const saved = new Set(webhooks.map(({ boardId }) => boardId));
+    const remote = yield* listTrelloWebhooks();
+    const callbackUrl = yield* trelloCallbackUrl;
+    const toRegister = new Set(
       [...destinations, ...stageLists]
         .map(({ boardId }) => boardId)
-        .filter((boardId) => !registered.has(boardId)),
+        .filter(
+          (boardId) =>
+            boardWebhookStatus({ boardId, saved, remote, callbackUrl })
+              .status !== "active",
+        ),
     );
-    for (const boardId of missing) {
+    for (const boardId of toRegister) {
       const webhook = yield* createTrelloWebhook(boardId);
-      yield* prisma.trelloWebhook.create({
-        data: { boardId, webhookId: webhook.id },
+      yield* prisma.trelloWebhook.upsert({
+        where: { boardId },
+        create: { boardId, webhookId: webhook.id },
+        update: { webhookId: webhook.id },
       });
     }
-    yield* Effect.annotateLogsScoped({ webhooksRegistered: missing.size });
-    return missing.size;
+    yield* Effect.annotateLogsScoped({ webhooksRegistered: toRegister.size });
+    return toRegister.size;
   },
 );

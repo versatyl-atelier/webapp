@@ -398,6 +398,43 @@ export function webhookStatus(input: {
   return { status: stale ? "stale" : "active", failures };
 }
 
+export type RemoteWebhook = {
+  idModel: string;
+  callbackURL: string;
+  consecutiveFailures?: number;
+};
+
+export function boardRemoteWebhook(
+  remote: readonly RemoteWebhook[],
+  boardId: string,
+  callbackUrl: string | null,
+): RemoteWebhook | undefined {
+  const onBoard = remote.filter(
+    ({ idModel, callbackURL }) =>
+      idModel === boardId && callbackURL.endsWith(TRELLO_WEBHOOK_PATH),
+  );
+  return (
+    onBoard.find(({ callbackURL }) => callbackURL === callbackUrl) ?? onBoard[0]
+  );
+}
+
+export function boardWebhookStatus(input: {
+  boardId: string;
+  saved: ReadonlySet<string>;
+  remote: readonly RemoteWebhook[] | null;
+  callbackUrl: string | null;
+}): { status: WebhookStatus; failures: number } {
+  return webhookStatus({
+    saved: input.saved.has(input.boardId),
+    remote:
+      input.remote === null
+        ? undefined
+        : boardRemoteWebhook(input.remote, input.boardId, input.callbackUrl),
+    remoteKnown: input.remote !== null,
+    callbackUrl: input.callbackUrl,
+  });
+}
+
 export function webhookCallbackUrl(baseUrl: string): string {
   return new URL(TRELLO_WEBHOOK_PATH, baseUrl).toString();
 }

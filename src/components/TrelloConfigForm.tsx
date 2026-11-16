@@ -74,7 +74,7 @@ export function TrelloConfigForm({
 }: TrelloConfigFormProps) {
   const headingId = useId();
   const [pending, startTransition] = useTransition();
-  const hasMissingWebhook = webhooks.some(({ status }) => status === "missing");
+  const needsRegistration = webhooks.some(({ status }) => status !== "active");
 
   const register = () =>
     startTransition(async () => {
@@ -204,7 +204,7 @@ export function TrelloConfigForm({
             type="button"
             variant="outline"
             size="sm"
-            disabled={pending || !hasMissingWebhook}
+            disabled={pending || !needsRegistration}
             onClick={register}
           >
             <Webhook />

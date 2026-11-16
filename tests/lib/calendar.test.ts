@@ -132,7 +132,7 @@ describe("params and paths", () => {
     expect(calendarWeekPath("2026-07-13")).toBe(
       "/calendrier?semaine=2026-07-13",
     );
-    expect(calendarDayPath("2026-07-14")).toBe("/calendrier/2026-07-14");
+    expect(calendarDayPath("2026-07-14")).toBe("/calendrier/jour/2026-07-14");
     expect(calendarEventPath(7)).toBe("/calendrier/evenements/7");
     expect(newCalendarEventPath()).toBe("/calendrier/evenements/nouveau");
     expect(newCalendarEventPath("2026-07-14")).toBe(
