@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 import { ActionTooltip } from "@/components/ActionTooltip";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
@@ -15,7 +16,7 @@ export type ChipHighlight = "none" | "match" | "dim";
 
 type CalendarEventChipProps = {
   occurrence: CalendarOccurrence;
-  href: string;
+  href: string | null;
   compact: boolean;
   highlight: ChipHighlight;
 };
@@ -27,7 +28,24 @@ const HIGHLIGHT_CLASSES: Record<ChipHighlight, string> = {
 };
 
 const CHIP_LINK_CLASS =
-  "focus-visible:ring-ring block transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none";
+  "focus-visible:ring-ring transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none";
+
+function chipTrigger(
+  href: string | null,
+  className: string,
+  style: CSSProperties,
+) {
+  return href ? (
+    <Link
+      href={href}
+      scroll={false}
+      style={style}
+      className={cn(CHIP_LINK_CLASS, className)}
+    />
+  ) : (
+    <span style={style} className={className} />
+  );
+}
 
 export function CalendarEventChip({
   occurrence,
@@ -38,7 +56,7 @@ export function CalendarEventChip({
   const description = occurrenceDescription(occurrence);
   const chipStyle = occurrenceColorStyle(occurrence);
   const chipClass = cn(
-    CHIP_LINK_CLASS,
+    "block",
     occurrenceColorClass(occurrence),
     HIGHLIGHT_CLASSES[highlight],
   );
@@ -48,14 +66,11 @@ export function CalendarEventChip({
       <li className="pointer-events-auto w-4/5 shrink-0">
         <ActionTooltip
           label={description}
-          render={
-            <Link
-              href={href}
-              scroll={false}
-              style={chipStyle}
-              className={cn("h-1.5 w-full rounded-full", chipClass)}
-            />
-          }
+          render={chipTrigger(
+            href,
+            cn("h-1.5 w-full rounded-full", chipClass),
+            chipStyle,
+          )}
         >
           <span className="sr-only">{description}</span>
         </ActionTooltip>
@@ -67,17 +82,11 @@ export function CalendarEventChip({
     <li className="pointer-events-auto shrink-0">
       <ActionTooltip
         label={description}
-        render={
-          <Link
-            href={href}
-            scroll={false}
-            style={chipStyle}
-            className={cn(
-              "overflow-hidden rounded-sm px-1.5 pt-0.5 pb-1",
-              chipClass,
-            )}
-          />
-        }
+        render={chipTrigger(
+          href,
+          cn("overflow-hidden rounded-sm px-1.5 pt-0.5 pb-1", chipClass),
+          chipStyle,
+        )}
       >
         <span className="flex items-center gap-1 text-xs font-semibold">
           <EventCategoryIcon

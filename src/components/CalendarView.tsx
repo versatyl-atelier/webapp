@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 type CalendarViewProps = {
   weeks: CalendarWeek[];
   canEdit: boolean;
+  interactive: boolean;
 };
 
 function useFittingWeekCount(maxWeeks: number) {
@@ -57,7 +58,11 @@ function useFittingWeekCount(maxWeeks: number) {
   return { containerRef, weekCount };
 }
 
-export function CalendarView({ weeks, canEdit }: CalendarViewProps) {
+export function CalendarView({
+  weeks,
+  canEdit,
+  interactive,
+}: CalendarViewProps) {
   const { query, activeFilters } = useCalendarFilters();
   const { containerRef, weekCount } = useFittingWeekCount(weeks.length);
   const visibleWeeks = weeks.slice(0, weekCount);
@@ -100,6 +105,7 @@ export function CalendarView({ weeks, canEdit }: CalendarViewProps) {
                   query={query}
                   activeFilters={activeFilters}
                   canEdit={canEdit}
+                  interactive={interactive}
                 />
               ))}
             </ol>
@@ -115,6 +121,7 @@ type CalendarDayCellProps = {
   query: string;
   activeFilters: ReadonlySet<CalendarFilterKey>;
   canEdit: boolean;
+  interactive: boolean;
 };
 
 function CalendarDayCell({
@@ -122,12 +129,14 @@ function CalendarDayCell({
   query,
   activeFilters,
   canEdit,
+  interactive,
 }: CalendarDayCellProps) {
   const occurrences = day.occurrences.filter((occurrence) =>
     isOccurrenceVisible(occurrence, activeFilters),
   );
   const hasQuery = query.trim().length > 0;
   const dayPath = calendarDayPath(day.date);
+  const dayLabel = `${formatDayLabel(day.date)}, ${eventCountLabel(occurrences.length)}`;
 
   return (
     <li
@@ -137,13 +146,17 @@ function CalendarDayCell({
         day.isMonthStart && "border-l-foreground border-l-3",
       )}
     >
-      <Link
-        href={dayPath}
-        scroll={false}
-        aria-label={`${formatDayLabel(day.date)}, ${eventCountLabel(occurrences.length)}`}
-        aria-current={day.isToday ? "date" : undefined}
-        className="hover:bg-muted focus-visible:ring-ring absolute inset-0 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
-      />
+      {interactive ? (
+        <Link
+          href={dayPath}
+          scroll={false}
+          aria-label={dayLabel}
+          aria-current={day.isToday ? "date" : undefined}
+          className="hover:bg-muted focus-visible:ring-ring absolute inset-0 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset"
+        />
+      ) : (
+        <span className="sr-only">{dayLabel}</span>
+      )}
       <span
         aria-hidden
         className={cn(
@@ -166,7 +179,11 @@ function CalendarDayCell({
           <CalendarEventChip
             key={occurrence.key}
             occurrence={occurrence}
-            href={occurrenceHref(occurrence, canEdit) ?? dayPath}
+            href={
+              interactive
+                ? (occurrenceHref(occurrence, canEdit) ?? dayPath)
+                : null
+            }
             compact={day.isWeekend}
             highlight={
               hasQuery

@@ -21,7 +21,7 @@ import type {
   LanceurPhaseUpdateArgs,
 } from "@/generated/prisma/models";
 import { getActiveSession } from "@/effects/auth";
-import { toDateKey, toDbDate } from "@/lib/calendar";
+import { toDateKey, toDbDate, type DateKey } from "@/lib/calendar";
 import { trackedChanges } from "@/lib/lanceurEdit";
 import {
   PLAN_DEFAULT_CAPACITY_RATIO,
@@ -29,10 +29,15 @@ import {
   PLAN_DEFAULT_MIN_PROD_DAYS,
   PLAN_SETTING_KEYS,
 } from "@/constants/lanceurPlan";
-import type { LanceurLogEntry, LanceurRow } from "@/lib/lanceur";
+import {
+  toPlanItem,
+  type LanceurLogEntry,
+  type LanceurRow,
+} from "@/lib/lanceur";
 import { intakeSlots, slotKey, type IntakeProject } from "@/lib/lanceurIntake";
 import { phaseName } from "@/lib/projects";
 import type { PlanSettings } from "@/lib/lanceurPlan";
+import { buildLanceurPreview } from "@/lib/lanceurPreview";
 import { normalizeStoredRichText } from "@/lib/richText";
 import {
   LanceurAddTargetSchema,
@@ -482,3 +487,18 @@ export const getPlanSettingsEffect = Effect.fn("getPlanSettings")(function* (
     closures: closures.map(({ closureDate }) => toDateKey(closureDate)),
   } satisfies PlanSettings;
 });
+
+export const getLanceurPreviewEffect = Effect.fn("getLanceurPreview")(
+  function* (prisma: PrismaService, today: DateKey) {
+    const [rows, settings] = yield* Effect.all(
+      [getLanceurRowsEffect(prisma), getPlanSettingsEffect(prisma)],
+      { concurrency: "unbounded" },
+    );
+    const preview = buildLanceurPreview(rows.map(toPlanItem), settings, today);
+    yield* Effect.annotateLogsScoped({
+      lanceurPreviewFrom: today,
+      lanceurPreviewRows: preview.rows.length,
+    });
+    return preview;
+  },
+);

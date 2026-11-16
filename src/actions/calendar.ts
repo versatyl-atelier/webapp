@@ -7,7 +7,7 @@ import { cachedGetter, runEffectAsFormAction } from "@/lib/effect";
 import {
   getCalendarEventEffect,
   getCalendarOccurrencesEffect,
-  getProjectOccurrencesEffect,
+  getEventOccurrencesEffect,
   saveCalendarEventEffect,
 } from "@/effects/calendar";
 import {
@@ -21,8 +21,13 @@ export const getCalendarOccurrences = cachedGetter(
   [Role.employee],
 );
 
-export const getProjectOccurrences = cachedGetter(getProjectOccurrencesEffect, [
-  Role.employee,
+export const getHomeCalendarOccurrences = cachedGetter(
+  getCalendarOccurrencesEffect,
+  [Role.atelier],
+);
+
+export const getHomeEventOccurrences = cachedGetter(getEventOccurrencesEffect, [
+  Role.atelier,
 ]);
 
 export const getCalendarEvent = cachedGetter(getCalendarEventEffect, [

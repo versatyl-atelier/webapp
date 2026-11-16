@@ -1,19 +1,14 @@
 import { COLOR_SWATCHES } from "@/constants/color";
-import { UPCOMING_OFFSET_VAR } from "@/constants/home";
 import {
-  ACTIVE_PROJECT_PLURAL_LABEL,
-  ACTIVE_PROJECT_SINGULAR_LABEL,
   CABINET_COUNT_READ_LABEL,
   CLADDING_SEPARATOR,
   CONTACT_DETAIL_SEPARATOR,
   DEFAULT_SUGGESTIONS,
-  DONE_PROJECT_STAGE,
   PHASE_NAME_PREFIX,
   PIECE_CLADDING_READ_LABEL,
   PIECE_COPY_SUFFIX,
   PIECE_TEXT_FIELDS,
   PROJECT_COLOR_VAR,
-  PROJECT_STAGES,
   UNNAMED_CONTACT_LABEL,
 } from "@/constants/projects";
 import type {
@@ -24,12 +19,7 @@ import type {
 } from "@/generated/prisma/client";
 import type { ProjectStage } from "@/generated/prisma/enums";
 import type { CSSProperties } from "react";
-import {
-  daysBetween,
-  toDateKey,
-  type CalendarOccurrence,
-  type DateKey,
-} from "@/lib/calendar";
+import type { CalendarOccurrence } from "@/lib/calendar";
 import { parseItemKey } from "@/lib/itemKey";
 import { projectLinkIds } from "@/lib/projectLinks";
 import type { FileSectionRecord } from "@/lib/projectFiles";
@@ -233,34 +223,6 @@ export function occurrenceColorStyle(
   return projectColorStyle(occurrence.color);
 }
 
-export type PipelineProject = Pick<Project, "id" | "name" | "stage" | "color">;
-
-export type PipelineStage = {
-  stage: ProjectStage;
-  projects: PipelineProject[];
-};
-
-export function projectsByStage(
-  projects: readonly PipelineProject[],
-): PipelineStage[] {
-  return PROJECT_STAGES.map((stage) => ({
-    stage,
-    projects: projects.filter((project) => project.stage === stage),
-  }));
-}
-
-export function activeProjectCount(stages: readonly PipelineStage[]): number {
-  return stages.reduce(
-    (count, { stage, projects }) =>
-      stage === DONE_PROJECT_STAGE ? count : count + projects.length,
-    0,
-  );
-}
-
-export function activeProjectsLabel(count: number): string {
-  return `${count} ${count > 1 ? ACTIVE_PROJECT_PLURAL_LABEL : ACTIVE_PROJECT_SINGULAR_LABEL}`;
-}
-
 export type DeliveryDates = Pick<
   Project,
   "manualDeliveryDate" | "calculatedDeliveryDate"
@@ -273,43 +235,3 @@ export function deliveryDate({
   return manualDeliveryDate ?? calculatedDeliveryDate;
 }
 
-export type DeliveryProject = Pick<Project, "id" | "name" | "color"> &
-  DeliveryDates;
-
-export type UpcomingDelivery = Pick<Project, "id" | "name" | "color"> & {
-  date: DateKey;
-  offsetPercent: number;
-};
-
-export function upcomingDeliveries(
-  projects: readonly DeliveryProject[],
-  today: DateKey,
-  horizonDays: number,
-  maxOffsetPercent: number,
-): UpcomingDelivery[] {
-  return projects
-    .flatMap(({ id, name, color, ...dates }) => {
-      const delivery = deliveryDate(dates);
-      if (!delivery) {
-        return [];
-      }
-      const date = toDateKey(delivery);
-      const days = daysBetween(today, date);
-      if (days < 0 || days > horizonDays) {
-        return [];
-      }
-      const offsetPercent = (days / horizonDays) * maxOffsetPercent;
-      return [{ id, name, color, date, offsetPercent }];
-    })
-    .toSorted((a, b) => a.date.localeCompare(b.date));
-}
-
-export function upcomingDeliveryStyle({
-  color,
-  offsetPercent,
-}: Pick<UpcomingDelivery, "color" | "offsetPercent">): CSSProperties {
-  return {
-    ...projectColorStyle(color),
-    [UPCOMING_OFFSET_VAR]: `${offsetPercent}%`,
-  } as CSSProperties;
-}

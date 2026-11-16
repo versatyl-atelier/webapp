@@ -1,82 +1,76 @@
 import Link from "next/link";
 
-import { getProjectOccurrences } from "@/actions/calendar";
+import { getHomeEventOccurrences } from "@/actions/calendar";
 import { ActionTooltip } from "@/components/ActionTooltip";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
-import { HomeCardLink } from "@/components/HomeCardLink";
+import { HomeWidgetCard } from "@/components/HomeWidgetCard";
+import { CardContent } from "@/components/ui/card";
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { CALENDAR_PATH } from "@/constants/calendar";
-import {
-  CALENDAR_LINK_LABEL,
   EMPTY_TODAY_LABEL,
-  TODAY_EVENTS_LIST_HEIGHT_CLASS,
-  TODAY_HEADING,
+  HOME_SIDE_WIDGET_HEIGHT_CLASS,
+  HOME_WIDGETS,
   TOMORROW_LABEL,
 } from "@/constants/home";
 import {
   addDays,
   calendarDayPath,
-  formatDayMonth,
   formatHour,
   occurrenceColorClass,
   occurrenceDescription,
   type DateKey,
 } from "@/lib/calendar";
+import { homeWidgetLink, todayWidgetTitle } from "@/lib/home";
 import { occurrenceColorStyle } from "@/lib/projects";
 import { cn } from "@/lib/utils";
 
+const ROW_CLASS = "flex items-center gap-2.5 px-3 py-2 text-sm";
+
 type TodayEventsProps = {
   today: DateKey;
+  interactive: boolean;
 };
 
-export async function TodayEvents({ today }: TodayEventsProps) {
-  const occurrences = await getProjectOccurrences(today, addDays(today, 1));
+export async function TodayEvents({ today, interactive }: TodayEventsProps) {
+  const occurrences = await getHomeEventOccurrences(today, addDays(today, 1));
 
   return (
-    <Card size="sm" className="gap-0 py-0">
-      <CardHeader className="bg-muted/50 border-b py-2.5">
-        <CardTitle className="font-semibold">
-          {TODAY_HEADING} — {formatDayMonth(today)}
-        </CardTitle>
-        <CardAction>
-          <HomeCardLink href={CALENDAR_PATH}>
-            {CALENDAR_LINK_LABEL}
-          </HomeCardLink>
-        </CardAction>
-      </CardHeader>
+    <HomeWidgetCard
+      widget={HOME_WIDGETS.today}
+      title={todayWidgetTitle(today)}
+      link={homeWidgetLink(HOME_WIDGETS.today, interactive)}
+    >
       {occurrences.length === 0 ? (
         <CardContent className="py-3">
           <p
             className={cn(
               "text-muted-foreground flex items-center text-sm",
-              TODAY_EVENTS_LIST_HEIGHT_CLASS,
+              HOME_SIDE_WIDGET_HEIGHT_CLASS,
             )}
           >
             {EMPTY_TODAY_LABEL}
           </p>
         </CardContent>
       ) : (
-        <ul className={cn("overflow-y-auto", TODAY_EVENTS_LIST_HEIGHT_CLASS)}>
+        <ul className={cn("overflow-y-auto", HOME_SIDE_WIDGET_HEIGHT_CLASS)}>
           {occurrences.map((occurrence) => {
             const isToday = occurrence.date === today;
+            const rowClass = cn(ROW_CLASS, !isToday && "opacity-65");
             return (
               <li key={occurrence.key} className="border-b last:border-b-0">
                 <ActionTooltip
                   label={occurrenceDescription(occurrence)}
                   render={
-                    <Link
-                      href={calendarDayPath(occurrence.date)}
-                      className={cn(
-                        "hover:bg-accent focus-visible:ring-ring flex items-center gap-2.5 px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
-                        !isToday && "opacity-65",
-                      )}
-                    />
+                    interactive ? (
+                      <Link
+                        href={calendarDayPath(occurrence.date)}
+                        className={cn(
+                          rowClass,
+                          "hover:bg-accent focus-visible:ring-ring transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
+                        )}
+                      />
+                    ) : (
+                      <div className={rowClass} />
+                    )
                   }
                 >
                   <span
@@ -108,6 +102,6 @@ export async function TodayEvents({ today }: TodayEventsProps) {
           })}
         </ul>
       )}
-    </Card>
+    </HomeWidgetCard>
   );
 }

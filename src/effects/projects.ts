@@ -18,7 +18,6 @@ import {
   PROJECT_SAVED_MESSAGE,
   RECENT_SUGGESTION_ROWS,
 } from "@/constants/projects";
-import { toDbDate, type DateKey } from "@/lib/calendar";
 import {
   buildSuggestions,
   isEmptyContact,
@@ -214,59 +213,6 @@ export const getProjectEffect = Effect.fn("getProject")(function* (
   };
   return fiche;
 });
-
-export const getPipelineProjectsEffect = Effect.fn("getPipelineProjects")(
-  function* (prisma: PrismaService) {
-    const where = yield* accessibleProjectsWhere(prisma);
-    if (!where) {
-      return [];
-    }
-    const projects = yield* prisma.project.findMany({
-      where: { AND: [where, { isDeleted: false, stage: { not: null } }] },
-      select: { id: true, name: true, stage: true, color: true },
-      orderBy: { name: SortOrder.asc },
-    });
-    yield* Effect.annotateLogsScoped({ pipelineProjects: projects.length });
-    return projects;
-  },
-);
-
-export const getUpcomingDeliveriesEffect = Effect.fn("getUpcomingDeliveries")(
-  function* (prisma: PrismaService, from: DateKey, to: DateKey) {
-    const where = yield* accessibleProjectsWhere(prisma);
-    if (!where) {
-      return [];
-    }
-    const range = { gte: toDbDate(from), lte: toDbDate(to) };
-    const projects = yield* prisma.project.findMany({
-      where: {
-        AND: [
-          where,
-          {
-            isDeleted: false,
-            OR: [
-              { manualDeliveryDate: range },
-              { manualDeliveryDate: null, calculatedDeliveryDate: range },
-            ],
-          },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        color: true,
-        manualDeliveryDate: true,
-        calculatedDeliveryDate: true,
-      },
-    });
-    yield* Effect.annotateLogsScoped({
-      deliveriesFrom: from,
-      deliveriesTo: to,
-      upcomingDeliveries: projects.length,
-    });
-    return projects;
-  },
-);
 
 export const getFicheSuggestionsEffect = Effect.fn("getFicheSuggestions")(
   function* (prisma: PrismaService) {

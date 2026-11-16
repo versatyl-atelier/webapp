@@ -1,24 +1,36 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import type { ReactNode } from "react";
+
+import { HomeWidgetCard } from "@/components/HomeWidgetCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SKELETON_ROWS } from "@/constants/home";
+import {
+  SKELETON_ROWS,
+  type HomeWidgetId,
+  type HomeWidgetLink,
+} from "@/constants/home";
+import { cn } from "@/lib/utils";
 
 const ROWS = Array.from({ length: SKELETON_ROWS }, (_, row) => row);
 
 type HomeWidgetSkeletonProps = {
-  className?: string;
+  widget: HomeWidgetId;
+  title: ReactNode;
+  link: HomeWidgetLink | null;
+  heightClass: string;
 };
 
-export function HomeWidgetSkeleton({ className }: HomeWidgetSkeletonProps) {
+export function HomeWidgetSkeleton({
+  widget,
+  title,
+  link,
+  heightClass,
+}: HomeWidgetSkeletonProps) {
   return (
-    <Card size="sm" aria-busy className={className}>
-      <CardHeader>
-        <Skeleton className="h-4 w-32" />
-      </CardHeader>
-      <CardContent className="flex flex-col gap-2">
+    <HomeWidgetCard widget={widget} title={title} link={link} busy>
+      <div className={cn("flex flex-col gap-2 p-3", heightClass)}>
         {ROWS.map((row) => (
-          <Skeleton key={row} className="h-6.5 w-full" />
+          <Skeleton key={row} className="h-5 w-full" />
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </HomeWidgetCard>
   );
 }

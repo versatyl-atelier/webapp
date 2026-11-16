@@ -35,6 +35,7 @@ export default async function Page({ searchParams }: CalendarPageProps) {
     <CalendarView
       weeks={buildWeeks(weekStart, MAX_VISIBLE_WEEKS, today, occurrences)}
       canEdit={hasRole(session.role, Role.manager)}
+      interactive
     />
   );
 }

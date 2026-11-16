@@ -14,6 +14,7 @@ import {
   getLanceurEmployeesEffect,
   getLanceurLogEffect,
   getLanceurOptionsEffect,
+  getLanceurPreviewEffect,
   getLanceurRowsEffect,
   getPlanSettingsEffect,
   removeLanceurPhaseEffect,
@@ -41,6 +42,10 @@ export const getLanceurEmployees = cachedGetter(getLanceurEmployeesEffect, [
 
 export const getPlanSettings = cachedGetter(getPlanSettingsEffect, [
   Role.employee,
+]);
+
+export const getLanceurPreview = cachedGetter(getLanceurPreviewEffect, [
+  Role.atelier,
 ]);
 
 export const getImportableProjects = cachedGetter(getImportableProjectsEffect, [

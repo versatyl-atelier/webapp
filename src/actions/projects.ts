@@ -14,10 +14,8 @@ import {
 import {
   getAllProjectsEffect,
   getFicheSuggestionsEffect,
-  getPipelineProjectsEffect,
   getProjectEffect,
   getProjectsEffect,
-  getUpcomingDeliveriesEffect,
   movePieceEffect,
   renamePhaseEffect,
   deleteContactEffect,
@@ -120,14 +118,6 @@ export const isProjectPinned = cachedGetter(isProjectPinnedEffect, [
 ]);
 
 export const getProjectTrello = cachedGetter(getProjectTrelloEffect, [
-  Role.employee,
-]);
-
-export const getPipelineProjects = cachedGetter(getPipelineProjectsEffect, [
-  Role.employee,
-]);
-
-export const getUpcomingDeliveries = cachedGetter(getUpcomingDeliveriesEffect, [
   Role.employee,
 ]);
 

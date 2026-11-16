@@ -115,7 +115,10 @@ export function workingDays(start: DateKey, count: number): DateKey[] {
   return days;
 }
 
-export function monthSpans(days: readonly DateKey[]): GanttSpan[] {
+export function monthSpans(
+  days: readonly DateKey[],
+  formatter: Intl.DateTimeFormat = monthFormatter,
+): GanttSpan[] {
   const spans: GanttSpan[] = [];
   for (const day of days) {
     const key = monthKey(day);
@@ -125,7 +128,7 @@ export function monthSpans(days: readonly DateKey[]): GanttSpan[] {
     } else {
       spans.push({
         key,
-        label: monthFormatter.format(new Date(`${day}T00:00:00Z`)),
+        label: formatter.format(new Date(`${day}T00:00:00Z`)),
         count: 1,
       });
     }

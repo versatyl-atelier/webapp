@@ -15,7 +15,6 @@ export const PROJECT_COLOR_DIALOG_DESCRIPTION =
 export const PROJECT_COLOR_VAR = "--project-color";
 export const PROJECT_STAGES = Object.values(ProjectStage);
 export const NEW_PROJECT_STAGE = ProjectStage.venteDesign;
-export const DONE_PROJECT_STAGE = ProjectStage.termine;
 export const PROJECT_STAGE_LABELS: Record<ProjectStage, string> = {
   venteDesign: "Vente / Design",
   planification: "Planification",
@@ -27,8 +26,6 @@ export const PROJECT_STAGE_LABELS: Record<ProjectStage, string> = {
   termine: "Terminé",
 };
 export const PROJECT_STAGE_LABEL = "Étape";
-export const ACTIVE_PROJECT_SINGULAR_LABEL = "projet actif";
-export const ACTIVE_PROJECT_PLURAL_LABEL = "projets actifs";
 export const NO_PROJECT_STAGE_VALUE = "none";
 export const NO_PROJECT_STAGE_LABEL = "Aucune étape";
 export const PROJECT_ADDRESS_LABEL = "Adresse du projet";
