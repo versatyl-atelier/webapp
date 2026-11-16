@@ -1,10 +1,13 @@
 "use client";
 
-import { useTransition, type KeyboardEvent } from "react";
+import { useState, useTransition, type KeyboardEvent } from "react";
 import { toast } from "sonner";
 
 import { saveProjectHeader } from "@/actions/projects";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { PinButton } from "@/components/PinButton";
+import { ProjectColorDialog } from "@/components/ProjectColorDialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -17,6 +20,7 @@ import { ENTER_KEY } from "@/constants/keys";
 import {
   NO_PROJECT_STAGE_LABEL,
   NO_PROJECT_STAGE_VALUE,
+  PROJECT_COLOR_EDIT_LABEL,
   PROJECT_STAGE_LABEL,
   PROJECT_STAGE_LABELS,
   PROJECT_STAGES,
@@ -24,7 +28,11 @@ import {
   PROJECT_TITLE_PLACEHOLDER,
   SAVED_TOAST_OPTIONS,
 } from "@/constants/projects";
-import type { ProjectFiche } from "@/lib/projects";
+import {
+  projectColorLabel,
+  projectColorStyle,
+  type ProjectFiche,
+} from "@/lib/projects";
 
 const STAGE_ITEMS = {
   [NO_PROJECT_STAGE_VALUE]: NO_PROJECT_STAGE_LABEL,
@@ -32,12 +40,14 @@ const STAGE_ITEMS = {
 };
 
 type ProjectHeaderProps = {
-  project: Pick<ProjectFiche, "id" | "name" | "stage" | "isManual">;
+  project: Pick<ProjectFiche, "id" | "name" | "stage" | "color" | "isManual">;
   pinned: boolean;
 };
 
 export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
   const [pending, startTransition] = useTransition();
+  const [editingColor, setEditingColor] = useState(false);
+  const colorLabel = `${PROJECT_COLOR_EDIT_LABEL} (${projectColorLabel(project.color)})`;
   const stage = project.stage ?? NO_PROJECT_STAGE_VALUE;
 
   const save = (name: string, nextStage: string) =>
@@ -66,25 +76,45 @@ export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
 
   return (
     <header className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      {project.isManual ? (
-        <Input
-          aria-label={PROJECT_TITLE_LABEL}
-          defaultValue={project.name}
-          placeholder={PROJECT_TITLE_PLACEHOLDER}
-          disabled={pending}
-          onBlur={(event) => commitName(event.currentTarget)}
-          onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
-            if (event.key === ENTER_KEY) {
-              event.currentTarget.blur();
-            }
-          }}
-          className="hover:border-input focus-visible:bg-card field-sizing-content h-auto max-w-full min-w-72 border-transparent bg-transparent px-2 py-0.5 text-2xl font-semibold tracking-tight shadow-none md:text-2xl dark:bg-transparent"
-        />
-      ) : (
-        <h1 className="px-2 py-0.5 text-2xl font-semibold tracking-tight">
-          {project.name}
-        </h1>
-      )}
+      <div className="flex min-w-0 items-center gap-1">
+        <ActionTooltip
+          label={colorLabel}
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={colorLabel}
+              onClick={() => setEditingColor(true)}
+            />
+          }
+        >
+          <span
+            aria-hidden
+            style={projectColorStyle(project.color)}
+            className="size-3.5 shrink-0 rounded-full bg-(--project-color)"
+          />
+        </ActionTooltip>
+        {project.isManual ? (
+          <Input
+            aria-label={PROJECT_TITLE_LABEL}
+            defaultValue={project.name}
+            placeholder={PROJECT_TITLE_PLACEHOLDER}
+            disabled={pending}
+            onBlur={(event) => commitName(event.currentTarget)}
+            onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+              if (event.key === ENTER_KEY) {
+                event.currentTarget.blur();
+              }
+            }}
+            className="hover:border-input focus-visible:bg-card field-sizing-content h-auto max-w-full min-w-72 border-transparent bg-transparent px-2 py-0.5 text-2xl font-semibold tracking-tight shadow-none md:text-2xl dark:bg-transparent"
+          />
+        ) : (
+          <h1 className="px-2 py-0.5 text-2xl font-semibold tracking-tight">
+            {project.name}
+          </h1>
+        )}
+      </div>
       <div className="ml-auto flex items-center gap-2">
         <Select
           items={STAGE_ITEMS}
@@ -116,6 +146,13 @@ export function ProjectHeader({ project, pinned }: ProjectHeaderProps) {
         </Select>
         <PinButton projectId={project.id} pinned={pinned} variant="ghost" />
       </div>
+      {editingColor && (
+        <ProjectColorDialog
+          projectId={project.id}
+          color={project.color}
+          onClose={() => setEditingColor(false)}
+        />
+      )}
     </header>
   );
 }

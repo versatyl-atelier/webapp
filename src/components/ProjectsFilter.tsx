@@ -2,9 +2,9 @@
 
 import { ChevronDown, Search } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import {
   Collapsible,
   CollapsibleContent,
@@ -20,11 +20,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { PROJECT_TAB_PARAM } from "@/constants/projects";
-import { projectPath, withProjectTab } from "@/lib/paths";
-import { findProjectTab, type ProjectTab } from "@/lib/projectTabs";
-import { projectColorLabel, projectColorStyle } from "@/lib/projects";
-import { normalize } from "@/lib/text";
+import { projectPath } from "@/lib/paths";
+import { projectColorStyle } from "@/lib/projects";
+import { splitArchived } from "@/lib/archive";
+import { matchesQuery } from "@/lib/text";
 
 export type FilterableProject = {
   id: string;
@@ -36,10 +35,9 @@ export type FilterableProject = {
 type ProjectGroupProps = {
   label: string;
   projects: FilterableProject[];
-  tab?: ProjectTab;
 };
 
-function ProjectGroup({ label, projects, tab }: ProjectGroupProps) {
+function ProjectGroup({ label, projects }: ProjectGroupProps) {
   return (
     <Collapsible defaultOpen render={<SidebarGroup className="min-h-12" />}>
       <SidebarGroupLabel
@@ -63,11 +61,11 @@ function ProjectGroup({ label, projects, tab }: ProjectGroupProps) {
             {projects.map(({ id, name, color }) => (
               <SidebarMenuItem key={id}>
                 <SidebarMenuButton
-                  render={<Link href={projectPath(id, tab)} title={name} />}
+                  render={<Link href={projectPath(id)} />}
+                  tooltip={{ children: name, hidden: false }}
                 >
                   <span
                     aria-hidden
-                    title={projectColorLabel(color)}
                     style={projectColorStyle(color)}
                     className="size-2 shrink-0 rounded-full bg-(--project-color)"
                   />
@@ -88,18 +86,9 @@ type ProjectsFilterProps = {
 
 export function ProjectsFilter({ projects }: ProjectsFilterProps) {
   const inputId = useId();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const tab = findProjectTab(
-    withProjectTab(pathname, searchParams).get(PROJECT_TAB_PARAM),
-  );
   const [query, setQuery] = useState("");
-  const needle = normalize(query);
-  const matches = projects.filter(({ name }) =>
-    normalize(name).includes(needle),
-  );
-  const active = matches.filter(({ isDeleted }) => !isDeleted);
-  const archived = matches.filter(({ isDeleted }) => isDeleted);
+  const matches = projects.filter(({ name }) => matchesQuery(query, name));
+  const { active, archived } = splitArchived(matches);
 
   return (
     <>
@@ -128,8 +117,8 @@ export function ProjectsFilter({ projects }: ProjectsFilterProps) {
       <p className="sr-only" aria-live="polite">
         {matches.length} projets trouvés
       </p>
-      <ProjectGroup label="Actifs" projects={active} tab={tab} />
-      <ProjectGroup label="Archivés" projects={archived} tab={tab} />
+      <ProjectGroup label="Actifs" projects={active} />
+      <ProjectGroup label="Archivés" projects={archived} />
     </>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useId, useOptimistic, useState, useTransition } from "react";
 
 import { reorderPins } from "@/actions/projects";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { CoverImage } from "@/components/CoverImage";
 import { PinButton } from "@/components/PinButton";
 import { REORDER_PIN_SHORTCUTS } from "@/constants/projectFiles";
@@ -180,12 +181,14 @@ export function ProjectRow({
                   </Badge>
                 )}
                 {project.address && (
-                  <p
-                    className="text-muted-foreground truncate text-xs"
-                    title={project.address}
+                  <ActionTooltip
+                    label={project.address}
+                    render={
+                      <p className="text-muted-foreground truncate text-xs" />
+                    }
                   >
                     {project.address}
-                  </p>
+                  </ActionTooltip>
                 )}
               </div>
             </li>

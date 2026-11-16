@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import {
   Sidebar,
@@ -24,8 +24,7 @@ type AppSidebarProps = {
 
 export function AppSidebar({ role }: AppSidebarProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const activeHref = activeToolHref(pathname, searchParams);
+  const activeHref = activeToolHref(pathname);
   return (
     <Sidebar
       collapsible="none"

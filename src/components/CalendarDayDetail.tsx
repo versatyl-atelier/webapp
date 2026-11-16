@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 
 import { getCalendarOccurrences } from "@/actions/calendar";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { EventCategoryIcon } from "@/components/EventCategoryIcon";
 import { Button } from "@/components/ui/button";
 import { DialogTitle } from "@/components/ui/dialog";
@@ -13,10 +14,10 @@ import {
 import { LANCEUR_EVENT_OPEN_LABEL } from "@/constants/lanceurCalendar";
 import { Role } from "@/generated/prisma/enums";
 import {
-  calendarEventPath,
   occurrenceColorClass,
   formatDayLabel,
   newCalendarEventPath,
+  occurrenceHref,
   occurrenceMeta,
   type CalendarOccurrence,
   type DateKey,
@@ -96,28 +97,30 @@ export async function CalendarDayDetail({
       ) : (
         <ul className="flex min-h-0 flex-col gap-2 overflow-y-auto pt-4">
           {occurrences.map((occurrence) => {
-            const href =
-              occurrence.href ??
-              (canEdit ? calendarEventPath(occurrence.eventId) : null);
+            const href = occurrenceHref(occurrence, canEdit);
             return (
               <li key={occurrence.key}>
                 {href ? (
-                  <Link
-                    href={href}
-                    title={
+                  <ActionTooltip
+                    label={
                       occurrence.href
                         ? LANCEUR_EVENT_OPEN_LABEL
                         : EDIT_EVENT_LABEL
                     }
-                    style={occurrenceColorStyle(occurrence)}
-                    className={cn(
-                      ROW_CLASS,
-                      ROW_LINK_CLASS,
-                      occurrenceColorClass(occurrence),
-                    )}
+                    render={
+                      <Link
+                        href={href}
+                        style={occurrenceColorStyle(occurrence)}
+                        className={cn(
+                          ROW_CLASS,
+                          ROW_LINK_CLASS,
+                          occurrenceColorClass(occurrence),
+                        )}
+                      />
+                    }
                   >
                     <OccurrenceRowContent occurrence={occurrence} />
-                  </Link>
+                  </ActionTooltip>
                 ) : (
                   <div
                     className={cn(ROW_CLASS, occurrenceColorClass(occurrence))}

@@ -53,7 +53,7 @@ Cards for projects, phases and pieces are created in Trello from the app, and ca
   - `npm run start:staging` or `npm run start:prod`
 - push to `dev` branch to deploy to staging and create PR
 - Code owners can merge PR into `main` to deploy to main
-- To import db from prod: `npm run db:prod-to-dev`
+- To import db from prod: `npm run db:prod-to-dev` (copy between any environments with `npm run db:copy -- <source> <target>`, add `--with-passwords` e.g. `npm run db:prod-to-dev -- --with-passwords` to copy passwords as well, see [Data](docs/data.md))
 
 ### For the rest
 

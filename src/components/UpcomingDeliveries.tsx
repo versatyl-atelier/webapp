@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getUpcomingDeliveries } from "@/actions/projects";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { HomeCardLink } from "@/components/HomeCardLink";
 import {
   Card,
@@ -71,10 +72,14 @@ export async function UpcomingDeliveries({ today }: UpcomingDeliveriesProps) {
                 style={upcomingDeliveryStyle(delivery)}
                 className="pl-(--upcoming-offset)"
               >
-                <Link
-                  href={projectPath(delivery.id)}
-                  title={delivery.name}
-                  className="focus-visible:ring-ring flex h-6.5 items-center justify-between gap-1.5 rounded-sm bg-(--project-color) px-2 text-xs font-medium text-white transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                <ActionTooltip
+                  label={delivery.name}
+                  render={
+                    <Link
+                      href={projectPath(delivery.id)}
+                      className="focus-visible:ring-ring flex h-6.5 items-center justify-between gap-1.5 rounded-sm bg-(--project-color) px-2 text-xs font-medium text-white transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    />
+                  }
                 >
                   <span className="min-w-0 truncate">{delivery.name}</span>
                   <time
@@ -83,7 +88,7 @@ export async function UpcomingDeliveries({ today }: UpcomingDeliveriesProps) {
                   >
                     {formatDayMonth(delivery.date)}
                   </time>
-                </Link>
+                </ActionTooltip>
               </li>
             ))}
           </ol>

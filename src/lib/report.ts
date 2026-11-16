@@ -18,25 +18,34 @@ import {
   type ReportGrouping,
 } from "@/constants/report";
 import {
+  CALENDAR_LOCALE,
+  CALENDAR_TIME_ZONE,
   END_DATE_BEFORE_START_MESSAGE,
   INVALID_DATE_MESSAGE,
 } from "@/constants/calendar";
 import { DEFAULT_SUBTASK_ID } from "@/constants/tasks";
-import { ProjectType } from "@/generated/prisma/enums";
+import type { ProjectType } from "@/generated/prisma/enums";
 import { isDateKey, type DateKey } from "@/lib/calendar";
 import { stringifyItemKey } from "@/lib/itemKey";
+import {
+  projectLinkItem,
+  projectLinkSource,
+  type ProjectLinkIds,
+  type ProjectLinkSources,
+} from "@/lib/projectLinks";
 import { normalize } from "@/lib/text";
 import { localDateKeyOf } from "@/lib/timesheet";
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 
-type ProjectLink = {
-  projectType: ProjectType;
-  projectId: string | null;
-  taskId: number | null;
-  project: { name: string; isDeleted?: boolean } | null;
-  task: { name: string; isDeleted?: boolean } | null;
-};
+const generatedAtFormatter = new Intl.DateTimeFormat(CALENDAR_LOCALE, {
+  timeZone: CALENDAR_TIME_ZONE,
+  dateStyle: "long",
+  timeStyle: "short",
+});
+
+type ProjectLink = ProjectLinkIds &
+  ProjectLinkSources<{ name: string; isDeleted?: boolean }>;
 
 export type UsedProjectSource = ProjectLink & {
   timeEntry: { start: Date; end: Date | null };
@@ -100,13 +109,9 @@ function hoursBetween(start: Date, end: Date | null): number {
   return end ? (end.getTime() - start.getTime()) / MS_PER_HOUR : 0;
 }
 
-export function projectKeyOf({
-  projectType,
-  projectId,
-  taskId,
-}: Pick<ProjectLink, "projectType" | "projectId" | "taskId">): string | null {
-  const id = projectType === ProjectType.trello ? projectId : taskId;
-  return id === null ? null : stringifyItemKey({ type: projectType, id });
+export function projectKeyOf(link: ProjectLinkIds): string | null {
+  const item = projectLinkItem(link);
+  return item === null ? null : stringifyItemKey(item);
 }
 
 function compareByName(a: { name: string }, b: { name: string }): number {
@@ -120,8 +125,7 @@ export function usedProjects(
 
   rows.forEach((row) => {
     const key = projectKeyOf(row);
-    const source =
-      row.projectType === ProjectType.trello ? row.project : row.task;
+    const source = projectLinkSource(row);
     if (key === null || !source || !row.timeEntry.end) return;
 
     const day = localDateKeyOf(row.timeEntry.start);
@@ -166,8 +170,7 @@ function reportLines(
     const hours = hoursBetween(entry.start, entry.end);
     const matching = entry.projects.flatMap((link) => {
       const projectKey = projectKeyOf(link);
-      const source =
-        link.projectType === ProjectType.trello ? link.project : link.task;
+      const source = projectLinkSource(link);
       return projectKey !== null && selectedKeys.has(projectKey) && source
         ? [{ projectKey, projectName: source.name }]
         : [];
@@ -346,4 +349,8 @@ export function formatReportPeriod({
   if (start) return `${PERIOD_FROM_LABEL} ${start}`;
   if (end) return `${PERIOD_UNTIL_LABEL} ${end}`;
   return PERIOD_ALL_LABEL;
+}
+
+export function formatReportGeneratedAt(date: Date): string {
+  return generatedAtFormatter.format(date);
 }

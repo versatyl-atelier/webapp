@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 import {
   COPY_COMMAND,
+  DELETE_COMMAND,
   MOVE_COMMAND,
   UNDO_COPY_COMMAND,
   UNDO_MOVE_COMMAND,
@@ -65,6 +66,7 @@ export const MoveTimeEntryFormSchema = Schema.Struct({
     COPY_COMMAND,
     UNDO_MOVE_COMMAND,
     UNDO_COPY_COMMAND,
+    DELETE_COMMAND,
   ),
 });
 
@@ -109,6 +111,9 @@ export const timeEntryInclude = {
         select: { name: true },
       },
       task: {
+        select: { name: true },
+      },
+      jobine: {
         select: { name: true },
       },
     },

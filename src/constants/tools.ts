@@ -1,5 +1,4 @@
 import { MANAGER_PATH } from "@/constants/auth";
-import { NOTES_TAB, PROJECT_TAB_PARAM } from "@/constants/projects";
 import { TRELLO_PAGE_PATH } from "@/constants/trello";
 
 export type Tool = {
@@ -14,7 +13,6 @@ export type Tool = {
 
 export const HOME_PATH = "/";
 export const PROJECTS_PATH = "/projets";
-export const NOTES_TOOL_PATH = `${PROJECTS_PATH}?${PROJECT_TAB_PARAM}=${NOTES_TAB}`;
 export const LANCEUR_PATH = "/lanceur-de-dates";
 export const HOME_LABEL = "Accueil";
 export const APP_NAME = "Versatyl";
@@ -67,13 +65,6 @@ export const EMPLOYEE_TOOLS: Tool[] = [
     icon: "☄️",
     title: "Lanceur",
     description: "Planification production",
-  },
-
-  {
-    href: NOTES_TOOL_PATH,
-    icon: "📝",
-    title: "Notes",
-    description: "Notes des projets",
   },
 ];
 export const KBD_CLASSES = "bg-muted text-2xs rounded-sm border px-1 font-sans";

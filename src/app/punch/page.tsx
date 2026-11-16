@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { OpenSidebarOnMount } from "@/components/OpenSidebarOnMount";
 import { ALL_EMPLOYEES_ACCESS_ROLES } from "@/constants/auth";
 import { PUNCH_PATH, PUNCH_SELECT_EMPLOYEE_PROMPT } from "@/constants/punch";
 import { employeePath } from "@/lib/paths";
@@ -15,11 +16,14 @@ export default async function Page() {
   }
 
   return (
-    <p className="text-muted-foreground m-auto flex items-center gap-3 p-4 text-lg">
-      <span aria-hidden className="text-3xl">
-        ←
-      </span>
-      {PUNCH_SELECT_EMPLOYEE_PROMPT}
-    </p>
+    <>
+      <OpenSidebarOnMount />
+      <p className="text-muted-foreground m-auto flex items-center gap-3 p-4 text-lg">
+        <span aria-hidden className="text-3xl">
+          ←
+        </span>
+        {PUNCH_SELECT_EMPLOYEE_PROMPT}
+      </p>
+    </>
   );
 }

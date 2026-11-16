@@ -1,4 +1,4 @@
-import { ProjectOrTask } from "@/components/ProjectSelect";
+import type { ProjectOrTask } from "@/lib/projectLinks";
 
 export function parseItemKey(key: string) {
   const [type, id] = key.split(":");

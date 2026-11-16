@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { Button } from "@/components/ui/button";
 import { SAVE_LABEL } from "@/constants/projects";
 import { Input } from "@/components/ui/input";
@@ -291,26 +292,34 @@ export function LanceurPlanner({
         <Button type="button" size="sm" onClick={goToToday}>
           {PLAN_TODAY_LABEL}
         </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          aria-label={GANTT_PREVIOUS_LABEL}
-          title={GANTT_PREVIOUS_LABEL}
-          onClick={() => requestScroll({ months: -1 })}
+        <ActionTooltip
+          label={GANTT_PREVIOUS_LABEL}
+          render={
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              aria-label={GANTT_PREVIOUS_LABEL}
+              onClick={() => requestScroll({ months: -1 })}
+            />
+          }
         >
           ◀
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          aria-label={GANTT_NEXT_LABEL}
-          title={GANTT_NEXT_LABEL}
-          onClick={() => requestScroll({ months: 1 })}
+        </ActionTooltip>
+        <ActionTooltip
+          label={GANTT_NEXT_LABEL}
+          render={
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              aria-label={GANTT_NEXT_LABEL}
+              onClick={() => requestScroll({ months: 1 })}
+            />
+          }
         >
           ▶
-        </Button>
+        </ActionTooltip>
         <div className={SEPARATOR_CLASS} />
         <label htmlFor="lanceur-jump" className="text-muted-foreground text-xs">
           {GANTT_JUMP_LABEL}

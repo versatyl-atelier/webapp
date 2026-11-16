@@ -8,7 +8,6 @@ import {
   CALENDAR_WEEK_PARAM,
   DATE_KEY_PATTERN,
   DAYS_PER_WEEK,
-  EVENT_COLOR_BG_CLASSES,
   EVENT_PLURAL_LABEL,
   EVENT_SINGULAR_LABEL,
   HOUR_SUFFIX,
@@ -18,6 +17,7 @@ import {
   NOON_HOUR,
   NOON_LABEL,
   OCCURRENCE_DETAIL_SEPARATOR,
+  PROJECT_TITLE_SEPARATOR,
   RECURRENT_CATEGORY,
   REPEATABLE_EVENT_TYPES,
   WEEK_LABEL_RANGE_SEPARATOR,
@@ -36,7 +36,6 @@ import {
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
-  type CalendarEventColor,
 } from "@/generated/prisma/enums";
 
 export type DateKey = string;
@@ -48,8 +47,9 @@ export type CalendarEventRecord = {
   title: string;
   detail: string;
   date: DateKey;
+  spanEndDate: DateKey | null;
   hour: number;
-  color: CalendarEventColor;
+  color: string;
   frequency: RecurrenceFrequency | null;
   interval: number;
   weekdays: number[];
@@ -57,6 +57,8 @@ export type CalendarEventRecord = {
   endDate: DateKey | null;
   endCount: number | null;
   projectId: string | null;
+  projectName: string | null;
+  projectColor: string | null;
   ownerId: string | null;
 };
 
@@ -69,9 +71,8 @@ export type CalendarOccurrence = {
   title: string;
   detail: string;
   hour: number;
-  color: CalendarEventColor;
+  color: string;
   allDay: boolean;
-  customColor: string | null;
   href: string | null;
   filterKey: CalendarFilterKey;
 };
@@ -90,11 +91,6 @@ export type CalendarWeek = {
 };
 
 export type LinkableProject = { id: string; name: string; color: string };
-
-export type EventTemplate = Pick<
-  CalendarEventRecord,
-  "title" | "color" | "type"
->;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MONTHS_PER_YEAR = 12;
@@ -221,6 +217,15 @@ export function calendarDayPath(date: DateKey): string {
   return `${CALENDAR_DAYS_PATH}/${date}`;
 }
 
+export function occurrenceHref(
+  occurrence: Pick<CalendarOccurrence, "href" | "eventId">,
+  canEdit: boolean,
+): string | null {
+  return (
+    occurrence.href ?? (canEdit ? calendarEventPath(occurrence.eventId) : null)
+  );
+}
+
 export function newCalendarEventPath(date?: DateKey): string {
   if (!date) {
     return NEW_CALENDAR_EVENT_PATH;
@@ -288,13 +293,39 @@ export function matchesRecurrence(
   }
 }
 
+export function hasSpan(
+  event: Pick<CalendarEventRecord, "date" | "spanEndDate">,
+): boolean {
+  return !!event.spanEndDate && event.spanEndDate > event.date;
+}
+
+function spanDates(
+  event: Pick<CalendarEventRecord, "date" | "spanEndDate">,
+  from: DateKey,
+  to: DateKey,
+): DateKey[] {
+  const { date: start, spanEndDate } = event;
+  const end = spanEndDate && spanEndDate > start ? spanEndDate : start;
+  const dates: DateKey[] = [];
+  for (
+    let date = start > from ? start : from;
+    date <= end && date <= to;
+    date = addDays(date, 1)
+  ) {
+    if (date === start || !isWeekend(date)) {
+      dates.push(date);
+    }
+  }
+  return dates;
+}
+
 export function occurrenceDates(
   event: CalendarEventRecord,
   from: DateKey,
   to: DateKey,
 ): DateKey[] {
   if (event.frequency === null) {
-    return event.date >= from && event.date <= to ? [event.date] : [];
+    return spanDates(event, from, to);
   }
   const countsOccurrences = event.endType === RecurrenceEnd.count;
   const last =
@@ -323,12 +354,23 @@ export function canRepeat(type: CalendarEventType): boolean {
   return REPEATABLE_EVENT_TYPES.includes(type);
 }
 
+export function occurrenceTitle(
+  title: string,
+  projectName: string | null,
+): string {
+  if (!projectName) {
+    return title;
+  }
+  const normalize = (value: string) => value.toLocaleLowerCase(CALENDAR_LOCALE);
+  return normalize(title).includes(normalize(projectName))
+    ? title
+    : `${projectName}${PROJECT_TITLE_SEPARATOR}${title}`;
+}
+
 export function eventCategory(
   event: Pick<CalendarEventRecord, "type" | "frequency">,
 ): EventCategory {
-  return event.frequency !== null && event.type === CalendarEventType.manuel
-    ? RECURRENT_CATEGORY
-    : event.type;
+  return event.frequency !== null ? RECURRENT_CATEGORY : event.type;
 }
 
 export function compareOccurrences(
@@ -355,12 +397,11 @@ export function expandOccurrences(
         date,
         category: eventCategory(event),
         subcategory: event.subcategory,
-        title: event.title,
+        title: occurrenceTitle(event.title, event.projectName),
         detail: event.detail,
         hour: event.hour,
         allDay: false,
-        color: event.color,
-        customColor: null,
+        color: event.projectColor ?? event.color,
         href: null,
         filterKey: eventCategory(event),
       })),
@@ -501,14 +542,6 @@ export function formatDayNumber(date: DateKey): string {
     : String(dayOfMonth);
 }
 
-export function ordinal(position: number): string {
-  return position === 1 ? "1er" : `${position}e`;
-}
-
-export function eventColorClass(color: CalendarEventColor): string {
-  return EVENT_COLOR_BG_CLASSES[color];
-}
-
 export function matchesSearch(
   occurrence: Pick<CalendarOccurrence, "title" | "subcategory" | "detail">,
   query: string,
@@ -527,16 +560,14 @@ export function isOccurrenceVisible(
 }
 
 export function occurrenceColorClass(
-  occurrence: Pick<CalendarOccurrence, "color" | "customColor">,
+  occurrence: Pick<CalendarOccurrence, "color">,
 ): string {
-  return occurrence.customColor
-    ? cn(
-        CUSTOM_EVENT_BG_CLASS,
-        isLightColor(occurrence.customColor)
-          ? LIGHT_EVENT_TEXT_CLASS
-          : DARK_EVENT_TEXT_CLASS,
-      )
-    : cn(EVENT_COLOR_BG_CLASSES[occurrence.color], DARK_EVENT_TEXT_CLASS);
+  return cn(
+    CUSTOM_EVENT_BG_CLASS,
+    isLightColor(occurrence.color)
+      ? LIGHT_EVENT_TEXT_CLASS
+      : DARK_EVENT_TEXT_CLASS,
+  );
 }
 
 export function isFilterVisible<T>(value: T, active: ReadonlySet<T>): boolean {
@@ -568,21 +599,6 @@ export function fittingWeekCount(
   );
 }
 
-export type DayOrderPreview<T> = {
-  items: (T & { isNew: boolean })[];
-  position: number;
-};
-
-export function dayOrderPreview<
-  T extends Pick<CalendarOccurrence, "date" | "hour" | "title">,
->(existing: T[], draft: T): DayOrderPreview<T> {
-  const items = [
-    ...existing.map((item) => ({ ...item, isNew: false })),
-    { ...draft, isNew: true },
-  ].toSorted((a, b) => a.hour - b.hour || (a.isNew ? 1 : b.isNew ? -1 : 0));
-  return { items, position: items.findIndex(({ isNew }) => isNew) + 1 };
-}
-
 export function parseWeekdays(value: string, separator: string): number[] {
   return [
     ...new Set(
@@ -595,14 +611,6 @@ export function parseWeekdays(value: string, separator: string): number[] {
         ),
     ),
   ].toSorted((a, b) => a - b);
-}
-
-export function uniqueTemplates(templates: EventTemplate[]): EventTemplate[] {
-  return [
-    ...new Map(
-      templates.map((template) => [template.title, template]),
-    ).values(),
-  ].toSorted((a, b) => a.title.localeCompare(b.title, CALENDAR_LOCALE));
 }
 
 export function isOneOf<T extends string>(

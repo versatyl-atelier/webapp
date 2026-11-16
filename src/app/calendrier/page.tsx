@@ -5,12 +5,14 @@ import {
   CALENDAR_WEEK_PARAM,
   MAX_VISIBLE_WEEKS,
 } from "@/constants/calendar";
+import { Role } from "@/generated/prisma/enums";
 import {
   buildWeeks,
   parseWeekParam,
   toLocalDateKey,
   weekRangeEnd,
 } from "@/lib/calendar";
+import { hasRole } from "@/lib/permissions";
 import { requireActiveSession } from "@/lib/session";
 
 type CalendarPageProps = {
@@ -18,7 +20,7 @@ type CalendarPageProps = {
 };
 
 export default async function Page({ searchParams }: CalendarPageProps) {
-  await requireActiveSession(CALENDAR_PATH);
+  const session = await requireActiveSession(CALENDAR_PATH);
   const today = toLocalDateKey(new Date());
   const weekStart = parseWeekParam(
     (await searchParams)[CALENDAR_WEEK_PARAM],
@@ -32,6 +34,7 @@ export default async function Page({ searchParams }: CalendarPageProps) {
   return (
     <CalendarView
       weeks={buildWeeks(weekStart, MAX_VISIBLE_WEEKS, today, occurrences)}
+      canEdit={hasRole(session.role, Role.manager)}
     />
   );
 }
