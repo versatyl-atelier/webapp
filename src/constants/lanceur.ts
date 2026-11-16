@@ -48,7 +48,7 @@ export const LANCEUR_DELETE_OPTION_LABEL = "Retirer";
 export const LANCEUR_GENERATED_PREFIX = "Généré le";
 
 export const LANCEUR_COLUMNS = {
-  priority: "Prior.",
+  priority: "Priorité",
   etape: "Étape",
   signed: "Signé",
   approved: "Approuvé",

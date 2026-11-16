@@ -8,14 +8,14 @@ import {
   REPEATS_VALUE,
   TITLE_REQUIRED_MESSAGE,
 } from "@/constants/calendar";
+import { COLOR_NAMES } from "@/constants/color";
 import {
-  CalendarEventColor,
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
 } from "@/generated/prisma/enums";
 import { isDateKey } from "@/lib/calendar";
-import { FormState } from "@/schemas/forms.schemas";
+import { FormState, HexColorSchema } from "@/schemas/forms.schemas";
 
 const DateKeySchema = Schema.String.pipe(
   Schema.filter((value) => isDateKey(value) || INVALID_DATE_MESSAGE),
@@ -33,12 +33,13 @@ export const CalendarEventFormSchema = Schema.Struct({
   ),
   detail: Schema.Trim,
   date: DateKeySchema,
+  spanEndDate: Schema.String,
   hour: IntFromFormSchema.pipe(
     Schema.between(0, HOURS_PER_DAY - 1, {
       message: () => INVALID_HOUR_MESSAGE,
     }),
   ),
-  color: Schema.Enums(CalendarEventColor),
+  color: HexColorSchema,
   projectId: Schema.String,
   repeats: Schema.optional(Schema.Literal(REPEATS_VALUE)),
   frequency: Schema.Enums(RecurrenceFrequency),
@@ -63,6 +64,7 @@ export type CalendarEventFormErrors = {
   title?: string[];
   detail?: string[];
   date?: string[];
+  spanEndDate?: string[];
   hour?: string[];
   color?: string[];
   projectId?: string[];
@@ -109,12 +111,12 @@ export const TrelloBoardConfigSchema = Schema.Struct({
   apiKey: Schema.String,
   apiToken: Schema.String,
   type: Schema.Enums(CalendarEventType),
-  color: Schema.Enums(CalendarEventColor),
+  color: Schema.Literal(...COLOR_NAMES),
   detail: Schema.optionalWith(Schema.String, { default: () => "" }),
   labelColors: Schema.optionalWith(
     Schema.Record({
       key: Schema.String,
-      value: Schema.Enums(CalendarEventColor),
+      value: Schema.Literal(...COLOR_NAMES),
     }),
     { default: () => ({}) },
   ),

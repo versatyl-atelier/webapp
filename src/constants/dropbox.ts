@@ -78,6 +78,7 @@ export const PIECE_SECTION_NAMES = [
   "Soumissions fournisseurs",
   "Dessins production",
   "Listes de débit",
+  "Notes",
 ] as const;
 
 export const PROJECT_SECTIONS = [
@@ -86,6 +87,7 @@ export const PROJECT_SECTIONS = [
   { name: "Comptoirs", folder: "Comptoirs" },
   { name: "Finition", folder: "Finition" },
   { name: "Commande de portes", folder: "Commande de portes" },
+  { name: "Notes", folder: "Notes" },
 ] as const;
 
 export const DROPBOX_SYNC_FAILED_MESSAGE = "Dropbox sync failed";

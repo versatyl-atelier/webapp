@@ -4,13 +4,14 @@ import {
   END_DATE_BEFORE_START_MESSAGE,
   INVALID_END_COUNT_MESSAGE,
   REPEATS_VALUE,
+  SPAN_REPEATS_NOTE,
 } from "@/constants/calendar";
 import {
-  CalendarEventColor,
   CalendarEventType,
   RecurrenceEnd,
   RecurrenceFrequency,
 } from "@/generated/prisma/enums";
+import { NAMED_COLORS } from "@/constants/color";
 import {
   eventDataFromForm,
   eventRecordFromDb,
@@ -27,13 +28,14 @@ const form = (
   overrides: Partial<CalendarEventFormData> = {},
 ): CalendarEventFormData => ({
   command: "save",
-  type: CalendarEventType.manuel,
+  type: CalendarEventType.divers,
   subcategory: "",
   title: "Réunion",
   detail: "",
   date: "2026-07-14",
+  spanEndDate: "",
   hour: 8,
-  color: CalendarEventColor.indigo,
+  color: NAMED_COLORS.indigo,
   projectId: "",
   repeats: REPEATS_VALUE,
   frequency: RecurrenceFrequency.weekly,
@@ -78,7 +80,10 @@ describe("eventDataFromForm", () => {
       ),
     ).toMatchObject({ data: { subcategory: "RH" } });
     expect(
-      eventDataFromForm(form({ subcategory: "RH" }), USER_ID),
+      eventDataFromForm(
+        form({ type: CalendarEventType.personnel, subcategory: "RH" }),
+        USER_ID,
+      ),
     ).toMatchObject({
       data: { subcategory: "" },
     });
@@ -154,13 +159,14 @@ describe("eventRecordFromDb", () => {
     expect(
       eventRecordFromDb({
         id: 3,
-        type: CalendarEventType.manuel,
+        type: CalendarEventType.divers,
         subcategory: "",
         title: "T",
         detail: "",
         date: new Date("2026-07-14T00:00:00.000Z"),
+        spanEndDate: new Date("2026-07-16T00:00:00.000Z"),
         hour: 9,
-        color: CalendarEventColor.blue,
+        color: NAMED_COLORS.blue,
         frequency: RecurrenceFrequency.daily,
         interval: 1,
         weekdays: [],
@@ -168,12 +174,57 @@ describe("eventRecordFromDb", () => {
         endDate: new Date("2026-07-20T00:00:00.000Z"),
         endCount: null,
         trelloCardId: null,
-        projectId: null,
+        projectId: "p1",
         ownerId: null,
         createdAt: now,
         updatedAt: now,
+        project: { name: "Côté", color: "#112233" },
       }),
-    ).toMatchObject({ date: "2026-07-14", endDate: "2026-07-20" });
+    ).toMatchObject({
+      date: "2026-07-14",
+      spanEndDate: "2026-07-16",
+      endDate: "2026-07-20",
+      projectName: "Côté",
+      projectColor: "#112233",
+    });
+  });
+});
+
+describe("eventDataFromForm span", () => {
+  const oneOff = { repeats: undefined };
+
+  it("stores the span end date of a one-off event", () => {
+    expect(
+      eventDataFromForm(
+        form({ ...oneOff, spanEndDate: "2026-07-17" }),
+        USER_ID,
+      ),
+    ).toMatchObject({
+      data: { spanEndDate: new Date("2026-07-17T00:00:00.000Z") },
+    });
+  });
+
+  it("drops an empty or same-day span", () => {
+    for (const spanEndDate of ["", "2026-07-14"]) {
+      expect(
+        eventDataFromForm(form({ ...oneOff, spanEndDate }), USER_ID),
+      ).toMatchObject({ data: { spanEndDate: null } });
+    }
+  });
+
+  it("rejects a span ending before the start", () => {
+    expect(
+      eventDataFromForm(
+        form({ ...oneOff, spanEndDate: "2026-07-10" }),
+        USER_ID,
+      ),
+    ).toEqual({ errors: { spanEndDate: [END_DATE_BEFORE_START_MESSAGE] } });
+  });
+
+  it("rejects a span on a repeating event", () => {
+    expect(
+      eventDataFromForm(form({ spanEndDate: "2026-07-17" }), USER_ID),
+    ).toEqual({ errors: { spanEndDate: [SPAN_REPEATS_NOTE] } });
   });
 });
 
@@ -184,9 +235,9 @@ describe("trelloCardToEventData", () => {
     apiKey: "k",
     apiToken: "t",
     type: CalendarEventType.livraison,
-    color: CalendarEventColor.blue,
+    color: "blue",
     detail: "Trello",
-    labelColors: { green: CalendarEventColor.lime },
+    labelColors: { green: "lime" },
   };
   const noProjects = new Set<string>();
 
@@ -219,7 +270,7 @@ describe("trelloCardToEventData", () => {
       detail: "Trello",
       date: new Date("2026-07-14T00:00:00.000Z"),
       hour: 21,
-      color: CalendarEventColor.blue,
+      color: NAMED_COLORS.blue,
       projectId: null,
       ownerId: null,
       subcategory: "",
@@ -254,6 +305,6 @@ describe("trelloCardToEventData", () => {
         board,
         noProjects,
       )?.color,
-    ).toBe(CalendarEventColor.lime);
+    ).toBe(NAMED_COLORS.lime);
   });
 });

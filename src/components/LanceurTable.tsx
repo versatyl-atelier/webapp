@@ -2,6 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -162,7 +163,16 @@ export function LanceurTable({
                   right && "text-right",
                 )}
               >
-                {short ? <abbr title={label}>{short}</abbr> : label}
+                {short ? (
+                  <ActionTooltip
+                    label={label}
+                    render={<abbr aria-label={label} tabIndex={0} />}
+                  >
+                    {short}
+                  </ActionTooltip>
+                ) : (
+                  label
+                )}
               </th>
             ))}
             <th scope="col" className="print:hidden">

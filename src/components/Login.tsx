@@ -6,7 +6,8 @@ import { useActionState, useEffect } from "react";
 import { login } from "@/actions/auth";
 import { useRouter } from "next/navigation";
 import { useAuthEvents } from "@/contexts/auth-events-provider";
-import { LOGIN_SUCCESS_MESSAGE } from "@/constants/auth";
+import { ActionTooltip } from "@/components/ActionTooltip";
+import { LOGIN_LABEL, LOGIN_SUCCESS_MESSAGE } from "@/constants/auth";
 import { changePasswordPath, loginPath } from "@/lib/paths";
 import { Field, FieldError, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
@@ -78,8 +79,17 @@ export function LoginForm({ redirectTo, defaultEmail }: LoginFormProps) {
 
 export function LoginButton() {
   return (
-    <Link href={loginPath()} title="Connexion" className="hover:text-primary">
+    <ActionTooltip
+      label={LOGIN_LABEL}
+      render={
+        <Link
+          href={loginPath()}
+          aria-label={LOGIN_LABEL}
+          className="hover:text-primary"
+        />
+      }
+    >
       <LogIn />
-    </Link>
+    </ActionTooltip>
   );
 }

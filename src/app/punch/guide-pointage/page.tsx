@@ -22,7 +22,7 @@ export default function Page() {
             la page d'accueil
           </li>
           <li className="before:bg-primary before:text-primary-foreground relative mb-3 pl-11.25 text-sm before:absolute before:-top-0.5 before:left-0 before:flex before:h-8 before:w-8 before:items-center before:justify-center before:rounded-full before:text-base before:font-bold before:content-['2']">
-            <strong>Choisir votre projet</strong> dans "Pointage Multiple"
+            <strong>Choisir votre projet</strong> dans "Pointage en temps réel"
             <div className="border-primary bg-muted my-2.5 border-l-4 px-2.5 py-2.5 text-xs">
               → Commencez à taper le nom du projet
               <br />→ Sélectionnez dans la liste qui apparaît

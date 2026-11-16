@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -53,16 +54,24 @@ export async function AppBreadcrumb({
                 className={collapsible ? COLLAPSIBLE_ITEM_CLASS : ITEM_CLASS}
               >
                 {index === lastIndex ? (
-                  <BreadcrumbPage className="truncate font-bold" title={label}>
-                    {label}
-                  </BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink
-                    render={<Link href={href} title={label} />}
-                    className="truncate"
+                  <ActionTooltip
+                    label={label}
+                    render={<BreadcrumbPage className="truncate font-bold" />}
                   >
                     {label}
-                  </BreadcrumbLink>
+                  </ActionTooltip>
+                ) : (
+                  <ActionTooltip
+                    label={label}
+                    render={
+                      <BreadcrumbLink
+                        render={<Link href={href} />}
+                        className="truncate"
+                      />
+                    }
+                  >
+                    {label}
+                  </ActionTooltip>
                 )}
               </BreadcrumbItem>
             </Fragment>

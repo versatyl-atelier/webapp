@@ -17,6 +17,7 @@ import { ALL_EMPLOYEES_ACCESS_ROLES } from "@/constants/auth";
 import { PUNCH_FINISH_LABEL, PUNCH_PATH } from "@/constants/punch";
 import { getEmployee } from "@/actions/employees";
 import { getActivePunch } from "@/actions/multiPunch";
+import { getJobines } from "@/actions/jobines";
 import { getProjects } from "@/actions/projects";
 import { getSubtasks, getTasks } from "@/actions/tasks";
 import { CALENDAR_WEEK_PARAM } from "@/constants/calendar";
@@ -35,6 +36,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FreezeForm } from "@/components/FreezeForm";
 import EditTimeEntryForm from "@/components/EditTimeEntryForm";
 import { TimeEntryDragHint } from "@/components/TimeEntryDragHint";
+import { TimeEntryTrashZone } from "@/components/TimeEntryTrashZone";
+import { Separator } from "@/components/ui/separator";
 import { PageContextProvider } from "./context-provider";
 import { cn } from "@/lib/utils";
 
@@ -117,6 +120,7 @@ export default async function EmployeePage({
 
   const projectsPromise = getProjects(employeeId);
   const tasksPromise = getTasks();
+  const jobinesPromise = getJobines();
   const subtasks = await getSubtasks();
 
   const disabledReason = weekFrozen ? WEEK_FROZEN_MESSAGE : undefined;
@@ -135,6 +139,7 @@ export default async function EmployeePage({
     <PageContextProvider
       projectsPromise={projectsPromise}
       tasksPromise={tasksPromise}
+      jobinesPromise={jobinesPromise}
     >
       <div className="relative flex flex-1 flex-col gap-2.5 p-1.5">
         <div className="flex items-center justify-between gap-2">
@@ -258,12 +263,17 @@ export default async function EmployeePage({
           </div>
           {!disabledReason && <TimeEntryDragHint />}
         </div>
-        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-3">
+        <TimeEntryTrashZone
+          disabled={disabledReason}
+          className="grid grid-cols-1 gap-2.5 lg:grid-cols-[1fr_auto_1fr_1fr]"
+        >
           <MultiPunchForm
             employeeId={employeeId}
             activePunch={activePunch}
             disabled={disabledReason}
           />
+          <Separator className="lg:hidden" />
+          <Separator orientation="vertical" className="hidden lg:block" />
           <ManualTimeForm
             employeeId={employeeId}
             dateOptions={dateOptions}
@@ -279,7 +289,7 @@ export default async function EmployeePage({
             hoursDifference={hoursDifference}
             disabled={disabledReason}
           />
-        </div>
+        </TimeEntryTrashZone>
       </div>
     </PageContextProvider>
   );

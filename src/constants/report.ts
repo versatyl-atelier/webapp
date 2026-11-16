@@ -1,3 +1,6 @@
+import { JOBINE_ICON, JOBINES_TITLE } from "@/constants/jobines";
+import { ProjectType } from "@/generated/prisma/enums";
+
 export const REPORT_GROUPINGS = [
   "project",
   "employee",
@@ -16,14 +19,26 @@ export const GROUPING_LABELS: Record<ReportGrouping, string> = {
   subtask: "Par projet / sous-tâche / statut",
 };
 
-export const PROJECT_TYPE_FILTERS = ["all", "trello", "task"] as const;
+export const PROJECT_TYPE_FILTERS = [
+  "all",
+  ProjectType.trello,
+  ProjectType.jobine,
+  ProjectType.task,
+] as const;
 
 export type ProjectTypeFilter = (typeof PROJECT_TYPE_FILTERS)[number];
 
 export const PROJECT_TYPE_FILTER_LABELS: Record<ProjectTypeFilter, string> = {
-  all: "Projets et tâches",
+  all: "Projets, jobines et tâches",
   trello: "Projets",
+  jobine: JOBINES_TITLE,
   task: "Tâches",
+};
+
+export const PROJECT_TYPE_ICONS: Record<ProjectType, string> = {
+  trello: "🔷",
+  jobine: JOBINE_ICON,
+  task: "📋",
 };
 
 export const NO_STATUT_LABEL = "Sans statut";
@@ -76,7 +91,7 @@ export const PERIOD_UNTIL_LABEL = "Jusqu'au";
 export const PERIOD_ALL_LABEL = "Toutes les dates";
 
 export const PROJECT_REQUIRED_REPORT_MESSAGE =
-  "Sélectionnez au moins un projet ou une tâche";
+  "Sélectionnez au moins un projet, une jobine ou une tâche";
 export const GROUPING_REQUIRED_MESSAGE = "Choisissez au moins un regroupement";
 
 export const REPORT_INDENT_CLASSES = ["pl-2", "pl-6", "pl-10"];

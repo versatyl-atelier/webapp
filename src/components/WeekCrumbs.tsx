@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { Button } from "@/components/ui/button";
 import { BreadcrumbItem, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import {
@@ -43,14 +44,19 @@ function WeekNavButton({
     );
   }
   return (
-    <Button
-      render={<Link href={href} aria-label={label} title={label} />}
-      nativeButton={false}
-      variant="secondary"
-      size="icon-xs"
+    <ActionTooltip
+      label={label}
+      render={
+        <Button
+          render={<Link href={href} aria-label={label} />}
+          nativeButton={false}
+          variant="secondary"
+          size="icon-xs"
+        />
+      }
     >
       {children}
-    </Button>
+    </ActionTooltip>
   );
 }
 

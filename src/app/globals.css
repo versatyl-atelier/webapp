@@ -158,8 +158,6 @@
   --container-lanceur-table: 82rem;
 
   --spacing-toolbar: calc(var(--spacing) * 10);
-  --spacing-note-meta: calc(var(--spacing) * 49);
-  --spacing-note-rule: calc(var(--spacing-note-meta) + var(--spacing) * 1.5);
 
   @keyframes fadeInUp {
     from {

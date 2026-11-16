@@ -97,6 +97,7 @@ describe("pieceSectionFolders", () => {
       folder: "7. Dessins production",
     });
     expect(folders[7]?.folder).toBe("8. Listes de débit");
+    expect(folders[8]?.folder).toBe("9. Notes");
   });
 });
 

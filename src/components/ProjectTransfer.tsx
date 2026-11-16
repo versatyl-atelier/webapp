@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -25,6 +26,7 @@ import {
   NO_MATCH_LABEL,
   NO_PROJECTS_USED_LABEL,
   PROJECT_TYPE_FILTERS,
+  PROJECT_TYPE_ICONS,
   PROJECT_TYPE_FILTER_LABELS,
   REMOVE_ALL_LABEL,
   REMOVE_SELECTED_LABEL,
@@ -32,7 +34,6 @@ import {
   TYPE_FILTER_LABEL,
   type ProjectTypeFilter,
 } from "@/constants/report";
-import { ProjectType } from "@/generated/prisma/enums";
 import { formatDecimalHours } from "@/lib/time";
 import { filterProjects, type UsedProject } from "@/lib/report";
 
@@ -53,8 +54,36 @@ type ProjectListProps = {
   onQueryChange: (query: string) => void;
 };
 
-function typeIcon(type: ProjectType) {
-  return type === ProjectType.task ? "📋" : "🔷";
+type TransferButtonProps = {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+};
+
+function TransferButton({
+  label,
+  disabled,
+  onClick,
+  children,
+}: TransferButtonProps) {
+  return (
+    <ActionTooltip
+      label={label}
+      render={
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          aria-label={label}
+          disabled={disabled}
+          onClick={onClick}
+        />
+      }
+    >
+      {children}
+    </ActionTooltip>
+  );
 }
 
 function ProjectList({
@@ -98,7 +127,7 @@ function ProjectList({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm wrap-break-word">
-                    <span aria-hidden>{typeIcon(project.type)} </span>
+                    <span aria-hidden>{PROJECT_TYPE_ICONS[project.type]} </span>
                     {project.name}
                     {project.archived && (
                       <span className="text-muted-foreground text-xs">
@@ -215,50 +244,34 @@ export function ProjectTransfer({
           onQueryChange={setAvailableQuery}
         />
         <div className="flex flex-row justify-center gap-1.5 md:flex-col md:self-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            title={ADD_SELECTED_LABEL}
-            aria-label={ADD_SELECTED_LABEL}
+          <TransferButton
+            label={ADD_SELECTED_LABEL}
             disabled={checkedAvailableKeys.length === 0}
             onClick={() => add(checkedAvailableKeys)}
           >
             →
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            title={ADD_ALL_LABEL}
-            aria-label={ADD_ALL_LABEL}
+          </TransferButton>
+          <TransferButton
+            label={ADD_ALL_LABEL}
             disabled={visibleAvailable.length === 0}
             onClick={() => add(visibleAvailable.map(({ key }) => key))}
           >
             ⇒
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            title={REMOVE_SELECTED_LABEL}
-            aria-label={REMOVE_SELECTED_LABEL}
+          </TransferButton>
+          <TransferButton
+            label={REMOVE_SELECTED_LABEL}
             disabled={checkedSelectedKeys.length === 0}
             onClick={() => remove(checkedSelectedKeys)}
           >
             ←
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            title={REMOVE_ALL_LABEL}
-            aria-label={REMOVE_ALL_LABEL}
+          </TransferButton>
+          <TransferButton
+            label={REMOVE_ALL_LABEL}
             disabled={selectedKeys.length === 0}
             onClick={() => remove(selectedKeys)}
           >
             ⇐
-          </Button>
+          </TransferButton>
         </div>
         <ProjectList
           title={SELECTED_LIST_TITLE}

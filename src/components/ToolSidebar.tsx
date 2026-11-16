@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { PropsWithChildren } from "react";
 
+import { ActionTooltip } from "@/components/ActionTooltip";
 import {
   Sidebar,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { HOME_LABEL } from "@/constants/tools";
 
 type ToolSidebarProps = {
   glyph: string;
@@ -28,21 +30,30 @@ export function ToolSidebar({
       <SidebarHeader className="border-b-muted h-toolbar justify-center border-b">
         <SidebarMenu>
           <SidebarMenuItem className="text-muted-foreground relative">
-            <Link
-              href="/"
-              title="Accueuil"
-              className="hover:text-primary absolute inset-y-0 flex items-center px-4 text-base"
+            <ActionTooltip
+              label={HOME_LABEL}
+              render={
+                <Link
+                  href="/"
+                  aria-label={HOME_LABEL}
+                  className="hover:text-primary absolute inset-y-0 flex items-center px-4 text-base"
+                />
+              }
             >
               ←
-            </Link>
-            <Link
-              href={href}
-              title={title}
-              className="hover:text-primary inline-block w-full text-center text-sm font-bold"
+            </ActionTooltip>
+            <ActionTooltip
+              label={title}
+              render={
+                <Link
+                  href={href}
+                  className="hover:text-primary inline-block w-full text-center text-sm font-bold"
+                />
+              }
             >
               <span className="mr-2">{glyph}</span>
               {title}
-            </Link>
+            </ActionTooltip>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
