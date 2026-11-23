@@ -53,6 +53,7 @@
     "db:copy": "tsx prisma/copyDb.ts",
     "db:prod-to-dev": "npm run db:copy -- prod dev",
     "db:dev-to-staging": "npm run db:copy -- dev staging",
+    "screenshot": "tsx scripts/screenshot.ts",
     "analyze": "next analyze",
     "type-check": "next typegen &&  tsc --noEmit",
     "format": "prettier --write .",

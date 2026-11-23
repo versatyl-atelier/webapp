@@ -1,4 +1,4 @@
-## Auth
+# Auth
 
 E-mail and password sign-in using better-auth with database-backed sessions in HTTP-only cookies.
 

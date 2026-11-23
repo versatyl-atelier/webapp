@@ -45,3 +45,7 @@ next-env.d.ts
 TODO.local.md
 
 /trello-import.json
+
+# screenshots (see docs/screenshots.md)
+/screenshots/
+/.auth/

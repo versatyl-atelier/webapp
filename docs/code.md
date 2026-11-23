@@ -1,19 +1,22 @@
 # Coding conventions
 
-- DRY
+- Mobile-first: every page works on a phone and with touch (see [Styles](styles.md))
+- Language: see [Copy](copy.md)
+- DRY: reuse existing helpers, components and constants before writing new ones
 - WCAG 2.1 AA compliance
-- semantic HTML
-- wide-event logging
-- business logic as pure functions, Effect for side-effects
+- Semantic HTML
+- Wide-event logging (see [Logs](logs.md))
+- Business logic as pure functions, Effect for side-effects
 - shadcn/ui for UI components
-- load page data via React Server Components
-- user actions using React Server Actions (`<form action={…}>`) and `useActionState`
+- Load page data with React Server Components
+- User actions with React Server Actions (`<form action={…}>`) and `useActionState`
 - Effect.Schema for input validation (e.g. form data)
-- auth
-  - src/proxy.ts protects pages
-  - `cachedGetter` and `protectedEffect` (see src/lib/effect.ts) protect actions
+- Auth (see [Auth](auth.md))
+  - `src/proxy.ts` protects pages
+  - `cachedGetter` and `protectedEffect` (see `src/lib/effect.ts`) protect actions
   - `runEffectAsFormAction` helps with form actions
-- strict typing. No `any` type
-- prefer async/await over manually using promises, but prefer Effect for code dealing with side-effects
-- don't add comments in the code
-- no magic values, define and export constants instead
+- Strict typing, no `any`
+- Prefer async/await over raw promises, and Effect over both for side-effects
+- No comments in the code
+- No magic values: define and export constants in `src/constants/`
+- Test pure functions with Vitest in `tests/`, mirroring the path in `src/` (e.g. `src/lib/time.ts` → `tests/lib/time.test.ts`)
