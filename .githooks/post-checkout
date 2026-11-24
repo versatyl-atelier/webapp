@@ -1,0 +1,4 @@
+#!/bin/sh
+
+[ -f scripts/sync.mts ] && command -v node >/dev/null 2>&1 && node scripts/sync.mts --hook post-checkout "$@"
+exit 0

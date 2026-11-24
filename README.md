@@ -19,6 +19,7 @@ Internal web app of Versatyl Atelier: Punch (time tracking), Lanceur de dates (s
   - Launch Docker Desktop or `docker desktop start`
   - Start the database: `npm run db:dev`
 - Start the dev server: `npm run dev`
+- After a pull, a merge, a rebase or a branch switch, and before `npm run dev`, a check tells you when dependencies, the Prisma client or your local database are out of date (as a desktop notification when a git GUI such as VS Code hides its output). `npm run sync` brings them up to date and is safe to run any time. `npm run sync -- --help` shows its options, including `git config versatyl.sync auto` to have it sync for you
 - Staging/prod variants (using values from `.env.staging` or `.env.prod`):
   - `npm run build:staging` or `npm run build:prod`
   - `npm run start:staging` or `npm run start:prod`
