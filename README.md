@@ -46,7 +46,7 @@ Read the ones that apply before changing code:
 | [Data](docs/data.md)               | change the schema or migrations, or work with the staging or prod databases |
 | [Auth](docs/auth.md)               | touch sign-in, sessions, roles or permissions                               |
 | [Logs](docs/logs.md)               | write an action or effect                                                   |
-| [Workflow](docs/workflow.md)       | commit, push or open a PR                                                   |
+| [Workflow](docs/workflow.md)       | commit, push or open a PR, versioning                                       |
 | [Screenshots](docs/screenshots.md) | check how a page looks at phone and desktop widths                          |
 | [Dropbox](docs/dropbox.md)         | touch project folders or files                                              |
 | [Trello](docs/trello.md)           | touch Trello cards, lists or webhooks                                       |
