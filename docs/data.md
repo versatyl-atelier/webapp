@@ -1,6 +1,6 @@
 # Data
 
-See @/prisma/schema.prisma
+Schema: [`prisma/schema.prisma`](../prisma/schema.prisma)
 
 ## Databases
 
